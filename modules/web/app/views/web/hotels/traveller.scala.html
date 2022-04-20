@@ -1,0 +1,224 @@
+@import helper._
+@import hotel.dto.entity.Hotel
+@import hotel.dto.entity.SearchRequest
+@import views.html.bookingEngine._
+@import views.html.web.templates._
+@import crypto.Encrypt
+@import hotel.dto.entity.HotelRoom
+@import scala.collection.JavaConversions._
+@import b3.vertical.fieldConstructor
+@import com.hotels.HotelBookingRequest
+@(hotel: Hotel, hotelRoom: HotelRoom, searchRequest: SearchRequest, fl_tabHash: String, travellerForm: Form[HotelBookingRequest])(implicit request: RequestHeader, maybeUser: Option[Users], messages: Messages, encrypt: Encrypt)
+@import controllers.web.routes; val roomRateId: String = hotelRoom.getRoomTypeCode; var roomIndex = 1
+@default(title = hotel.getHotelName, script, loggedUser = maybeUser) {
+    <div class="container">
+        <ul class="breadcrumb">
+            <li><a href="/@routes.ApplicationCtrl.page("/").url">Home</a></li>
+            <li><a href="/@routes.ApplicationCtrl.page("/hotels").url">Hotels</a></li>
+            <li><a href="/@routes.ApplicationCtrl.page("/hotels").url">@hotel.getHotelName</a></li>
+            <li class="active">@hotelRoom.getRoomName Traveller(s)</li>
+        </ul>
+        <div class="gap gap-small"></div>
+        <div class="">
+            <div class="row row-wrap">
+                <div class="col-md-8">
+                    @tags.alertFromRequest(request, "success")
+                    @tags.alertFromRequest(request, "error")
+                    <form class="cc-form" data-validate="parsley" method="post" action="@routes.HotelCtrl.postBookRoom(encrypt.encrypt(hotel.getHotelId), hotelRoom.getRoomRateId, fl_tabHash)" role="form" enctype="application/x-www-form-urlencoded">
+                        @helper.CSRF.formField
+                        <input type="hidden" name="@travellerForm("hotelId").name" value="@hotel.getHotelId" />
+                        <input type="hidden" name="@travellerForm("salesCategory").name" value="@SalesCategory.B2C.name()" />
+                        <h4>Traveller's Details</h4>
+                        <p>Fields with <span class="text-danger">*</span> are required.</p>
+                        <input type="hidden" name="roomCount" value="@searchRequest.getHotelAvailabilityRequest.getRooms.size()" />
+                        @for(room <- searchRequest.getHotelAvailabilityRequest.getRooms) {
+                            <h4><strong>Room @roomIndex Passenger(s) Details</strong></h4>
+                            <input type="hidden" name="@(s"room${roomIndex}roomId")" value="@roomRateId" />
+                            <input type="hidden" name="@(s"room${roomIndex}_adtCount")" value="@room.getAdults" />
+                            <input type="hidden" name="@(s"room${roomIndex}_chdCount")" value="@room.getChildren" />
+                            <h5><strong>Adult(s) Details</strong></h5>
+                            @for(paxId <- 1 to room.getAdults) {
+                                <input type="hidden" name="@(s"adt_room_${roomIndex}_pax_${paxId}_passengerType")" value="ADT" />
+                                <div class="clearfix row">
+                                    <div class="col-md-2 form-group">
+                                        <label>Title</label>
+                                        <select name="@(s"adt_room_${roomIndex}_pax_${paxId}_title")" class="form-control title" data-required="true" required>
+                                            <option value="">------</option>
+                                            @for(title <- Titles.values()) { <option value="@title.name()">@title.name()</option> }
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3 form-group">
+                                        <label>First Name <span class="text-danger">*</span></label>
+                                        <input type="text" name="@(s"adt_room_${roomIndex}_pax_${paxId}_firstName")" class="form-control firstName" data-required="true" placeholder="First Name" required/>
+                                    </div>
+                                    <div class="col-md-2 form-group">
+                                        <label>Other Name</label>
+                                        <input type="text" name="@(s"adt_room_${roomIndex}_pax_${paxId}_otherName")" class="form-control otherName" placeholder="Other Name"/>
+                                    </div>
+                                    <div class="col-md-3 form-group">
+                                        <label>Last Name <span class="text-danger">*</span></label>
+                                        <input type="text" name="@(s"adt_room_${roomIndex}_pax_${paxId}_lastName")" class="form-control lastName" data-required="true" placeholder="Last Name" required/>
+                                    </div>
+                                </div>
+                            }
+                            @if(room.getChildren > 0) {
+                                <h5><strong>Child@("ren".when(room.getChildren > 1)) Details</strong></h5>
+                            }
+                            @for(paxId <- 1 to room.getChildren) {
+                                <input type="hidden" name="@(s"chd_room_${roomIndex}_pax_${paxId}_passengerType")" value="CHD" />
+                                <div class="clearfix row">
+                                    <div class="col-md-2 form-group">
+                                        <label>Title</label>
+                                        <select name="@(s"chd_room_${roomIndex}_pax_${paxId}_title")" class="form-control title" data-required="true" required>
+                                            <option value="">------</option>
+                                            @for(title <- Titles.values()) { <option value="@title.name()">@title.name()</option> }
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3 form-group">
+                                        <label>First Name <span class="text-danger">*</span></label>
+                                        <input type="text" name="@(s"chd_room_${roomIndex}_pax_${paxId}_firstName")" class="form-control firstName" data-required="true" placeholder="First Name" required/>
+                                    </div>
+                                    <div class="col-md-2 form-group">
+                                        <label>Other Name</label>
+                                        <input type="text" name="@(s"chd_room_${roomIndex}_pax_${paxId}_otherName")" class="form-control otherName" placeholder="Other Name"/>
+                                    </div>
+                                    <div class="col-md-3 form-group">
+                                        <label>Last Name <span class="text-danger">*</span></label>
+                                        <input type="text" name="@(s"chd_room_${roomIndex}_pax_${paxId}_lastName")" class="form-control lastName" data-required="true" placeholder="Last Name" required/>
+                                    </div>
+                                    <div class="col-md-2 form-group">
+                                        <label>Child Age <span class="text-danger">*</span></label>
+                                        <input type="number" name="@(s"chd_room_${roomIndex}_pax_${paxId}_age")" class="form-control age" data-required="true" placeholder="Max. Age of 11" required/>
+                                    </div>
+                                </div>
+                            }
+                            <!-- Important as death -->
+                            @{roomIndex += 1}
+                        }
+                        <hr /><div class="clearfix"></div>
+
+                        <div class="gap gap-small"></div>
+                        @defining(maybeUser.getOrElse(new Users)) { authu =>
+                            <div class="row">
+                                <div class="col-md-3"> <h5><strong>Contact Details</strong> </h5></div>
+                                <div class="col-md-3"><label for="same_as_adult1"><input type="checkbox" name="same_as_adult1" value="1" id="same_as_adult1" />
+                                    same as first adult?</label></div>
+                                <div class="clearfix"></div>
+                                <div class="form-group col-md-1 col-xs-6" style="width: 12.33333333% ;">
+                                    @b3.select(travellerForm("contactTitle"), options(Titles.options(Option(authu.getPrefix).getOrElse(Titles.Mr).name())), '_label -> "Title", 'required -> "required")
+                                </div>
+                                <div class="form-group col-md-3 col-x-6" style="width: 21% ;">
+                                @b3.text(travellerForm("contactFirstName"), 'value -> authu.getFirstName, '_label -> "First Name", 'required -> "required")
+                                </div>
+                                <div class="form-group col-md-3 col-xs-6">
+                                @b3.text(travellerForm("contactLastName"), 'value -> authu.getLastName, '_label -> "Surname", 'required -> "required")
+                                </div>
+                                <div class="form-group col-md-3 col-xs-6">
+                                @b3.email(travellerForm("email"), 'value -> authu.getEmail, '_label -> "Email", 'required -> "required")
+                                </div>
+                                <div class="form-group col-md-2 col-xs-6">
+                                    <label>Mobile Phone</label>
+                                    <input name="@travellerForm("phone").name" type="number" placeholder="Phone Number" value="@travellerForm("phone").value.getOrElse(authu.getPhone)" class="form-control bfh-phone" data-required="true" required="required" />
+                                </div>
+                                <div class="form-group col-md-12">
+                                    <label>Comment/Special Remark <small>(Optional)</small></label>
+                                    <textarea class="form-control" name="@travellerForm("remarks").name" placeholder="Remarks" cols="100" rows="4">@travellerForm("remarks").value.orNull</textarea>
+                                </div>
+                            </div>
+                        }
+                        <div class="gap gap-small"></div>
+                        <h4>Payment Option</h4>
+                        <ul class="list-group">
+                            @for(paymentMethod <- PaymentMethods.find.where().eq("payment_category", PaymentCategories.CASH_PAYMENT).findList()) {
+                                <li class="list-group-item col-md-6 col-xs-6">
+                                    <label for="@paymentMethod.getId" class="row">
+                                        <div class="col-md-8 col-md-offset-3">
+                                            <input id="@paymentMethod.getId" class="i-check" @if(travellerForm("paymentMethodId").value.isDefined) { @if(travellerForm("paymentMethodId").value.get.equals(paymentMethod.getId.toString)) { checked="checked" } } else { checked="checked" } type="radio" data-required="true" required="required" name="@travellerForm("paymentMethodId").name" value="@paymentMethod.getId" />
+                                            <img src="@paymentMethod.getLogoUrl" style="width: 35px; height: 35px" class="img img-responsive" />
+                                        </div>
+                                        <div class="col-md-12"><p class="text-center">@paymentMethod.getAccountNo - @paymentMethod.getAccountName</p></div>
+                                    </label>
+                                </li>
+                            }
+                        </ul>
+                        <div class="gap gap-small"></div>
+                        <div class="checkbox checkbox-small">
+                            <label>
+                                <div class="i-check checked"><input class="i-check" name="acknowledge" type="checkbox" data-required="true" checked="" style="position: absolute; opacity: 0;"><ins class="iCheck-helper" style="position: absolute; top: 0%; left: 0%; display: block; width: 100%; height: 100%; margin: 0px; padding: 0px; background: rgb(255, 255, 255); border: 0px; opacity: 0;"></ins></div>Confirm and Acknowledge Booking Terms and Conditions
+                            </label>
+                        </div>
+                        <input class="btn btn-primary" style="" id="submitBtn" type="submit" value="Submit Booking">
+                    </form>
+                </div>
+                <div class="col-md-4">
+                    <div class="booking-item-payment">
+                        <header class="clearfix">
+                            <a class="booking-item-payment-img" href="#">
+                                <img src="@hotel.getImages.head.getUrl" height="100px" style="max-height: 100px;" alt="@hotel.getHotelName" title="@hotel.getHotelName">
+                            </a>
+                            <h5 class="booking-item-payment-title"><a href="#">@hotel.getHotelName</a></h5>
+                            @if(hotel.getStarRating != null && !hotel.getStarRating.isEmpty) {
+                                <ul class="icon-group booking-item-rating-stars">
+                                    @for(star <- 1 to hotel.getStarRating.toInt) {
+                                        <li><i class="fa fa-star fa-lg"></i></li>
+                                    }
+                                    @for(star <- 1 to 5 - hotel.getStarRating.toInt) {
+                                        <li><i class="fa fa-star-o fa-lg"></i></li>
+                                    }
+                                </ul>
+                                <span class="booking-item-rating-number"><b>@hotel.getStarRating</b>of 5</span> <small>(689 reviews)</small>
+                            }
+                        </header>
+                        <ul class="booking-item-payment-details">
+                            <li>
+                                <h5>Booking for @searchRequest.getHotelAvailabilityRequest.duration() night(s)</h5>
+                                <div class="booking-item-payment-date">
+                                    <p class="booking-item-payment-date-day">@searchRequest.getHotelAvailabilityRequest.getCheckIn</p>
+                                    @*<p class="booking-item-payment-date-weekday">Saturday</p>*@
+                                </div>
+                                <i class="fa fa-arrow-right booking-item-payment-date-separator"></i>
+                                <div class="booking-item-payment-date">
+                                    <p class="booking-item-payment-date-day">@searchRequest.getHotelAvailabilityRequest.getCheckOut</p>
+                                    @*<p class="booking-item-payment-date-weekday">Saturday</p>*@
+                                </div>
+                            </li>
+                            @*<li>
+                                <h5>Hotel Booking Rules and Policies</h5>
+                                <table class="table table-responsive table-striped">
+                                    <tr>
+                                        <td>Refundable</td>
+                                        <td>???</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Cancellation Fee</td>
+                                        <td>???</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Amendable</td>
+                                        <td>???</td>
+                                    </tr>
+                                </table>
+                            </li>*@
+                            <li>
+                                <h5>Room</h5>
+                                <p class="booking-item-payment-item-title">@hotelRoom.getRoomName</p>
+                                <ul class="booking-item-payment-price">
+                                    <li>
+                                        <p class="booking-item-payment-price-title">@searchRequest.getHotelAvailabilityRequest.duration() Night(s)</p>
+                                        <p class="booking-item-payment-price-amount">@hotelRoom.getOrderPrice.getPrice.divide(new java.math.BigDecimal(searchRequest.getHotelAvailabilityRequest.duration())).doubleValue()<small>/per day</small></p>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                        <p class="booking-item-payment-total">Total trip: <span>@hotelRoom.getOrderPrice.getCurrency @hotelRoom.getOrderPrice.getPrice.doubleValue()</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="gap gap-small"></div>
+    </div>
+}
+@script = {
+    <rel="stylesheet" type="text/css" href="@routes.Assets.commonLib("/parsley/parsley.css")" />
+    <script type="text/javascript" src="@routes.Assets.commonLib("/parsley/parsley.min.js")"></script>
+}

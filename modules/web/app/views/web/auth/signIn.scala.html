@@ -1,0 +1,24 @@
+@import crypto.Encrypt
+@(signInForm: Form[(String, String, Boolean)])(implicit request: RequestHeader, messages: Messages, encrypt: Encrypt)
+@import b3.vertical.fieldConstructor
+@import controllers.web.routes
+<div class="">
+	<div class="modal-header">
+		<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+		<h4 class="modal-title">Login</h4>
+	</div>
+	<div class="modal-body">
+		<div class="form-control col-md-12 signin-error label label-danger"></div>
+		<div class="form-control col-md-12 signin-success label label-success"></div>
+		@b3.formCSRF(routes.AuthCtrl.authenticate, 'id -> "login_form") {
+			@b3.text(signInForm("email"), '_hiddenLabel -> Messages("field.email"), 'placeholder -> "your@email.com", 'autofocus -> true)
+			@b3.password(signInForm("password"), '_hiddenLabel -> Messages("field.password"), 'placeholder -> Messages("field.password"))
+			@b3.checkbox(signInForm("rememberMe"), '_text -> Messages("signin.rememberme"), 'checked -> true)
+			@b3.submit('class -> "btn btn-primary", 'id -> "submitLogin") {
+				@Messages("signin")
+			}
+			<p>@Messages("signin.forgot.question") <a data-modal-size="modal-sm" href="#" title="Forget Password">@Messages("signin.forgot")</a></p>
+		}
+		<script src="@routes.Assets.myJs("jsAuthReg.js")"></script>
+	</div>
+</div>

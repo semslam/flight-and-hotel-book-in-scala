@@ -1,0 +1,60 @@
+@import org.apache.commons.lang3.StringUtils._
+@import com.alajobi.ota.utils.SystemControlSetting
+@(systemControlSetting: SystemControlSetting, pageTitle: String = "", inlineCss: String = "", seoMetaName: String = "", seoMetaDesc: String = "", htmlClass: String = "load-full-screen")(implicit messages: Messages, request: RequestHeader)
+@import controllers.web.routes
+<!DOCTYPE html>
+<html class="load-full-screen" ng-app="my-app">
+<head>
+    <meta charset="utf-8">
+    <title>@capitalize(pageTitle) | @play.Configuration.root().getString("project.slogan")</title>
+
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="author" content="@seoMetaName">
+    <meta name="keyword" content="@seoMetaDesc">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link href="https://fonts.googleapis.com/css?family=Ubuntu" rel="stylesheet">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+
+    @Html(systemControlSetting.get(SystemControlSetting.CMS_HTML_HEADER_META_TAG))
+
+
+        <!-- STYLES -->
+    <link href="@routes.Assets.css("animate.min.css")" rel="stylesheet">
+    <link href="@routes.Assets.css("bootstrap-select.min.css")" rel="stylesheet">
+    <link href="@routes.Assets.css("owl.carousel.css")" rel="stylesheet">
+    <link href="@routes.Assets.css("owl-carousel-theme.css")" rel="stylesheet">
+    <link href="@routes.Assets.css("bootstrap.min.css")" rel="stylesheet" media="screen">
+    <link href="@routes.Assets.css("flexslider.css")" rel="stylesheet" media="screen">
+    <!-- LIGHT -->
+    <link href="@routes.Assets.fonts("css/font-awesome.min.css")" rel="stylesheet">
+
+    <!-- FONTS -->
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Chela+One" rel="stylesheet">
+
+    <link rel="stylesheet" media="all" href="@routes.Assets.commonLib("parsley/parsley.css")" />
+    <link rel="stylesheet" media="all" href="@routes.Assets.commonLib("autocomplete/autocomplete.css")" />
+    <link rel="stylesheet" type="text/css" media="screen" href="@routes.Assets.commonCss("nprogress.css")" />
+    <link rel="stylesheet" type="text/css" media="screen" href="@routes.Assets.commonLib("iziToast/css/iziToast.min.css")" />
+    <link rel="stylesheet" type="text/css" media="screen" href="@routes.Assets.commonCss("loading-bar.css")" />
+
+
+    <!-- MAIN STYLE -->
+    <link href="@routes.Assets.css("style.css")" rel="stylesheet" media="screen">
+    <link href="@routes.Assets.commonCss("jquery-ui.css")" rel="stylesheet" media="screen">
+    <link rel="shortcut icon" media="all" type="image/png" href="@routes.Assets.commonImg("favicon.png")">
+
+    @Html(inlineCss)
+
+    <script type="text/javascript" src="@routes.Assets.commonJs("modernizr.js")"></script>
+</head>
+
+<!--[if IE 7]> <body class="ie7 lt-ie8 lt-ie9 lt-ie10"> <![endif]-->
+<!--[if IE 8]> <body class="ie8 lt-ie9 lt-ie10"> <![endif]-->
+<!--[if IE 9]> <body class="ie9 lt-ie10"> <![endif]-->
+<!--[if (gt IE 9)|!(IE)]><!--> <body> <!--<![endif]-->

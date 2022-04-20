@@ -1,0 +1,60 @@
+@import controllers.admin.reports.UserReportForm
+@import controllers.admin.reports.routes
+@import b3.vertical.fieldConstructor
+@import helper._
+@(form: Form[UserReportForm])(implicit loggedManager: PrivateUsers, messages: Messages, requestHeader: RequestHeader)
+@views.html.admin.templates.default(title = "Users and Newsletters Report", tab = "report") {
+    <div class="panel">
+        <div class="panel-heading">
+            <h2>Generate Report</h2>
+            @tags.alertFromRequest(requestHeader, "error")
+            @tags.alertFromRequest(requestHeader, "success")
+        </div>
+        <div class="panel-body">
+        @b3.formCSRF(routes.ReportCtrl.usersReportPost()){
+            <div class="col-md-2 form-group">
+                <label for="reportType">Report Type</label>
+                <select class="form-control" name="@form("reportType").name" id="reportType">
+                    <option value="users_r">Registered Customers</option>
+                    <option value="newsletter_r">Newsletter Subscription</option>
+                </select>
+            </div>
+            <div class="col-md-2 form-group">
+            @b3.text(form("fromDate"), '_label -> "From Date", 'class -> "datepicker", 'placeholder -> "From Date")
+            </div>
+            <div class="col-md-2 form-group">
+            @b3.text(form("toDate"), '_label -> "To Date", 'class -> "datepicker", 'placeholder -> "From Date")
+            </div>
+            <div class="col-md-2 form-group">
+                <label for="role">Customers Category</label>
+                <select class="form-control" name="@form("role").name" id="role">
+                    <option value="">All</option>
+                    <option value="B2C">B2C</option>
+                </select>
+            </div>
+            @*<div class="col-md-4 form-group">
+            <label for="ticketStatus">Filter By Customers</label>
+            <select class="form-control chosen-select" name="@form("usersId").name" id="ticketStatus">
+            <option value="">All</option>
+            <optgroup label="B2C">
+            @for(user <- Users.find.where().eq("role", Roles.b2c_customer.name()).findList()) {
+            <option value="@user.id">@user.fullName() / @user.email / @user.phone</option>
+            }
+            </optgroup>
+            <optgroup label="B2B">
+            @for(user <- Users.find.where().eq("role", Roles.b2b_owner.name()).findList()) {
+            <option value="@user.id">@user.agentCorporateDetailId.companyName / @user.fullName()</option>
+            }
+            </optgroup>
+            </select>
+            </div>*@
+            @*Add more "col" here co*@
+            <div class="clearfix"></div>
+            <div class="col-md-12 form-group">
+            @b3.submit('class -> "btn btn-info btn-md") { <span class="fa fa-file-excel-o"></span> Generate CSV }
+            </div>
+        }
+        </div>
+    </div>
+
+}

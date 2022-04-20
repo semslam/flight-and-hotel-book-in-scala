@@ -1,0 +1,37 @@
+@import views.html.admin.tags.myDataTable
+@import crypto.Encrypt
+@(items: List[AddonProducts])(implicit request: RequestHeader, messages: Messages, manager: PrivateUsers, encrypt: Encrypt)
+@import controllers.admin.cms.routes
+@import views.html.admin.templates._
+@default(title = "Products", tab = "product") {
+    <div class="panel">
+        <header class="panel-heading">
+            <h2 class="panel-name">Products</h2>
+            <br />
+            <a href="@routes.ProductCtrl.create()" class="btn btn-default"><i class="fa fa-plus"></i> Create New Product</a><br />
+        </header>
+        <div class="panel-body">
+            @myDataTable(Seq("#", "Code", "Name", "Adult Price",  "Child Price", "Infant Price", "Auth User", "Created at", "Updated at", "Action")) {
+                @if(items.nonEmpty) {
+                    @for(item <- items) {
+                        <tr>
+                            <td>@item.getId</td>
+                            <td>@item.getRefCode</td>
+                            <td>@item.getName</td>
+                            <td>@item.getAdultPrice</td>
+                            <td>@item.getChildPrice</td>
+                            <td>@item.getInfantPrice</td>
+                            <td>@item.getAuthUserId.getFirstName</td>
+                            <td>@item.getCreatedAt.format("yyyy-MM-dd HH:mm")</td>
+                            <td>@item.getUpdatedAt.format("yyyy-MM-dd HH:mm")</td>
+                            <td>
+                                <span><a href="@routes.ProductCtrl.create(encrypt.encrypt(item.getId.toString))" class="btn btn-xs btn-primary"><i class="fa fa-pencil"></i> Edit</a></span>
+                                <span><a href="@routes.ProductCtrl.delete(encrypt.encrypt(item.getId.toString))" class="btn btn-xs btn-danger"><i class="fa fa-times"></i> Delete</a></span>
+                            </td>
+                        </tr>
+                    }
+                }
+            }
+        </div>
+    </div>
+}

@@ -1,0 +1,13 @@
+@import helper._
+@import controllers.b2b.routes
+@()(implicit requestHeader: RequestHeader, messages: Messages)
+<div class="panel">
+    <div class="panel-body">
+        <form method="post" action="@routes.ApplicationCtrl.uploadLogo" enctype="multipart/form-data">
+            @helper.CSRF.formField
+            <label>Logo</label>
+            <input class="form-control fileupload" type="file" name="file" accept="image/*" required />
+            <button type="submit" class="btn btn-md btn-primary">Upload</button>
+        </form>
+    </div>
+</div>

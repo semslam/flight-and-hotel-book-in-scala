@@ -1,0 +1,17 @@
+@import flight.dto.entity.FlightSearchResponse
+@import controllers.web.routes
+@import views.html.bookingEngine._
+@import crypto.Encrypt
+@()(implicit request: RequestHeader, messages: Messages, encrypt: Encrypt, maybeUser: Option[Users])
+@views.html.web.templates.default(title = "No Result", Html(""), Html(""), maybeUser) {
+    @tags.alertFromRequest(request, "error")
+    <div class="main-search">
+        <div class="wrap">
+            <h2>Ooops!!! Session has expired. Please try again</h2>
+            <section>
+                @tags.alertFromRequest(request, "error")
+                @("[flightBookingEngine]")
+            </section>
+        </div>
+    </div>
+}

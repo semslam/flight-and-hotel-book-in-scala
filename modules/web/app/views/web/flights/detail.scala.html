@@ -1,0 +1,273 @@
+@import helper._
+@import b3.vertical.fieldConstructor
+@import controllers.web.routes
+@import com._
+@import flight.dto.entity.PassengerCode
+@import crypto.Encrypt
+@import flight.dto.entity.FlightSearchResponse
+@import com.alajobi.ota.flights.FlightTravellerInfo
+@import flight.dto.entity.ItineraryWSResponse
+@import flight.dto.entity.FlightSearchRequest
+@(itinerary: ItineraryWSResponse, searchRequest: FlightSearchRequest, travellerInfoForm: Form[FlightTravellerInfo], itineraryRef: String, uri: String, fl_tabHash: String, isCached: Boolean = false)(implicit request: RequestHeader, messages: Messages, loggedManager: Option[Users], encrypt: Encrypt)
+@import java.text.SimpleDateFormat; var ind = 0; var passengerClass = "adultDOB"; val fromDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'dd:mm:ss"); val toDateFormat = new SimpleDateFormat("yyyy-MMM-dd HH:mm")
+@views.html.web.templates.default(title = "Flight Result", scripts, Html(""), loggedManager) {
+    <style>
+            body, #wrapper, #page_content_wrapper.fixed, #gallery_lightbox h2, .slider_wrapper .gallery_image_caption h2, #body_loading_screen, h3#reply-title span, .overlay_gallery_wrapper, .pricing_wrapper_border, .pagination a, .pagination span, #captcha-wrap .text-box input, .flex-direction-nav a, .blog_promo_title h6, #supersized li, #gallery_caption .tg_caption, #horizontal_gallery_wrapper .image_caption, #tour_search_form, .tour_search_form {
+                /*background: #F2F2F2;*/
+            }
+            @@media(min-width: 1200px)  {
+            .container {
+                width: 1210px;
+            }
+            }
+            button[name=submitBtn] {
+                background: #006fa2;
+                border-color: #006fa2;
+            }
+    </style>
+    <div style="background-color: #5b63aa; margin:0 0 10px 0;" class="hidden-xs">
+        @("[flightBookingEngineAlt]")
+    </div>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <ol class="breadcrumb">
+                    <li><a href="/" title="Home">Home</a></li>
+                    <li><a href="@routes.FlightCtrl.result(searchRequest.getTicketLocale.name().toLowerCase, searchRequest.getTabHash)" title="Home">Search results</a></li>
+                    <li>@itinerary.getAirline Booking - Traveller(s) details</li>
+                    <li>Products &amp; Payment Option</li>
+                    <li>Complete Booking</li>
+                </ol>
+            </div>
+            <div class="clearfix"></div>
+            @*<div class="booking-tab">*@
+                @*<div class="container clear-padding">*@
+                    @*<ul class="nav nav-tabs">*@
+                        @*<li class="col-md-3 col-sm-3 col-xs-3 active"><a data-toggle="tab" class="text-center"><i class="fa fa-male"></i> <span>Traveller Details</span></a></li>*@
+                        @*<li class="col-md-3 col-sm-3 col-xs-3"><a data-toggle="tab" href="#" class="text-center"><i class="fa fa-edit"></i> <span>Payment &amp; Add-On</span></a></li>*@
+                        @*<li class="col-md-3 col-sm-3 col-xs-3"><a data-toggle="tab" href="#" class="text-center"><i class="fa fa-circle-o-notch"></i> <span>Review Details</span></a></li>*@
+                        @*<li class="col-md-3 col-sm-3 col-xs-3"><a data-toggle="tab" href="#" class="text-center"><i class="fa fa-check"></i> <span>Complete</span></a></li>*@
+                    @*</ul>*@
+                @*</div>*@
+            @*</div>*@
+
+            <div class="">
+                <div class="clear-padding">
+                    <div class="tab-content">
+                        <div id="review-booking" class="row tab-pane fade in active">
+                            <div class="col-md-9 col-sm-9">
+                                <div class="login-box" style="margin-top: 0;">
+                                    <form method="POST" action="@routes.FlightCtrl.submitTraveller(itineraryRef, fl_tabHash, uri)" name="b2cFlForm" role="form" class="form static-content booking" enctype="application/x-www-form-urlencoded">
+                                        @CSRF.formField
+                                        @request.queryString.foreach { get =>
+                                            <input type="hidden" name="@get._1" value="@get._2.head" />
+                                        }
+                                        <input type="hidden" name="@travellerInfoForm("salesCategory").name" value="@SalesCategory.B2C.name()" />
+                                        <input type="hidden" name="@travellerInfoForm("cacheIndex").name" value="@itinerary.getCacheIndex.toString" />
+                                        <input type="hidden" name="@travellerInfoForm("userId").name"  @if(loggedManager.isDefined) { value="@loggedManager.get.getId.toString" } />
+                                        <input type="hidden" name="itineraryRef" value="@itineraryRef" />
+                                        <input type="hidden" name="num_of_adult" value="@searchRequest.getAdultCount" />
+                                        <input type="hidden" name="num_of_children" value="@searchRequest.getChildCount" />
+                                        <input type="hidden" name="num_of_infant" value="@searchRequest.getInfantCount" />
+                                        <div class="col-md-12">
+                                            <h2>Traveller info</h2>
+                                            <p class="">Fields with <strong class="text-danger">*</strong> are required. Also, provide information as appeared on passport</p>
+                                        </div>
+                                        @if(!isCached){
+                                            <h4><strong>Adult Details</strong></h4>
+                                            @helper.repeatWithIndex(travellerInfoForm("travellersBio"), min = searchRequest.getAdultCount) { (traveller, index) =>
+                                                <section class="row">
+                                                    <div class="col-md-12">
+                                                        @if((index + 1) <= searchRequest.getAdultCount) {
+                                                            <input type="hidden" name="@traveller("passengerType").name" value="@PassengerCode.ADULT.value()" />
+                                                        }
+                                                    </div>
+                                                    <div class="col-md-2">
+                                                    @b3.select(traveller("title"), options(Titles.options("")), 'required -> "required", 'class -> "title", '_label -> Html("""Title<span class="text-danger">*</span>"""))
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                    @b3.text(traveller("firstName"), 'class -> "firstName", 'required -> "required", '_label -> Html("""First Name<span class="text-danger">*</span>"""))
+                                                    </div>
+                                                    <div class="col-md-2">
+                                                    @b3.text(traveller("otherName"), 'class -> "otherName", '_label -> "Other Name")
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                    @b3.text(traveller("lastName"), 'class -> "lastName", 'required -> "required", '_label -> Html("""Surname<span class="text-danger">*</span>"""))
+                                                    </div>
+                                                    <div class="f-item col-md-2">
+                                                    @b3.text(traveller("dateOfBirth"), 'class -> "adultDOB", 'required -> "required", '_label -> Html("""Date of Birth<span class="text-danger">*</span>"""))
+                                                    </div>
+                                                    <div class="clearfix"></div>
+                                                </section>
+                                            }
+
+                                            @if(searchRequest.getChildCount > 0) {
+                                                <hr />
+                                                <h4>Child Details</h4>
+                                            }
+                                            @helper.repeatWithIndex(travellerInfoForm("travellersBio"), min = searchRequest.getChildCount + searchRequest.getAdultCount) { (traveller, index) =>
+                                                @if(index >= searchRequest.getAdultCount) {
+                                                    <div class="row">
+                                                        <input type="hidden" name="@traveller("passengerType").name" value="@PassengerCode.CHILD.value()" />
+                                                        <div class="col-md-2">
+                                                        @b3.select(traveller("title"), options(Map("" -> "------", "Master" -> "Master", "Ms" -> "Miss")), 'required -> "required", 'class -> "title", '_label -> Html("""Title<span class="text-danger">*</span>"""))
+                                                        </div>
+                                                        <div class="col-md-3">
+                                                        @b3.text(traveller("firstName"), 'class -> "firstName", 'required -> "required", '_label -> Html("""First Name<span class="text-danger">*</span>"""))
+                                                        </div>
+                                                        <div class="col-md-2">
+                                                        @b3.text(traveller("otherName"), 'class -> "otherName", '_label -> "Other Name")
+                                                        </div>
+                                                        <div class="col-md-3">
+                                                        @b3.text(traveller("lastName"), 'class -> "lastName", 'required -> "required", '_label -> Html("""Surname<span class="text-danger">*</span>"""))
+                                                        </div>
+                                                        <div class="f-item col-md-2">
+                                                        @b3.text(traveller("dateOfBirth"), 'class -> "childDOB", 'required -> "required", '_label -> Html("""Date of Birth<span class="text-danger">*</span>"""))
+                                                        </div>
+                                                        <div class="clearfix"></div>
+                                                    </div>
+                                                }
+                                                <span></span>
+                                            }
+
+                                            @if(searchRequest.getInfantCount > 0) {
+                                                <hr />
+                                                <h4 class="col-md-12">Infant Details</h4>
+                                            }
+                                            @helper.repeatWithIndex(travellerInfoForm("travellersBio"), min = searchRequest.getInfantCount + (searchRequest.getAdultCount + searchRequest.getChildCount)) { (traveller, index) =>
+                                                @if(index  >= (searchRequest.getAdultCount + searchRequest.getChildCount)) {
+                                                    <input type="hidden" name="@traveller("passengerType").name" value="@PassengerCode.INFANT.value()" />
+                                                    <div class="row">
+                                                        <div class="col-md-2">
+                                                        @b3.select(traveller("title"), options(Map("" -> "------", "Master" -> "Male", "Ms" -> "Female")), 'required -> "required", 'class -> "title", '_label -> Html("""Gender <span class="text-danger">*</span>"""))
+                                                        </div>
+                                                        <div class="col-md-3">
+                                                        @b3.text(traveller("firstName"), 'class -> "firstName", 'required -> "required", '_label -> Html("""First Name<span class="text-danger">*</span>"""))
+                                                        </div>
+                                                        <div class="col-md-2">
+                                                        @b3.text(traveller("otherName"), 'class -> "otherName", '_label -> "Other Name")
+                                                        </div>
+                                                        <div class="col-md-3">
+                                                        @b3.text(traveller("lastName"), 'class -> "lastName", 'required -> "required", '_label -> Html("""Surname<span class="text-danger">*</span>"""))
+                                                        </div>
+                                                        <div class="f-item col-md-2">
+                                                        @b3.text(traveller("dateOfBirth"), 'class -> "infantDOB", 'required -> "required", '_label -> Html("""Date of Birth<span class="text-danger">*</span>"""))
+                                                        </div>
+                                                        <div class="clearfix"></div>
+                                                    </div>
+                                                }
+                                            }
+                                        } else {
+                                            <section class="row">
+                                                <div class="col-md-12">
+                                                    <h4><strong>Passenger Details</strong></h4><hr />
+                                                    @helper.repeatWithIndex(travellerInfoForm("travellersBio"), min = 1) { (traveller, index) =>
+                                                        <h5 class="col-md-12"><strong>@traveller("passengerType").value.orNull @index Passenger</strong></h5>
+                                                        <input type="hidden" name="@traveller("passengerType").name" value="@PassengerCode.ADULT.value()" />
+                                                        <div class="col-md-2">
+                                                        @b3.select(traveller("title"), options(Titles.options("")), 'required -> "required", 'class -> "title", '_label -> Html("""Title<span class="text-danger">*</span>"""))
+                                                        </div>
+                                                        <div class="col-md-3">
+                                                        @b3.text(traveller("firstName"), 'class -> "firstName", 'required -> "required", '_label -> Html("""First Name<span class="text-danger">*</span>"""))
+                                                        </div>
+                                                        <div class="col-md-2">
+                                                        @b3.text(traveller("otherName"), 'class -> "otherName", '_label -> "Other Name")
+                                                        </div>
+                                                        <div class="col-md-3">
+                                                        @b3.text(traveller("lastName"), 'class -> "lastName", 'required -> "required", '_label -> Html("""Surname<span class="text-danger">*</span>"""))
+                                                        </div>
+                                                        <div class="f-item col-md-2">
+                                                        @b3.text(traveller("dateOfBirth"), 'class -> "adultDOB", 'required -> "required", '_label -> Html("""Date of Birth<span class="text-danger">*</span>"""))
+                                                        </div>
+                                                    }
+                                                    <div class="clearfix"></div>
+                                                </div>
+                                            </section>
+                                        }
+                                        <div class="clearfix"></div>
+                                        <h2 class="col-md-12">Contact Details </h2>
+                                        <div class="row">
+                                            <div class="f-item col-md-12"><label for="same_as_adult1"><input type="checkbox" name="same_as_adult1" value="1" id="same_as_adult1" /> same as first adult?</label></div>
+                                            @defining(loggedManager.getOrElse(new Users())) { authu =>
+                                                <div class="f-item col-md-2 col-xs-12">@* style="width: 12%;"*@
+                                                    @b3.select(travellerInfoForm("contactTitle"), options(Titles.options("")), '_label -> Html("""Title<span class="text-danger">*</span>"""), 'required -> "required")
+                                                </div>
+                                                <div class="f-item col-md-2 col-xs-12">@* style="width: 21%"*@
+                                                    @b3.text(travellerInfoForm("contactFirstName"), '_label -> Html("""First Name<span class="text-danger">*</span>"""), 'required -> "required")
+                                                </div>
+                                                <div class="f-item col-md-2 col-xs-12">@*style="width: 22%"*@
+                                                    @b3.text(travellerInfoForm("contactLastName"),'_label -> Html("""Surname<span class="text-danger">*</span>"""), 'required -> "required")
+                                                </div>
+                                                <div class="f-item col-md-3 col-xs-12">@* style="width: 22%"*@
+                                                    @b3.email(travellerInfoForm("email"), '_label -> Html("""Email<span class="text-danger">*</span>"""), 'required -> "required")
+                                                </div>
+                                                <div class="f-item col-md-3 col-xs-12">@* style="width: 23%"*@
+                                                    <label>Mobile Phone<span class="text-danger">*</span></label>
+                                                    <input name="@travellerInfoForm("phone").name" type="number" value="@travellerInfoForm("phone").value.orNull" placeholder="Phone Number" class="form-control bfh-phone" data-required="true" required="required" />
+                                                </div>
+                                                <div class="clearfix"></div>
+                                                <input name="remarks" class="hide" value="@travellerInfoForm("remarks").value.orNull" />
+                                                @*<div class="f-item ">
+                                                <label>Remark/Comment</label>
+                                                <textarea rows="4" class="form-control" name="remarks" placeholder="Optional"></textarea>
+                                                </div>*@
+                                            }
+                                            <div class="clearfix"></div>
+                                            <div class="f-item  col-xs-12">
+                                                <input type="submit" style="cursor: pointer;" class="btn btn-md btn-primary submitFl_btn gradient-button" value="Proceed"/>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+@scripts = {
+    <script>
+            $(function() {
+                $('.toglekbeng').click(function() {
+                    $("#toglekbeng").toggle();
+                });
+                $('form[name=b2cForm]').find('.search-submit').removeClass('gradient-button');
+            })
+    </script>
+    <script>
+            $(function () {
+                var dtOption = {
+                    changeMonth: true,
+                    changeYear: true,
+                    yearRange: "-100:-11"
+                };
+                var childOption = {
+                    changeMonth: true,
+                    changeYear: true,
+                    yearRange: "-12:+0"
+                };
+                var infantOption = {
+                    changeMonth: true,
+                    changeYear: true,
+                    yearRange: "-2:+0"
+                };
+                $('.inf-dob').attr('value', moment(new Date().setDate(new Date().getDate() - 30)).format("YYYY-MM-DD"));
+                $(".adultDOB").datepicker(dtOption);
+                $(".childDOB").datepicker(childOption);
+                $(".infantDOB").datepicker(infantOption);
+
+                $('.search-section').css({
+                    'margin-top': '15px',
+                    'margin-bottom': '10px'
+                });
+                $('.search-button').css({
+                    'margin-top': '40px'
+                })
+            });
+
+            $('#disclaimerModal').modal('show');
+            $('form[name=b2cForm]').find('.search-submit').removeClass('gradient-button');
+    </script>
+}

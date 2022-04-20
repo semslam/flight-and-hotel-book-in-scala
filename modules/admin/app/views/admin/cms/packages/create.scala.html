@@ -1,0 +1,390 @@
+@import helper._
+@import crypto.Encrypt
+@import controllers.admin.cms.routes
+@import views.html.admin.templates._
+@import b3.vertical.fieldConstructor
+@import controllers.admin.cms.PackageDOA
+@(form: Form[PackageDOA])(implicit request: RequestHeader, messages: Messages, manager: PrivateUsers, encrypt: Encrypt)
+@default(title = "Create/Edit Package", tab = "package", scripts = script) {
+    <div class="panel">
+        <div class="panel-heading">
+            <h2 class="panel-name">Create/Edit Package</h2>
+        </div>
+        <div class="panel-body">
+            <div class="row">
+                <div class="col-md-12">
+                    @tags.alertFromRequest(request, "error/cms/PackageCtrl.scala:232")
+                    @form.globalError.map { error =>
+                        @tags.alert(error.message, "error")
+                    }
+                </div>
+                @helper.form(CSRF(routes.PackageCtrl.save)) {
+                    @if(form("id").value.nonEmpty) {
+                        <input type="hidden" value="@encrypt.encrypt(form("id").value.get)" name="@form("id").name" />
+                    }
+                    <div class="col-md-12">
+                        <ul class="nav nav-tabs" role="tablist">
+                            <li role="presentation" class="active"><a href="#home" aria-controls="home" role="tab" data-toggle="tab">General Properties</a></li>
+                            <li role="presentation"><a href="#profile" aria-controls="profile" role="tab" data-toggle="tab">Facilities, Inclusion & Exclusion</a></li>
+                            <li role="presentation"><a href="#tourItinerary" aria-controls="profile" role="tab" data-toggle="tab">Tour Itineraries</a></li>
+                            <li role="presentation"><a href="#settings" aria-controls="settings" role="tab" data-toggle="tab">Media & Galleries</a></li>
+                            <li role="presentation"><a href="#policies" aria-controls="policies" role="tab" data-toggle="tab">Policies</a></li>
+                        </ul>
+
+                            <!-- Tab panes -->
+                        <div class="tab-content" style="padding: 10px; 0">
+                            <div role="tabpanel" class="tab-pane active" id="home">
+                                <div class="row">
+                                    <div class="col-md-2">
+                                    @helper.select(form("theme"), options(PackageTheme.options()), 'class -> "form-control", '_label -> "Product Theme")
+                                    </div>
+                                    <div class="col-md-2">
+                                    @helper.select(form("packageDestination"), options(Countries.options()), 'class -> "form-control chosen-select", '_label -> "Destination Cities", 'placeholder -> "Airport City Code")
+                                    </div>
+                                    <div class="col-md-3">
+                                    @helper.inputText(form("name"), 'class -> "form-control", '_label -> "Name")
+                                    </div>
+                                    <div class="col-md-2">
+                                    @helper.inputText(form("code"), 'class -> "form-control", '_label -> "Uniq code Max length (6)", 'placeholder -> "Max 6. Characters")
+                                    </div>
+                                    <div class="col-md-3">
+                                    @helper.inputText(form("thumbImageUrl"), 'class -> "form-control", '_label -> Html(s"""Thumbnail Image Click <a target="_blank" href="${routes.MediaCtrl.index}">Here</a> to upload files"""), 'placeholder -> "")
+                                    </div>
+                                    <div class="clearfix"></div>
+                                    <div class="col-md-6">
+                                    @helper.textarea(form("shortDescription"), '_label -> "Short Description(Text)", 'rows -> "22", 'class -> "form-control")
+                                    </div>
+                                    <div class="col-md-6">
+                                    @helper.textarea(form("description"), 'rows -> "10", 'class -> "form-control editable", '_label -> "Description(HTML)")
+                                    </div>
+                                    <div class="clearfix"></div>
+                                    <div class="col-md-4">
+                                    @helper.inputText(form("adultUnitPrice"), 'class -> "form-control", '_label -> "Price Per Adult", 'placeholder -> "Price / Adult")
+                                    </div>
+                                    <div class="col-md-4">
+                                    @helper.inputText(form("childUnitPrice"), 'class -> "form-control", '_label -> "Price Per Child", 'placeholder -> "Price / Child")
+                                    </div>
+                                    <div class="col-md-2">
+                                    @helper.inputRadioGroup(form("isRefundable"), options("true" -> "Yes", "false" -> "No"), '_label -> "Is Refundable")
+                                    </div>
+                                    <div class="col-md-2">
+                                    @helper.inputText(form("packageRating"), 'class -> "form-control", '_label -> "Package Rating", 'placeholder -> "")
+                                    </div>
+                                </div>
+                            </div>
+                            <div role="tabpanel" class="tab-pane" id="profile">
+                                <div class="col-md-4">
+                                    @for((facility, index) <- Facilities.find.all().zipWithIndex) {
+                                    <div class="col-md-6">
+                                        <label class="checkbox-inline fac_@facility.getId"><input type="checkbox" name="facilities[@index]" id="facility_@facility.getId" value="@facility.getId"><i class="@facility.getFontCode"></i> @facility.getName</label>
+                                    </div>
+                                }
+                                </div>
+                                <div class="col-md-3">
+                                    <input type="hidden" name="inc_count" value="0" />
+                                    <label>Package Inclusion</label>
+                                    <div id="inclusionDIV">
+                                    @helper.repeatWithIndex(form("packageInclusions"), 1) { (field, index) =>
+                                        <div class="inc_@index">
+                                        @helper.inputText(field, 'class -> s"form-control", '_label -> "", 'placeholder -> "Package Inclusion")
+                                        </div>
+                                    }
+                                    </div>
+                                    <span><a class="btn btn-primary btn-xs add-inclusion" href="">Add More </a></span>
+                                    <span><a class="btn btn-danger btn-xs del-inclusion" href="">Delete</a> </span>
+                                </div>
+                                <div class="col-md-3">
+                                    <input type="hidden" name="exc_count" value="0" />
+                                    <label>Package Exclusion</label>
+                                    <div id="exclusionDIV">
+                                        @helper.repeatWithIndex(form("packageExclusions"), 1) { (field, index) =>
+                                            <div class="exc_@index">
+                                            @helper.inputText(field, 'class -> s"form-control exc_$index", '_label -> "", 'placeholder -> "Package Exclusion")
+                                            </div>
+                                        }
+                                    </div>
+                                    <span><a class="btn btn-primary btn-xs add-exclusion" href="">Add More </a></span>
+                                    <span><a class="btn btn-danger btn-xs del-exclusion" href="">Delete</a> </span>
+                                </div>
+                                <div class="col-md-2">
+                                    <label><input type="checkbox" name="@form("includeFlight").name" value="@form("includeFlight").value.getOrElse("true")" @if(form("includeFlight").value.nonEmpty) { checked="checked" }> Has Flight Included</label>
+                                    <label><input type="checkbox" name="@form("includeHotel").name" value="@form("includeHotel").value.getOrElse("true")" @if(form("includeHotel").value.nonEmpty) { checked="checked" }> Has Hotel Included</label>
+                                </div>
+                                <div class="col-md-12" style="display: @if(form("includeFlight").value.nonEmpty) { inline } else { none }" id="flightInformationDIV">
+                                    <h3>Flight Information</h3>
+                                    <div class="row">
+                                        @if(form("airportOption.id").value.nonEmpty) {
+                                            <input type="hidden" value="@encrypt.encrypt(form("airportOption.id").value.get)" name="@form("airportOption.id").name" />
+                                        }
+                                        <div class="col-md-3">
+                                            @helper.select(form("airportOption.originAirport"), options(Airports.options()), '_showConstraints -> false, 'class -> "form-control chosen-select", 'label -> "Origin Airport")
+                                        </div>
+                                        <div class="col-md-3">
+                                            @helper.select(form("airportOption.arrivingAirport"), options(Airports.options()), '_showConstraints -> false, 'class -> "form-control chosen-select", 'label -> "Arriving Airport")
+                                        </div>
+                                        <div class="col-md-3">
+                                            @helper.select(form("airportOption.airlineId"), options(Airlines.options()), 'class -> "form-control chosen-select", 'label -> "Operating Airline")
+                                        </div>
+                                        <div class="col-md-3">
+                                            @helper.select(form("airportOption.tripType"), options(TripType.options()), 'class -> "form-control", 'label -> "Trip Type")
+                                        </div>
+                                        <div class="col-md-3">
+                                            @helper.select(form("airportOption.cabinClass"), options(CabinClass.options()), 'class -> "form-control", 'label -> "Cabin Class")
+                                        </div>
+                                        <div class="col-md-3">
+                                            @helper.inputText(form("airportOption.earlierDepartureDate"), 'class -> "form-control dtpicker", 'label -> "Earlier/Departure Date")
+                                        </div>
+                                        <div class="col-md-3">
+                                            @helper.inputText(form("airportOption.earlierArrivalDate"), 'class -> "form-control dtpicker", 'label -> "Earlier/Arriving Date")
+                                        </div>
+                                        <div class="col-md-3">
+                                            @helper.inputText(form("airportOption.duration"), 'class -> "form-control", 'label -> "Trip Duration (Range btw Dep. and Arr.)")
+                                        </div>
+                                        <div class="col-md-12">
+                                            @helper.textarea(form("airportOption.description"), 'class -> "form-control", 'label -> "Description")
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-12" style="display:  @if(form("includeHotel").value.nonEmpty) { inline } else { none }" id="hotelInformationDIV">
+                                    <h3>Hotel Information</h3>
+                                    <div class="row">
+                                        @if(form("hotelOption.id").value.nonEmpty) {
+                                            <input type="hidden" value="@encrypt.encrypt(form("hotelOption.id").value.get)" name="@form("hotelOption.id").name" />
+                                        }
+                                        <div class="col-md-3">
+                                            @helper.inputText(form("hotelOption.hotelName"), 'class -> "form-control", 'label -> "Hotel Name")
+                                        </div>
+                                        <div class="col-md-2">
+                                            @helper.inputText(form("hotelOption.hotelRating"), 'class -> "form-control", 'label -> "Hotel Rating")
+                                        </div>
+                                        <div class="col-md-3">
+                                            @helper.inputText(form("hotelOption.imageURL"), 'class -> "form-control", 'label -> "Hotel Image URL")
+                                        </div>
+                                        <div class="col-md-3">
+                                            @helper.inputText(form("hotelOption.roosmName"), 'class -> "form-control", 'label -> "Hotel Room Name")
+                                        </div>
+                                        <div class="clearfix"></div>
+                                        <div class="col-md-12">
+                                            @helper.textarea(form("hotelOption.description"), 'class -> "form-control", 'label -> "Hotel Description")
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div role="tabpanel" class="tab-pane" id="tourItinerary">
+                                <input type="hidden" name="itinerary_count" value="0" />
+                                <div class="col-md-12" id="tourItineraryDIV">
+                                    <h3>Tour Itinerary</h3><hr />
+                                    <div id="itinerary_0" class="row">
+                                        @helper.repeatWithIndex(form("packageItinerary")) { (packageItinerary, index) =>
+                                            @if(packageItinerary("id").value.nonEmpty) {
+                                                <input type="hidden" value="@encrypt.encrypt(form("id").value.get)" name="@form("id").name" />
+                                            }
+                                            <div class="col-md-6">
+                                                @helper.inputText(packageItinerary("name"), 'class -> "form-control", 'label -> "Title")
+                                            </div>
+                                            <div class="col-md-6">
+                                                @helper.inputText(packageItinerary("imageURL"), 'class -> "form-control", 'label -> "Image URL")
+                                            </div>
+                                            <div class="col-md-6">
+                                                @helper.textarea(packageItinerary("description"), 'class -> "form-control", 'label -> "Description")
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label><strong>Inclusions</strong></label>
+                                                <div id="itinerary_incl_@index">
+                                                    <input type="hidden" name="itinerary_@(index)_inc_count" value="0" />
+                                                    @helper.repeat(packageItinerary("inclusion")) { inclusion =>
+                                                      @helper.inputText(inclusion, 'class -> "form-control", 'placeholder -> "Inclusion")
+                                                    }
+                                                </div>
+                                                <div class="clearfix"></div>
+                                                <br />
+                                                <span><a class="btn btn-primary btn-xs addInc-itinerary" data-id="@(index)" href="">Add More </a></span>
+                                                <span><a class="btn btn-danger btn-xs delInc-itinerary" data-id="@(index)" href="">Delete</a> </span>
+                                            </div>
+                                        }
+                                    </div>
+                                    <br /><br />
+                                </div>
+                                <span><a class="btn btn-primary btn-md add-day-itinerary" href="">Add Day to Itinerary </a></span>
+                                <span><a class="btn btn-danger btn-md del-day-itinerary" href="">Delete Day From Itinerary</a> </span>
+                                <br /><br />
+                            </div>
+                            <div role="tabpanel" class="tab-pane" id="settings">
+                                    <input type="hidden" name="img_count" value="0" />
+                                    <label>Images Click <small><a target="_blank" href="@routes.MediaCtrl.index">Here</a> to upload images</small></label>
+                                    <div id="imageDIV">
+                                        @helper.repeatWithIndex(form("packageImages"), 1) { (field, index) =>
+                                            @helper.inputText(field, 'class -> s"form-control img_$index", '_label -> "", 'placeholder -> "Image URL")
+                                        }
+                                    </div>
+                                    <span><a class="btn btn-primary btn-xs add-img" href="">Add More </a></span>
+                                    <span><a class="btn btn-danger btn-xs del-img" href="">Delete</a> </span>
+                                <br /><br />
+                            </div>
+                            <div role="tabpanel" class="tab-pane" id="policies">
+                                @helper.textarea(form("policy"), 'rows -> "10", 'class -> "form-control editable", '_label -> "Policy")
+                            </div>
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-md-12">
+                        <button type="submit" name="submit" class="btn btn-primary">Save</button>
+                        <span><a href="@routes.PackageCtrl.index" class="btn btn-default">Cancel</a></span>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@script = {
+    <script>
+            $(function () {
+                $('.del-inclusion').on('click', function () {
+                    var fIndex = parseInt($("input[name=inc_count]").val());
+                    $('.inc_' + fIndex).remove();
+                    fIndex = (fIndex <= 1) ? 1 : fIndex - 1;
+                    $("input[name=inc_count]").val(fIndex);
+                });
+                $('.add-inclusion').on('click', function () {
+                    var fIndex = parseInt($("input[name=inc_count]").val()) + 1;
+                    $("input[name=inc_count]").val(fIndex);
+                        var html = '<div class="inc_' + fIndex + '"><div class="form-group" id="packageInclusions_' + fIndex + '_field"><input type="text" id="packageInclusions_' + fIndex + '" name="packageInclusions[' + fIndex + ']" value="" placeholder="Package Inclusion" class="form-control form-control inc_' + fIndex + '"></div></div>';
+                    $(html).appendTo("#inclusionDIV");
+                });
+
+                //Exclusion
+                $('.del-exclusion').on('click', function () {
+                    var fIndex = parseInt($("input[name=exc_count]").val());
+                    $('.exc_' + fIndex).remove();
+                    fIndex = (fIndex <= 1) ? 1 : fIndex - 1;
+                    $("input[name=exc_count]").val(fIndex);
+                });
+                $('.add-exclusion').on('click', function () {
+                    var fIndex = parseInt($("input[name=exc_count]").val()) + 1;
+                    $("input[name=exc_count]").val(fIndex);
+                    var html = '<div class="inc_' + fIndex + '"><div class="form-group" id="packageExclusions_' + fIndex + '_field"><input type="text" id="packageExclusions_' + fIndex + '" name="packageExclusions[' + fIndex + ']" value="" placeholder="Package Exclusion" class="form-control form-control inc_' + fIndex + '"></div></div>';
+                    $(html).appendTo("#exclusionDIV");
+                });
+
+                $('.del-img').on('click', function () {
+                    var fIndex = parseInt($("input[name=img_count]").val());
+                    $('.img_' + fIndex).remove();
+                    fIndex = (fIndex <= 1) ? 1 : fIndex - 1;
+                    $("input[name=img_count]").val(fIndex);
+                });
+                $('.add-img').on('click', function () {
+                    var fIndex = parseInt($("input[name=img_count]").val()) + 1;
+                    $("input[name=img_count]").val(fIndex);
+                    var html = '<div class="form-group img_'+fIndex+'" id="packageImages_'+fIndex+'_field"><input type="text" id="packageImages_'+fIndex+'" name="packageImages['+fIndex+']" value="" placeholder="Image URL" class="form-control form-control img_'+fIndex+'"></div>';
+                    $(html).appendTo("#imageDIV");
+                });
+
+                //Option of Flight is Checked
+                $("input[name=includeFlight]").on('click', function () {
+                    var div =$("#flightInformationDIV");
+                    if($(this).is(":checked")) div.show(); else div.hide();
+                });
+                $("input[name=includeHotel]").on('click', function () {
+                    var div =$("#hotelInformationDIV");
+                    if($(this).is(":checked")) div.show(); else div.hide();
+                });
+
+
+                $('.del-day-itinerary').on('click', function () {
+                    var fIndex = parseInt($("input[name=itinerary_count]").val());
+                    $('.exc_' + fIndex).remove();
+                    fIndex = (fIndex <= 1) ? 1 : fIndex - 1;
+                    $("input[name=itinerary_count]").val(fIndex);
+                });
+                $('.add-day-itinerary').on('click', function () {
+                    var fIndex = parseInt($("input[name=itinerary_count]").val()) + 1;
+                    $("input[name=itinerary_count]").val(fIndex);
+                    var html = $(this).getItineraryHTML(fIndex);
+                    $(html).appendTo("#tourItineraryDIV");
+
+                    //On append, re-trigger the ability to call the JS
+                    $('.delInc-itinerary').on('click', function () {
+                        var cIndex = parseInt($("input[name=itinerary_" + fIndex + "_inc_count]").val());
+                        $('#packageItinerary_'+fIndex+'_inclusion_' + cIndex + '_field').remove();
+                        cIndex = (cIndex <= 1) ? 1 : cIndex - 1;
+                        $("input[name=itinerary_'+fIndex+'_inc_count]").val(cIndex);
+                        return false;
+                    });
+
+                    $('.addInc-itinerary').on('click', function () {
+                        var cIndex = parseInt($("input[name=itinerary_"+fIndex+"_inc_count]").val()) + 1;
+                        $("input[name=itinerary_"+fIndex+"_inc_count]").val(cIndex);
+                        var html = '<div class="form-group  " id="packageItinerary_'+fIndex+'_inclusion_' + cIndex + '_field"><input type="text" id="packageItinerary_'+fIndex+'_inclusion_' + cIndex + '" name="packageItinerary['+fIndex+'].inclusion[' + cIndex + ']" value="" placeholder="Inclusion" class="form-control form-control"></div>';
+                        $(html).appendTo("#itinerary_incl_"+fIndex);
+                        return false;
+                    });
+
+                });
+
+
+                $('.delInc-itinerary').on('click', function () {
+                    var fIndex = parseInt($("input[name=itinerary_0_inc_count]").val());
+                    $('#packageItinerary_0_inclusion_' + fIndex + '_field').remove();
+                    fIndex = (fIndex <= 1) ? 1 : fIndex - 1;
+                    $("input[name=itinerary_0_inc_count]").val(fIndex);
+                });
+
+                $('.addInc-itinerary').on('click', function () {
+                    var fIndex = parseInt($("input[name=itinerary_0_inc_count]").val()) + 1;
+                    $("input[name=itinerary_0_inc_count]").val(fIndex);
+                    var html = '<div class="form-group  " id="packageItinerary_0_inclusion_' + fIndex + '_field"><input type="text" id="packageItinerary_0_inclusion_' + fIndex + '" name="packageItinerary[0].inclusion[' + fIndex + ']" value="" placeholder="Inclusion" class="form-control form-control"></div>';
+                    $(html).appendTo("#itinerary_incl_0");
+                });
+
+
+
+            });
+
+            $.fn.getItineraryHTML = function (index) {
+                return '<div id="itinerary_' + index + '" class="row">\n' +
+                        '<input name="itinerary_'+ index + '_inc_count" type="hidden" value="0">' +
+                        '                                            <div class="col-md-6">\n' +
+                        '<dl class=" " id="packageItinerary_' + index + '_name_field">\n' +
+                        '    <dt><label for="packageItinerary_' + index + '_name">packageItinerary.' + index + '.name</label></dt>\n' +
+                        '    <dd>\n' +
+                        '    <input type="text" id="packageItinerary_' + index + '_name" name="packageItinerary[' + index + '].name" value="" class="form-control" label="Title">\n' +
+                        '</dd>\n' +
+                        '</dl>\n' +
+                        '                                            </div>\n' +
+                        '                                            <div class="col-md-6">\n' +
+                        '<dl class=" " id="packageItinerary_' + index + '_imageURL_field">\n' +
+                        '    <dt><label for="packageItinerary_' + index + '_imageURL">packageItinerary.' + index + '.imageURL</label></dt>\n' +
+                        '    <dd>\n' +
+                        '    <input type="text" id="packageItinerary_' + index + '_imageURL" name="packageItinerary[' + index + '].imageURL" value="" class="form-control" label="Image URL">\n' +
+                        '</dd>\n' +
+                        '</dl>\n' +
+                        '                                            </div>\n' +
+                        '                                            <div class="col-md-6">\n' +
+                        '<dl class=" " id="packageItinerary_' + index + '_description_field">\n' +
+                        '    <dt><label for="packageItinerary_' + index + '_description">packageItinerary.' + index + '.description</label></dt>\n' +
+                        '    <dd>\n' +
+                        '    <textarea id="packageItinerary_' + index + '_description" name="packageItinerary[' + index + '].description" class="form-control" label="Description"></textarea>\n' +
+                        '</dd>\n' +
+                        '</dl>\n' +
+                        '                                            </div>\n' +
+                        '                                            <div class="col-md-6">\n' +
+                        '<label><strong>Inclusions</strong></label>' +
+                        '                                                <div id="itinerary_incl_' + index + '">' +
+                        '<dl class=" " id="packageItinerary_' + index + '_inclusion_0_field">\n' +
+                        '    <dt><label for="packageItinerary_' + index + '_inclusion_0">packageItinerary.' + index + '.inclusion.0</label></dt>\n' +
+                        '    <dd>\n' +
+                        '    <input type="text" id="packageItinerary_' + index + '_inclusion_0" name="packageItinerary[' + index + '].inclusion[0]" value="" class="form-control" placeholder="Inclusion">\n' +
+                        '</dd>\n' +
+                        '</dl>\n' +
+                        '                                                </div>\n' +
+                        '                                                    <span><a class="btn btn-primary btn-xs addInc-itinerary" data-id="' + index + '" href="">Add More </a></span>\n' +
+                        '                                                    <span><a class="btn btn-danger btn-xs delInc-itinerary" data-id="' + index + '" href="">Delete</a> </span>\n' +
+                        '                                            </div>\n' +
+                        '                                        \n' +
+                        '                                    </div>';
+            }
+    </script>
+}

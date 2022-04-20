@@ -1,0 +1,178 @@
+@import controllers.b2b._
+@(flightBooking: FlightBookings)(implicit requestHeader: RequestHeader)
+@isB2B = @{
+    flightBooking.getBookings.getSalesCategory.eq(SalesCategory.B2B)
+}
+@companyName = @{ if(isB2B) {
+        flightBooking.getBookings.getUserId.getAgentCorporateDetailId.getCompanyName
+    } else {
+        play.Configuration.root().getString("project.name")
+    }
+}
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>@companyName- Invoice (@flightBooking.getBookings.getTransactionRef)</title>
+        <style type="text/css">
+            .aqua_table {
+                margin: 20px 0;
+            }
+            .aqua_table th {
+                border: 1px solid #e2e2e2;
+                background: #4c4d4f url('http://jadorecakesonline.com/images/grad_menu.png') top left repeat-x;
+                text-align: center;
+                padding: 8px 14px;
+                font-size: 14px;
+                text-align: left;
+                font-weight: 600;
+            }
+            .aqua_table td {
+                padding: 8px 14px;
+                border: #e2e2e2 1px solid;
+
+                -webkit-transition: all 0.3s linear;
+                -moz-transition: all 0.3s linear;
+                -ms-transition: all 0.3s linear;
+                -o-transition: all 0.3s linear;
+                transition: all 0.3s linear;
+            }
+            table {
+                border-collapse: collapse;
+            }
+            table, td, th {
+                border-bottom: 1px solid black;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div align="" style="max-width: 100%">
+            @if(isB2B) {
+                <img src="@flightBooking.getBookings.getUserId.getAgentCorporateDetailId.logo()" height="90px" alt=""/>
+            } else {
+                <img src="@routes.Assets.commonImg("logo.png").absoluteURL()" height="90px" alt=""/>
+            }
+
+            <p><strong> </strong> <br />
+                Dear @flightBooking.getBookings.getContactFirstname<strong> @flightBooking.getBookings.getContactSurname</strong> <br />
+                <br />
+                Thank you for your patronage.&nbsp;<br />
+                <br />
+                This is your e-ticket. Please present this information at check-in.&nbsp;<br />
+            </p>
+            <div>
+                <p><strong><font color="#FF9049">Passenger(s)</font></strong></p>
+            </div>
+            <table width="90%" border="0">
+                <thead>
+                    <tr>
+                        <th>Full Name</th>
+                        <th>Passenger Type</th>
+                        <th>Ticket Number</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @for(passenger <- FlightBookingTraveller.find.where().eq("flightBookingId", flightBooking).findList()) {
+                    <tr>
+                        <td>@passenger.getNamePrefix @passenger.getFirstName @passenger.getMiddleName @passenger.getLastName</td>
+                        <td>@passenger.getPassengerCat</td>
+                        <td>@passenger.getTicketRef</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+            <br />
+            <div><br />
+                <strong><font color="#FF9049">Ticket details</font></strong> <strong> </strong></div>
+            <p>Your @companyName Booking Reference: @flightBooking.getBookings.getTransactionRef<br />
+                GDS Reference::&nbsp;@flightBooking.getPnrRef&nbsp;<br />
+                <br />
+                <br />
+            </p>
+            <div><br />
+                <strong><font color="#FF9049">Your Itinerary</font></strong></div>
+            <div class="tab-content" style="padding: 10px; background: rgba(255, 90, 0, 0.08);">
+                <div role="tabpanel" class="tab-pane active row">
+                @for(item <- FlightBookingDestinations.find.where().eq("flightBookingId", flightBooking).findList()) {
+                    <div>
+                        <div class="col-md-10"><i class="icon icon-departure"></i> @item.getAirlineName <span> <i class="icon icon-long-arrow-right"></i> </span> <i class="icon icon-arrival"></i> @item.getArrivalAirportName </div>
+                        <div class="col-md-2 pull-right">Duration: @item.getDuration</div>
+                        <div class="clearfix"></div>
+                        <div class="col-md-12">
+                            <table class="table table-responsive" cellspacing="0" width="100%">
+                                <tbody>
+                                @for(flightSegment <- item.getFlightBookingDestinationSegmentsList) {
+                                    <tr>
+                                        <td>
+                                            <img src="https://s3-us-west-2.amazonaws.com/travelden/airline/@flightSegment.getAirlineCode.concat(".png")" alt="@flightSegment.getAirlineCode" style="width: 5.0em" class="img img-circle flight-ico-img"/>
+                                            <span class="text-center">@flightSegment.getAirlineCode</span>
+                                        </td>
+                                        <td>
+                                            <strong>@flightSegment.getDepartureDt.replaceAll("T", " ")</strong> <br />
+                                            <small> @flightSegment.getDepartureAirportId.getAirportName
+                                                (@flightSegment.getDepartureAirportCode)</small>
+                                        </td>
+                                        <td><i class="icon icon-long-arrow-right"></i></td>
+                                        <td>
+                                            <strong>@flightSegment.getArrivalDt.replaceAll("T", " ")
+                                            </strong> <br />
+                                            <small>@flightSegment.getArrivalAirportId.getAirportName
+                                                (@flightSegment.getArrivalAirportCode)</small>
+                                        </td>
+
+                                        <td class="text-center" width="12%">
+                                            <small>
+                                                <span>@if(item.getNumOfStops == 0) {
+                                                    Non stop
+                                                } else {
+                                                    @item.getNumOfStops Stop(s)
+                                                }
+                                                </span>
+                                            </small>
+                                            <div class="clearfix"></div>
+                                            <small class="text-primary">@item.getClass.getName()</small>
+                                        </td>
+                                    </tr>
+                                }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                }
+                </div>
+            </div>
+            <p><br />
+                <br />
+                Please take note of the following!!!&nbsp;<br />
+                <br />
+                1. You can check details of your issued ticket by visiting <u>&nbsp;www.checkmytrip.com.</u>
+                Please log in using your reference<strong>&nbsp;@flightBooking.getPnrRef &nbsp;&nbsp;</strong>
+                and the last name as per your ticket.&nbsp;<br />
+                <br />
+                We advise that you do this before your flight as you will be notified of any schedule changes. (Please note that last minute schedule changes might not display here).&nbsp;<br />
+                <br />
+                <strong>Deadline for Check-in</strong>
+                : we encourage you to check-in at least three (3) hours before departure to avoid missing your flight as longer security checks are conducted for specific destinations.&nbsp;</p>
+            Please ensure that all travel documents including passports, visas to final destinations and transit visas where applicable have been duly obtained before embarking on your trip as @companyName will not be liable for boarding denial.
+            <p><br />
+            </p>
+            <div style=""><div class="row">
+                <div class="sixteen columns clearfix">
+                    <div align="right"></div>
+                </div>
+            </div>
+            </div>
+
+            </p>
+
+            <br/>
+            <p>
+                <b><i>Thank you for choosing @companyName</i></b> <br />
+                <b><i>Enjoy your trip,</i></b> <br /> <br />
+                <b><i>@companyName Team.</i></b>
+            </p>
+        </div>
+
+    </body>
+</html>

@@ -1,0 +1,83 @@
+@import controllers.common.routes
+@import product.hepstar.dto.entity.response.PricedPoliciesResponse
+@(products: List[ProductResult], hepstarPolicy: PricedPoliciesResponse = null)(implicit requestHeader: RequestHeader, messages: Messages)
+@*Display Hepstar Product *@
+@if(hepstarPolicy != null) {
+    @for(policy <- hepstarPolicy.getPricedProducts.getPricedProduct) {
+        <div class="row">
+            <div class="col-md-10">
+                <h4 class="text-info">
+                    <label for="hp_@policy.getProductInformation.getId">
+                        <input type="checkbox" id="hp_@policy.getProductInformation.getId" class="jsCheckPrice" name="policy_id[]" data-title="@policy.getProductInformation.getName" data-amount="@policy.getPriceDetails.head.getTotalAmount" value="@policy.getProductInformation.getId" checked="checked" />
+                        <strong style="font-size: 17px;">@policy.getProductInformation.getName</strong> &nbsp;
+                        <span class="pull-right">@policy.getPriceDetails.head.getCurrency @policy.getPriceDetails.head.getTotalAmount</span>
+                    </label>
+                </h4>
+                <small class="text-muted">@Html(policy.getProductInformation.getDetails)</small>
+            </div>
+            <div class="col-md-2"><a href="#" data-sec="@policy.getProductInformation.getId" class="text-primary showHideDetail bold btn btn-xs btn-danger">View Detail</a></div>
+            <div class="col-md-12" id="@policy.getProductInformation.getId" style="display: none;background: #f5f5f5;padding: 7px;border-radius: 5px;">
+                <img src="@policy.getProductInformation.getInsurer.getLogo" class="img img-responsive" style="width: 250px;" />
+                <h4>@policy.getProductInformation.getInsurer.getInsurerName, @policy.getProductInformation.getInsurer.getContact.getAddress.getCountry</h4>
+                @Html(policy.getProductInformation.getDetails)
+                <hr />
+                @if(policy.getProductInformation.getProductcovers != null) {
+                    <h3 class="text-info">What you are covered for</h3>
+                    <table class="table table-responsive table-striped">
+                        <thead>
+                            <tr>
+                                <th><strong>Section</strong></th>
+                                <th>Description</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @for(cover <- policy.getProductInformation.getProductcovers.getProductcover) {
+                            <tr>
+                                <td><strong>@cover.getProductcovercatergory.getHeader</strong></td>
+                                <td>@cover.getHeader</td>
+                                <td>@cover.getCurrency @cover.getAmount</td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+        <div class="clearfix"></div>
+    }
+}
+@if(products.nonEmpty) {
+    @for(product <- products) {
+        <div class="row">
+            <div class="col-md-10">
+                <h4 class="text-info">
+                    <label for="pd_@product.addonProducts.getId">
+                        <input type="checkbox" id="pd_@product.addonProducts.getId" class="jsCheckPrice" data-amount="@(product.totalAmount.doubleValue())" data-title="@product.addonProducts.getName" name="product_id[]" checked="checked" value="@product.addonProducts.getId.toString" /> &nbsp;
+                        <strong style="font-size: 17px;">
+                            @product.addonProducts.getName @utils.Utilities.moneyFormat(product.totalAmount.doubleValue())
+                        </strong>
+                    </label>
+                    <span class="text-muted">@*product.getProductItemId.getProduct*@</span>
+                </h4>
+                <p>@Html(product.addonProducts.getShortDesc)</p>
+            </div>
+            <div class="col-md-2"><a href="#" data-sec="@product.addonProducts.getId.toString" class="text-primary showHideDetail bold btn btn-xs btn-primary">View Detail</a></div>
+            <div class="clearfix"></div>
+            <div class="col-md-12" id="@product.addonProducts.getId" style="display: none;background: #f5f5f5;padding: 7px;border-radius: 5px;">
+            @Html(product.addonProducts.getHtmlDesc)
+            </div>
+        </div>
+        <div class="clearfix"></div>
+    }
+}
+<script type="text/javascript" src="@routes.Assets.commonJs("jquery-2.1.1.min.js")"></script>
+<script>
+        $(function () {
+            $(".showHideDetail").click(function (e) {
+                var dt = $(this).data('sec');
+                $('#' + dt).toggle('fast');
+                e.preventDefault();
+            });
+        })
+</script>

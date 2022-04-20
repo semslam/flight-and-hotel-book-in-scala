@@ -1,0 +1,33 @@
+@import helper._
+@import views.html.admin.tags.myDataTable
+@import crypto.Encrypt
+@import views.html.helper.CSRF
+@import b3.vertical.fieldConstructor
+@import controllers.admin.systems.routes
+
+
+@(categoryies: Array[PaymentCategories])(implicit request: RequestHeader, messages: Messages, manager: PrivateUsers)
+@import views.html.admin.templates._
+@default(title = "Payment Categories", tab = "systems") {
+    <div class="panel">
+        <header class="panel-heading">
+            <h2 class="panel-name">Payment Categories</h2>
+            <br />
+        </header>
+        <div class="panel-body">
+        @myDataTable(Seq("#", "Category", "Action")) {
+            @if(categoryies.nonEmpty) {
+                @for(item <- categoryies) {
+                    <tr>
+                        <td>@item.ordinal()</td>
+                        <td>@item.name()</td>
+                        <td>
+                            <span><a href="@routes.PaymentCtrl.manage(item.name())" class="btn btn-xs btn-primary"> Add/Edit @item.name()</a></span>
+                        </td>
+                    </tr>
+                }
+            }
+        }
+        </div>
+    </div>
+}

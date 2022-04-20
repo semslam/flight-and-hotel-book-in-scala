@@ -1,0 +1,4 @@
+@import cms.DynamicPageHandler
+@import crypto.Encrypt
+@(page: CmsPages, tempMgr: DynamicPageHandler, loggedManager: Option[Users])(implicit messages: Messages, request: RequestHeader, encrypt: Encrypt)
+@views.html.web.templates.main(page.getName, Html(page.getInlineJs), Html(page.getInlineCss), loggedManager, page, tempMgr)(null)

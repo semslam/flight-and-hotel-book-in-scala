@@ -1,0 +1,276 @@
+@import helper._
+@import b3.vertical.fieldConstructor
+@import controllers.web.routes
+@import com._
+@import views.html.bookingEngine._
+@import crypto.Encrypt
+@import flight.dto.entity.FlightSearchResponse
+@import com.alajobi.ota.flights.ProductPurchaseInfo
+@import flight.dto.entity.ItineraryWSResponse
+@import flight.dto.entity.FlightSearchRequest
+@import flight.dto.entity.BookingRequest
+@import com.alajobi.ota.utils.SystemControlSetting
+@import scala.concurrent.JavaConversions._
+@import java.time.ZoneId
+@(bookingRequest: BookingRequest, searchRequest: FlightSearchRequest, urlAppend: String, itineraryRef: String, fl_tabHash: String)(implicit request: RequestHeader, messages: Messages, loggedsManager: Option[Users], encrypt: Encrypt)
+@import java.text.SimpleDateFormat; var ind = 0; val dtFormat = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss"); var total = 0.0
+@views.html.web.templates.default(title = "Review Details", scripts, loggedUser = loggedsManager) {
+    <style>
+            body, #wrapper, #page_content_wrapper.fixed, #gallery_lightbox h2, .slider_wrapper .gallery_image_caption h2, #body_loading_screen, h3#reply-title span, .overlay_gallery_wrapper, .pricing_wrapper_border, .pagination a, .pagination span, #captcha-wrap .text-box input, .flex-direction-nav a, .blog_promo_title h6, #supersized li, #gallery_caption .tg_caption, #horizontal_gallery_wrapper .image_caption, #tour_search_form, .tour_search_form {
+                /*background: #F2F2F2;*/
+            }
+            button[name=submitBtn] {
+                background: #006fa2;
+                border-color: #006fa2;
+            }
+            @@media(min-width: 1200px)  {
+            .container {
+                width: 1210px;
+            }
+            }
+    </style>
+    <div style="background-color: #5b63aa; margin:0 0 10px 0;" class="hidden-xs">
+     @("[flightBookingEngineAlt]")
+    </div>
+    <div class="gap-gmall"></div>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <ul class="breadcrumb">
+                    <li><a href="/" title="Home">Home</a></li>
+                    <li><a href="@routes.FlightCtrl.result(searchRequest.getTripType.name().toLowerCase, searchRequest.getTabHash)" title="Home">Search Results</a></li>
+                    <li><a href="@routes.FlightCtrl.detail(bookingRequest.getItineraryWSResponse.getCacheIndex.toString, searchRequest.getTabHash)&sequenceId=@bookingRequest.getItineraryWSResponse.getSequenceNumber@encrypt.decrypt(urlAppend)">@bookingRequest.getItineraryWSResponse.getAirline Booking - Traveller(s) Details</a></li>
+                    <li><a href="@routes.FlightCtrl.reviewProduct(itineraryRef, fl_tabHash, urlAppend)">Product &amp; Add-On</a></li>
+                    <li>Review Itinerary Details</li>
+                </ul>
+            </div>
+            <div class="clearfix"></div>
+            <br />
+            <div class="row">
+                <div class="col-md-8">
+                    <div id="review-booking" class="row">
+                        <div style="margin-top: 0; border: 1px solid #DDD;">
+                            <h3 style="margin-top: 0; padding: 10px; background: #e6e6e6;">Traveller info</h3>
+                            <div style="padding: 10px; background: #FFF;">
+                            @for(passenger <- bookingRequest.getPassengers) {
+                                <div class="col-md-2">
+                                    <p><strong class="text-muted">Title</strong></p>
+                                    <p><strong>@passenger.getNamePrefix</strong></p>
+                                </div>
+                                <div class="col-md-2">
+                                    <p><strong class="text-muted">First Name</strong></p>
+                                    <p><strong>@passenger.getGivenName</strong></p>
+                                </div>
+                                <div class="col-md-2">
+                                    <p><strong class="text-muted">Middle Name</strong></p>
+                                    <p><strong>@passenger.getMiddleName</strong></p>
+                                </div>
+                                <div class="col-md-2">
+                                    <p><strong class="text-muted">Surname</strong></p>
+                                    <p><strong>@passenger.getSurname</strong></p>
+                                </div>
+                                <div class="col-md-2">
+                                    <p><strong class="text-muted">                                                                                                      Type</strong></p>
+                                    <p><strong>@passenger.getCode.name()</strong></p>
+                                </div>
+                                <div class="col-md-2">
+                                    <p><strong class="text-muted">Birth Date</strong></p>
+                                    <p><strong>@{java.util.Date.from(passenger.getBirthDate.atZone(ZoneId.systemDefault()).toInstant).format("yyyy-MMM-dd")}</strong></p>
+                                </div>
+                                <div class="clearfix"></div>
+                                <hr />
+                            }
+                            </div>
+                            <h3 style="margin-top: 0; padding: 10px; background: #e6e6e6;">Flight Information</h3>
+                            <div style="padding: 10px; background: #FFF;">
+                            @for(item <- bookingRequest.getItineraryWSResponse.getAirItineraryWSResponse.getOriginDestinationWSResponses) {
+                                <div class="col-md-9" style="font-size: 12px;">
+                                    <b>@if(item.getOriginAirportTbl != null){ @item.getOriginAirportTbl.getAirportName } else { }</b>
+                                    <span>to</span>
+                                    <b>@if(item.getDestinationAirportTbl != null) { @item.getDestinationAirportTbl.getAirportName } else { }</b>
+                                </div>
+                                <div class="col-md-3 text-right"><b>Duration:</b> @item.getDuration</div>
+                                <div class="clearfix"></div>
+                                <div class="col-md-12">
+                                    <section class="row">
+                                    @for(flightSegment <- item.getFlightSegmentWSResponses) {
+                                        <div class="col-md-12 row">
+                                            <div class="col-md-2 col-xs-4 text-center">
+                                                <p style="font-size: 12px;">@flightSegment.getMarketingAirline</p>
+                                                <img style="height: 50px; margin: 0 auto;" data-original="@flightSegment.getAirlineLogoUrl" src="/common/images/spinner.gif" lazy-img="@flightSegment.getAirlineLogoUrl" alt="@flightSegment.getMarketingAirlineCode" class="img img-circle flight-ico-img"/>
+                                            </div>
+                                            <div class="col-md-4 col-xs-4" style="font-size: 12px;">
+                                                <strong>@defining(models.Airports.getAirport(flightSegment.getDepartureAirportCode)) { airport => @if(airport != null) { @airport.getAirportName } (@flightSegment.getDepartureAirportCode)  }</strong>
+                                                <div class="clearfix"></div>
+                                                <small>@dtFormat.parse(flightSegment.getDepartureDateTime).format("EEE dd-MMM-yyyy")</small>
+                                                <p>@dtFormat.parse(flightSegment.getDepartureDateTime).format("h:mm a")</p>
+                                            </div>
+                                            <div class="col-md-4 col-xs-4"  style="font-size: 12px;">
+                                                <strong>@defining(models.Airports.getAirport(flightSegment.getArrivalAirportCode)) { airport => @if(airport != null) { @airport.getAirportName } (@flightSegment.getArrivalAirportCode)  }</strong>
+                                                <div class="clearfix"></div>
+                                                <small>@dtFormat.parse(flightSegment.getArrivalDateTime).format("EEE dd-MMM-yyyy")</small>
+                                                <p>@dtFormat.parse(flightSegment.getArrivalDateTime).format(" h:mm a")</p>
+                                            </div>
+                                            <div class="text-center col-md-2">
+                                                <small>
+                                                @if(flightSegment.getStopQuantity <= 0) {
+                                                    Non Stop
+                                                } else {
+                                                    @flightSegment.getStopQuantity Stop@if(flightSegment.getStopQuantity >1){s}
+                                                }
+                                                </small>
+                                                <div class="clearfix"></div>
+                                                <small class="text-primary">@flightSegment.getResBookDesigCode Class</small>
+                                                <div class="clearfix"></div>
+                                                <small class="text-muted">@flightSegment.getCabin</small>
+                                            </div>
+                                        </div>
+                                        <div class="clearfix"></div>
+                                    }
+                                    </section>
+                                </div>
+                            }
+                            </div>
+                            <div class="clearfix gap"></div>
+                            <h3 style="margin-top: 0; padding: 10px; background: #e6e6e6;">Price Breakdown</h3>
+                            <div style="padding: 10px; background: #FFF;">
+                                <table class="table table-responsive table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Description</th>
+                                            <th>Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <th>Flight Cost</th>
+                                            <td>
+                                            @{
+                                                val flFare = bookingRequest.getItineraryWSResponse.getPricingInfoWSResponse.getTotalFare
+                                                total += flFare
+                                                utils.Utilities.moneyFormat(flFare)
+                                            }
+                                            </td>
+                                        </tr>
+                                        @for(product <- bookingRequest.getProducts) {
+                                            <tr>
+                                                <th>@product.getAddonProductOptions.getName</th>
+                                                <td>
+                                                @{
+                                                    val pamt = product.getAmount
+                                                    total += pamt
+                                                    utils.Utilities.moneyFormat(pamt)
+                                                }
+                                                </td>
+                                            </tr>
+                                        }
+                                        @*if(PaymentMethods.find.byId(bookingRequest.getPaymentMethod.toLong).getPaymentCategory.equals(PaymentCategories.Debit_Card)) {
+                                            <tr>
+                                                <th>Online WebPay Fee</th>
+                                                <td>
+                                                @{
+                                                    val webpayFee = SystemControlSetting.getInstance().get(SystemControlSetting.SYSTEM_WEBPAY_FEE)
+                                                    total += webpayFee.toDouble
+                                                    utils.Utilities.moneyFormat(webpayFee)
+                                                }
+                                                </td>
+                                            </tr>
+                                        }*@
+                                        <tr>
+                                            <th class="pull-right"><h4><strong>Total</strong></h4></th>
+                                            <th><h4>@utils.Utilities.moneyFormat(total)</h4></th>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="clear-padding row">
+                        <div style="margin-top: 0;  border: 1px solid #DDD;">
+                            <h3 style="margin-top: 0; padding: 10px; background: #e6e6e6;">Contact Details</h3>
+                            <div style="padding: 10px;">
+                                <section class="col-md-4 col-xs-6">
+                                    <p>
+                                        <strong class="text-muted">Title</strong>
+                                        <strong>@bookingRequest.getPassengers.head.getContactNamePrefix</strong>
+                                    </p>
+                                </section>
+                                <section class="col-md-4 col-xs-6">
+                                    <p>
+                                        <strong class="text-muted">First Name</strong>
+                                        <strong>@bookingRequest.getPassengers.head.getContactFirstName</strong>
+                                    </p>
+                                </section>
+                                <section class="col-md-4 col-xs-6">
+                                    <p><strong class="text-muted">Surname</strong>
+                                        <strong>@bookingRequest.getPassengers.head.getContactLastName</strong>
+                                    </p>
+                                </section>
+                                <section class="col-md-4 col-xs-6">
+                                    <p><strong class="text-muted">Phone</strong>
+                                        <strong>@bookingRequest.getPassengers.head.getContactPhone</strong>
+                                    </p>
+                                </section>
+                                <section class="col-md-8 col-xs-6">
+                                    <p>
+                                        <strong class="text-muted">Email Address</strong>
+                                        <strong>@bookingRequest.getPassengers.head.getContactEmail</strong>
+                                    </p>
+                                </section>
+                                <div class="clearfix"></div>
+                                <div class="gap"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="clearfix"></div>
+                    <div class="gap"></div><section>
+                        <a href="@routes.FlightCtrl.paymentOption(itineraryRef, fl_tabHash, urlAppend)" class="btn btn-md btn-primary accept-term gradient-button">Proceed to Payment</a>
+                    </section>
+                </div>
+                <div class="clearfix"></div>
+                <div class="gap"></div>
+                <div class="col-md-12">
+                    <a href="@routes.FlightCtrl.paymentOption(itineraryRef, fl_tabHash, urlAppend)" class="btn btn-md btn-primary accept-term gradient-button">Proceed to Payment</a>
+                </div>
+                <div class="clearfix"></div>
+                <div class="gap"></div>
+            </div>
+        </div>
+    </div>
+}
+@scripts = {
+    <script>
+            $(function() {
+                $('form[name=b2cForm]').find('.search-submit').removeClass('gradient-button');
+                $('.toglekbeng').click(function() {
+                    $("#toglekbeng").toggle();
+                });
+                $('.bkproduct').on('click', function() {
+                    $('#payment-option').hide();
+                    $('#product-option').show();
+                });
+                $('.continue-btn').on('click', function() {
+                    $('#payment-option').show();
+                    $('#product-option').hide();
+                });
+                $('.search-section').css({
+                    'margin-top': '15px',
+                    'margin-bottom': '10px'
+                });
+                $('.search-button').css({
+                    'margin-top': '40px'
+                });
+
+                var $term = $('.accept-term');
+                $('#term_and_condition').on('click', function (e) {
+                    if (!$(this).prop("checked")) {
+                        $term.attr('disabled', 'disabled');
+                    } else {
+                        $term.removeAttr('disabled');
+                    }
+                });
+            })
+    </script>
+}

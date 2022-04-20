@@ -1,0 +1,220 @@
+@import controllers.admin.routes
+@import views.html.admin.tags.auth._
+@import crypto.Encrypt
+@import views.html.tags.myDataTable
+@()(implicit loggedManager: PrivateUsers, messages: Messages, request: RequestHeader, encrypt: Encrypt)
+@import java.util._; val numOfTrips: Int = if(request.getQueryString("trip_type").isDefined && request.getQueryString("trip_type").get.eq(TripType.MULTI_CITY.name())) { request.getQueryString("num_of_destination").get.toInt } else { 3 }
+@views.html.admin.templates.default(title = "Home", tab = "index", scripts = scripts) {
+    <div style="margin-top: 15px;" class="row">
+        @tags.alertFromRequest(request, "error")
+        @tags.alertFromRequest(request, "success")
+        @*<div class="col-md-5 panel">
+			<div class="">
+                <h3>Back-Office Search Engine</h3>
+            </div>
+            <div>
+                <form method="get" action="" enctype="application/x-www-form-urlencoded" class="form row" role="form" data-validate="parsley" id="flight_bkEngine">
+                    <input type="hidden" name="num_of_destination" value="@request.getQueryString("num_of_destination").getOrElse("1")"/>
+                    <div class="col-md-12 col-lg-12 col-xs-12 form-group row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Sales Type</label>
+                                <select class="form-control" name="sale_category">
+                                    <option selected value="B2C">B2C</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <span>
+                                <label>&nbsp;</label>
+                                <br>
+                                <label for="ONE_WAY" class="block radio-inline mt15 option option-warning">
+                                    <input type="radio" id="ONE_WAY" name="trip_type" value="ONE_WAY" /> One Way
+                                </label>
+                                <label for="RETURN" class="block mt15 radio-inline option option-warning">
+                                    <input type="radio" id="RETURN" checked name="trip_type" value="RETURN" /> Return
+                                </label>
+                                <label for="MULTI_CITY" class="block mt15 radio-inline option option-warning">
+                                    <input type="radio" id="MULTI_CITY" name="trip_type" value="MULTI_CITY" /> Multi-City
+                                </label>
+                            </span>
+                        </div>
+                        <input type="hidden" name="region" id="international" class="i-radio" value="international"/>
+                    </div>
+                    <div class="col-md-6 col-lg-6 col-xs-6 col-sm-6 iconic-input form-group">
+                        <label for="dp_airport1">Departure Airport</label>
+                        <input class="form-control search_airport_from" id="dp_airport1" value="@request.getQueryString("departure_airport_1").getOrElse("")" name="departure_airport_1" data-section="1" autoselect="true" data-error-message="Departure airport is required" data-required="true" autocomplete="off" aria-autocomplete="none" placeholder="Departure Airport" />
+                        <input type="hidden" name="departure_airport_code_1" value="@request.getQueryString("departure_airport_code_1").getOrElse("")" />
+                    </div>
+                    <div class="col-md-6 col-lg-6 col-xs-6 col-sm-6 iconic-input form-group">
+                        <label for="ar_airport1">Arrival Airport</label>
+                        <input class="form-control search_airport_to" id="ar_airport1" value="@request.getQueryString("arrival_airport_1").getOrElse("")" name="arrival_airport_1" data-section="1" autocomplete="off" autoselect="true" data-error-message="Arrival airport is required" data-required="true" aria-autocomplete="none" placeholder="Arrival Airport" />
+                        <input type="hidden" name="arrival_airport_code_1" value="@request.getQueryString("arrival_country_code_1").getOrElse("")"  />
+                    </div>
+                    <div class="clearfix"></div>
+                    <div id="div_dt_from" class="col-md-6 col-lg-6 col-xs-6 col-sm-6 iconic-input form-group">
+                        <label for="dp_date1">Departure Date</label>
+                        <input class="form-control departure_date" id="dp_date1" data-type="dateIso" data-required="true" name="departure_date_1" data-error-message="Incorrect Date Specified" value="@request.getQueryString("departure_date_1").getOrElse("")"  type="text">
+                    </div>
+                    <div id="div_dt_to" @if(request.getQueryString("trip_type").isDefined && request.getQueryString("trip_type").get.eq(TripType.ONE_WAY.name())) { style="display: none" } class="col-md-6 col-lg-6 col-xs-6 col-sm-6 iconic-input form-group">
+                        <label for="ar_date1">Arrival Date</label>
+                        <input class="form-control arrival_date" id="ar_date1" data-required="true" data-error-message="Incorrect Date Specified" name="arrival_date_1" value="@request.getQueryString("arrival_date_1").getOrElse("")"  type="text">
+                    </div>
+                    <div class="clearfix"></div>
+                    <div style="display: @if(request.getQueryString("trip_type").isDefined && request.getQueryString("trip_type").get.eq(TripType.MULTI_CITY.name())) { block } else { none }" class="multi_city_div">
+                        <div class="more_multi_city_div"></div>
+                        <div class="clearfix"></div>
+                        <div class="col-md-12 col-xs-12">
+                            <button type="button" class="add_more_multi_city btn btn-primary btn-md btn-rounded btn-circle"><i class="fa fa-plus"></i> Add Segment</button>
+                            <button type="button" class="delete_multi btn btn-danger btn-md btn-rounded btn-circle"><i class="fa fa-times"></i> Remove Segment</button>
+                        </div>
+                        <div class="clearfix"></div>
+                    </div>
+                    <div class="col-md-3 col-lg-3 col-xs-3 col-sm-3 form-group">
+                <label>Adults</label>
+                <div class="form-group">
+                    <select name="num_of_adult" class="form-control"> <!--ng-model="numOfAdt" -->
+                        @for(i <- 1 to 9){
+                            <option value="@i">@i</option>
+                        }
+                    </select>
+                </div>
+            </div>
+                    <div class="col-md-3 col-lg-3 col-xs-3 col-sm-3 form-group">
+                <label>Children</label>
+                <div class="form-group">
+                    <select name="num_of_children" class="form-control">
+                    @for(i <- 0 to 9){
+                        <option value="@i">@i</option>
+                    }
+                    </select>
+                </div>
+            </div>
+                <div class="col-md-3 col-lg-3 col-xs-3 col-sm-3 form-group">
+                <label>Infants</label>
+                <div class="form-group">
+                    <select name="num_of_infant" class="form-control"> <!--ng-model="numOfInf"-->
+                        @for(i <- 0 to 9){
+                            <option value="@i">@i</option>
+                        }
+                    </select>
+                </div>
+            </div>
+                <div class="col-md-3 col-lg-3 col-xs-3 col-sm-3 form-group">
+                <label for="cabin_pref">Pref. Cabin</label>
+                <select class="form-control" data-required="true" name="cabin_class">
+                    <option value="@CabinClass.ECONOMY.name()">@CabinClass.ECONOMY.name()</option>
+                    <option value="@CabinClass.PREMIUM.name()">@CabinClass.PREMIUM.name()</option>
+                    <option value="@CabinClass.BUSINESS.name()">@CabinClass.BUSINESS.name()</option>
+                    <option value="@CabinClass.FIRST.name()">@CabinClass.FIRST.name()</option>
+                </select>
+            </div>
+                <div class="clearfix"></div>
+                <div class="col-md-5">
+                <select name="airline_id" id="pref_airline" class="form-control">
+                    <option value="">Preferred Airline</option>
+                    @for(airlines <- Airlines.find.all()) {
+                        <option @if(request.getQueryString("pref_airline").isDefined && request.getQueryString("pref_airline").get.eq(airlines.getId.toString)) { selected="selected"} value="@airlines.getId">@airlines.getName
+                        }
+                </select>
+            </div>
+                <div class="col-md-7" style="margin-bottom: 10px">
+                    <span><button type="submit" class="btn btn-md btn-danger pull-right">Search Flight</button></span>
+                </div>
+            </form>
+            </div>
+		</div>
+		<div class="col-md-7">
+			<div class="panel">
+                <div class="panel panel-heading">
+                    <div class="row">
+                        <div class="col-md-2">
+                            <h3 class="panel-title"><strong></strong></h3>
+                        </div>
+                        <div class="col-md-4 form-inline">
+                            <label>Data Type</label>
+                            <select class="form-control" name="chartType">
+                                <option value="daysOfMonth">Days of Month</option>
+                                <option value="monthOfYear">Months of Year</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4"><input class="form-control" name="chartDateRange" placeholder="Date Range"></div>
+                    </div>
+                </div>
+                <div class="panel-body">
+                    <canvas id="salesFlow"></canvas>
+                </div>
+            </div>
+		</div>
+        <div class="clearfix"></div>*@
+        <div class="col-md-12">
+            <span style="text-info label label-info" class="">PNR/Task Assigner - 18th-Aug-2018</span>
+        </div>
+        <div class="col-md-3 col-sm-6 col-xs-12">
+            <div class="panel">
+                <h5 class="panel-heading panel-primary"><strong>Actionable Queues</strong></h5>
+                <ul class="list-group">
+                    <li class="list-group-item"><a href="@controllers.admin.management.routes.FlightBookingCtrl.index("flightQueues.awaitingAction")">New Flight Bookings <span class="label label-danger pull-right">@FlightBookings.find.where().eq("bookings.isArchived", false).findRowCount()</span></a></li>
+                    <li class="list-group-item"><a href="@controllers.admin.management.routes.FlightBookingCtrl.index("flightQueues.b2bSales.all")">B2B Flight Queues <span class="label label-danger pull-right">@FlightBookings.find.where().eq("bookings.isArchived", false).where().eq("bookings.salesCategory", SalesCategory.B2B).findRowCount()</span></a></li>
+                    <li class="list-group-item"><a href="@controllers.admin.management.routes.FlightBookingCtrl.ticketingQueue">PNR Ticketing Queues <span class="label label-info">New</span> <span class="label label-danger pull-right">@{BookingQueues.find.where().eq("actionType", "AWAITING_ISSUE").findRowCount}</span></a></li>
+                    <li class="list-group-item"><a href="@controllers.admin.management.routes.FlightBookingCtrl.index("flightQueues.flightQueues.paymentFailed")">Failed Flight Bookings <span class="label label-danger pull-right">@FlightBookings.find.where().eq("bookings.isArchived", false).where().eq("bookings.status", BookingStatus.FAILED_BOOKING).findRowCount()</span></a></li>
+                    <li class="list-group-item"><a href="@controllers.admin.management.routes.PackageBookingCtrl.index("packageQueues.archieved")">Packages Queues <span class="label label-danger pull-right">@PackageBookings.find.where().eq("bookings.isArchived", false).where().eq("bookings.status", BookingStatus.FAILED_BOOKING).findRowCount()</span></a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 col-xs-12">
+            <div class="panel">
+                <h5 class="panel-heading panel-primary"><strong>Finance &amp; Payment Queues</strong></h5>
+                <ul class="list-group">
+                    <li class="list-group-item"><a href="@controllers.admin.management.routes.FlightBookingCtrl.index("flightQueues.paymentStatus.confirmed")">Payment Confirmed <span class="label label-danger pull-right">@Bookings.find.where().eq("isPaymentConfirmed", true).where().eq("isArchived", true).findRowCount()</span></a></li>
+                    <li class="list-group-item"><a href="@controllers.admin.management.routes.FlightBookingCtrl.index("flightQueues.paymentMethod.bookOnHold")">Book on Hold/EFT <span class="label label-danger pull-right">@Bookings.find.where().eq("isArchived", true).where().eq("paymentHistoryId.paymentMethodId.code", PaymentCategories.CASH_PAYMENT).findRowCount()</span></a></li>
+                    <li class="list-group-item"><a href="@controllers.admin.management.routes.FlightBookingCtrl.index("flightQueues.paymentMethod.webpay")">All Online Payment Queues <span class="label label-danger pull-right">@Bookings.find.where().in("paymentHistoryId.paymentMethodId.paymentCategory", PaymentCategories.Debit_Card, PaymentCategories.Credit_Card).findRowCount()</span></a></li>
+                    <li class="list-group-item"><a href="@controllers.admin.management.routes.FlightBookingCtrl.index("flightQueues.paymentMethod.webpay.debit")">Debit Card Payment  <span class="label label-danger">@FlightBookings.find.where().eq("bookings.isArchived", false).where().eq("bookings.paymentHistoryId.paymentMethodId.paymentCategory", PaymentCategories.Debit_Card).findRowCount()</span></a></li>
+                    <li class="list-group-item"><a href="@controllers.admin.management.routes.FlightBookingCtrl.index("flightQueues.paymentMethod.webpay.credit")">Credit Card Payment <span class="label label-danger">@FlightBookings.find.where().eq("bookings.isArchived", false).where().eq("bookings.paymentHistoryId.paymentMethodId.paymentCategory", PaymentCategories.Credit_Card).findRowCount()</span></a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="col-md-6 col-sm-6 col-xs-12 panel">
+            <div class="">
+                <h3><strong>Most Recent Bookings</strong></h3>
+                <table class="table table-striped table-bordered table-hover" cellspacing="0" width="100%">
+                    <thead>
+                        <tr>
+                            <th>TD Ref</th>
+                            <th>Supplier</th>
+                            <th>Status</th>
+                            <th>Booked Date</th>
+                            <th>Vendor</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for(user <- Bookings.find.setMaxRows(4).order().desc("id").findList()) {
+                        <tr>
+                            <td>@user.getTransactionRef</td>
+                            <td>@user.getSupplier.getName.toUpperCase</td>
+                            <td>@user.getStatus.name()</td>
+                            <td>@user.getCreatedAt.format("yyyy-MM-dd")</td>
+                            @if(user.getHotelBookings != null) {
+                                <td>@user.getHotelBookings.getHotelName</td>
+                                <td><a href="@controllers.admin.management.routes.HotelBookingCtrl.manage(encrypt.encrypt(user.getTransactionRef))" class="btn btn-primary btn-sm">Action</a> </td>
+                            }else {
+                                @if(user.getFlightBookings != null) {
+                                    <td>@user.getFlightBookings.getAirlineCode</td>
+                                    <td><a href="@controllers.admin.management.routes.FlightBookingCtrl.itinerary(encrypt.encrypt(user.getId.toString))" class="btn btn-primary btn-sm">Action</a> </td>
+                                } else {
+                                    <td></td>
+                                    <td></td>
+                                }
+                            }
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+	</div>
+}
+@scripts = {
+    <script type="text/javascript" src="@routes.Assets.commonMyJs("jsBookingEngineForm.js")"></script>
+}

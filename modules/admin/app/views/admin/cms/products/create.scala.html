@@ -1,0 +1,93 @@
+@import helper._
+@import crypto.Encrypt
+@import controllers.admin.cms.routes
+@import views.html.admin.templates._
+@import b3.vertical.fieldConstructor
+@import scala.collection.JavaConversions._
+@import scala.collection.JavaConverters._
+@import controllers.admin.cms.ProductDAO
+@(form: Form[ProductDAO])(implicit request: RequestHeader, messages: Messages, manager: PrivateUsers, encrypt: Encrypt)
+@airports = @{
+    Airports.find.all().asScala.toList
+}
+@default(title = "Create/Edit Product ", tab = "product", scripts = script) {
+    <div class="panel">
+        <div class="panel-heading">
+        @if(form("id").value.isDefined) {
+            <h2 class="panel-name">Edit Product</h2>
+
+        } else {
+            <h2 class="panel-name">Create Product</h2>
+        }
+        </div>
+        <div class="panel-body">
+            @tags.alertFromRequest(request, "error")
+            @form.globalError.map { error =>
+                @tags.alert(error.message, "error")
+            }
+            @helper.form(CSRF(routes.ProductCtrl.save)) {
+                @if(form("id").value.nonEmpty) {
+                    <input type="hidden" value="@form("id").value.get" name="@form("id").name" />
+                }
+                <div class="row">
+                    <div class="col-md-6">
+                        @helper.inputText(form("name"), 'class -> "form-control", '_label -> "Name")
+                    </div>
+                    <div class="col-md-6">
+                        @helper.inputText(form("code"), 'class -> "form-control", '_label -> "Unique Code")
+                    </div>
+                    <div class="col-md-5">
+                        @helper.textarea(form("shortDescription"), '_label -> "Short Description(Max. 250 Characters )", 'rows -> "22", 'class -> "form-control")
+                    </div>
+                    <div class="col-md-7">
+                        @helper.textarea(form("fullDescription"), 'rows -> "10", 'class -> "form-control editable", '_label -> "Description(HTML)")
+                    </div>
+                    <div class="clearfix"></div>
+                    <div class="col-md-3">
+                        @helper.inputText(form("pricePerAdult"), 'class -> "form-control", '_label -> "Price Per Adult", 'placeholder -> "Price / Adult")
+                    </div>
+                    <div class="col-md-3">
+                        @helper.inputText(form("pricePerChild"), 'class -> "form-control", '_label -> "Price Per Child", 'placeholder -> "Price / Child")
+                    </div>
+                    <div class="col-md-3">
+                        @helper.inputText(form("pricePerInfant"), 'class -> "form-control", '_label -> "Price Per Infant", 'placeholder -> "Price / Infant")
+                    </div>
+                    <div class="col-md-3">
+                        @helper.checkbox(form("preSelect"), '_label -> "Pre-Select by Default?")
+                    </div>
+                    <div class="col-md-6">
+                        <select name="departure_airports[]" class="form-control chosen-select" multiple>
+                            <option value="">-----</option>
+                            @for((airport, index)<- airports.zipWithIndex) {
+                                <option value="@airport.getAirCode" @if(form.value.isDefined) { @if(form.value.get.departingCountries.contains(airport.getAirCode)) { selected="selected" } }>@airport.getAirCode</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <select name="arriving_airports[]" class="form-control chosen-select" multiple>
+                            <option value="">-----</option>
+                            @for((airport, index) <- airports.zipWithIndex) {
+                                <option value="@airport.getAirCode" @if(form.value.isDefined) { @if(form.value.get.arrivingCountries.contains(airport.getAirCode)) { selected="selected" } }>@airport.getAirCode</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="clearfix"></div>
+                    <br />
+                    <div class="col-md-12">
+                        <button type="submit" name="submit" class="btn btn-primary">Save</button>
+                        <span><a href="@routes.ProductCtrl.index" class="btn btn-default">Cancel</a></span>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@script = {
+    <script>
+            $(function () {
+
+
+            });
+    </script>
+}

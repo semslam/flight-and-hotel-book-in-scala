@@ -1,0 +1,52 @@
+@import controllers.common.routes
+@import com.avaje.ebean.Ebean
+@import com.avaje.ebean.RawSqlBuilder
+@(users: Option[Users])(implicit request: RequestHeader, messages: Messages)
+<form method="get" action="/packages" name="b2cPackageForm" id="b2cPackageForm" style="padding: 0 10px;">
+    <input type="hidden" name="apply_filter" value="true">
+    <div style="padding: 5px 18px; border-radius: 3px;">
+        <div class="row">
+            <div style="padding-right: 2px;padding-left: 2px;" class="col-md-3 col-xs-6 col-sm-6">
+                <label>Country</label>
+                <select class="form-control" name="country_id" required>
+                    @for(country <- Ebean.find(classOf[Packages]).select("countryId").setDistinct(true).findList()) {
+                        <option @if(request.getQueryString("country_id").getOrElse("156").toInt == country.getCountryId.getId) { selected="selected" } value="@country.getCountryId.getId">@country.getCountryId.getName</option>
+                    }
+                </select>
+            </div>
+            <div style="padding-right: 2px;padding-left: 2px;" class="col-md-3 col-xs-6">
+                <label>Theme</label>
+                <select name="theme_id" class="form-control">
+                    <option value="">All Themes</option>
+                    @for(theme <- PackageTheme.find.all()){
+                        <option @if(request.getQueryString("theme_id").getOrElse("") == theme.getId.toString) { selected="selected" } value="@theme.getId">@theme.getName</option>
+                    }
+                </select>
+            </div>
+            <div style="padding-right: 2px;padding-left: 2px;" class="col-md-2 col-xs-6">
+                <label>Departure</label>
+                <input readonly required class="form-control departure_date" value="@request.getQueryString("pick_up").orNull" placeholder="Pick-Up" data-type="dateIso" data-required="true" name="pick_up" data-error-message="Incorrect Date Specified" type="text">
+            </div>
+            <div style="padding-right: 2px;padding-left: 2px;" class="col-md-1 col-xs-6">
+                <label for="spinner6">Adults</label>
+                <select name="num_of_adult" class="form-control" required data-required="true">
+                @for(i <- 1 to 9) {
+                    <option value="@i">@i</option>
+                }
+                </select>
+            </div>
+            <div style="padding-right: 2px;padding-left: 2px;" class="col-md-1 col-xs-6">
+                <label for="spinner7">Child</label>
+                <select name="num_of_children" class="form-control" data-required="true" required>
+                @for(i <- 0 to 9) {
+                    <option value="@i">@i</option>
+                }
+                </select>
+            </div>
+            <div style="padding-right: 2px;padding-left: 2px;" class="col-md-2 col-xs-6">
+                <label>&nbsp;</label>
+                <button class="btn search-button button" type="submit">Find Packages</button>
+            </div>
+        </div>
+    </div>
+</form>

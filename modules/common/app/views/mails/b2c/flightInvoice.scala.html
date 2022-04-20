@@ -1,0 +1,259 @@
+@import flight.dto.entity.{ItineraryWSResponse, PNRDetails}
+@import com.alajobi.ota.utils.SystemControlSetting
+@(pnrDetail: PNRDetails, flightBookings: FlightBookings, itinerary: ItineraryWSResponse)
+@totalAmount = @{flightBookings.getBookings.getPaymentHistoryId.getTotalAmount}
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+        <title>@play.Configuration.root().getString("project.name") - Invoice (@pnrDetail.getItineraryRef)</title>
+        <style type="text/css">
+
+        /* Table */
+        .aqua_table {
+            margin: 20px 0;
+        }
+
+        .aqua_table th {
+            border: 1px solid #e2e2e2;
+            background: #4c4d4f url('http://jadorecakesonline.com/images/grad_menu.png') top left repeat-x;
+            text-align: center;
+            padding: 8px 14px;
+            font-size: 14px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .aqua_table td {
+            padding: 8px 14px;
+            border: #e2e2e2 1px solid;
+
+            -webkit-transition: all 0.3s linear;
+            -moz-transition: all 0.3s linear;
+            -ms-transition: all 0.3s linear;
+            -o-transition: all 0.3s linear;
+            transition: all 0.3s linear;
+        }
+
+        table {
+            border-collapse: collapse;
+        }
+
+        table, td, th {
+            border-bottom: 1px solid black;
+        }
+        </style>
+    </head>
+    <body>
+        <div align="" style="max-width: 100%">
+
+            <img src="@SystemControlSetting.getInstance().get(SystemControlSetting.CMS_LOGO)" height="120px" alt=""/>
+
+            <p>Dear @flightBookings.getBookings.getContactTitle <strong>@flightBookings.getBookings.getContactFirstname <strong> @flightBookings.getBookings.getContactSurname</strong></strong></p>
+            <p>Thank you for booking your Flight(s) with us.<br/>
+                <br/>
+                Here is your Booking Confirmation.&nbsp;<br/>
+                <br/>
+                This is NOT your E-Ticket. Once we have processed your payment, you will receive your e-ticket in a separate
+                email within 24 hours.&nbsp;<br/>
+                <br/>
+                Please verify all the details below; the passenger names, travel dates and itinerary. If any of the information
+                you have supplied is incorrect please do not hesitate to contact us immediately by sending an e-mail to <u>@play.Configuration.root().getString("project.email")</u>&nbsp;or
+                    by calling us on @play.Configuration.root().getString("project.phone1") or @play.Configuration.root().getString("project.phone2"). We will be more than willing to assist you.<br/>
+                <br/>
+                <strong><font color="#FF9049">Booking Reference</font></strong><strong> </strong></p>
+            <p>
+                Your Booking Reference: <strong>@flightBookings.getBookings.getTransactionRef</strong><br/>
+                Date: <strong>@{
+                new java.util.Date().format("dd MMM, yyyy HH:mm")
+            }</strong>
+            </p>
+            <div><p><strong><font color="#FF9049">Passenger(s)</font></strong></p></div>
+
+
+            <table width="90%" border="0">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>First Name</th>
+                        <th>Middle Name</th>
+                        <th>Last Name</th>
+                        <th>Passenger Type</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @for(passenger <- FlightBookingTraveller.find.where().eq("flightBookingId", flightBookings).findList()) {
+                    <tr>
+                        <td>@passenger.getNamePrefix</td>
+                        <td>@passenger.getFirstName</td>
+                        <td>@passenger.getMiddleName</td>
+                        <td>@passenger.getLastName</td>
+                        <td>@passenger.getPassengerCat</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+            <p>Email Id: @flightBookings.getBookings.getContactEmail <br/> Contact Number: @flightBookings.getBookings.getContactPhone</p>
+            <p>&nbsp;</p>
+            <div>
+                <p><strong><font color="#FF9049">Your Itinerary</font></strong><strong> </strong></p>
+            </div>
+            <div class="tab-content" style="padding: 10px; background: rgba(255, 90, 0, 0.08);">
+                <div role="tabpanel" class="tab-pane active row">
+                @for(item <- FlightBookingDestinations.find.where().eq("flightBookingId", flightBookings).findList()) {
+                    <div>
+                        <div class="col-md-10"><i class="icon icon-departure"></i> @item.getAirlineName <span> <i class="icon icon-long-arrow-right"></i> </span> <i class="icon icon-arrival"></i> @item.getArrivalAirportName </div>
+                        <div class="col-md-2 pull-right">Duration: @item.getDuration</div>
+                        <div class="clearfix"></div>
+                        <div class="col-md-12">
+                            <table class="table table-responsive" cellspacing="0" width="100%">
+                                <tbody>
+                                @for(flightSegment <- item.getFlightBookingDestinationSegmentsList) {
+                                    <tr>
+                                        <td>
+                                            <img src="https://s3-us-west-2.amazonaws.com/travelden/airline/@flightSegment.getAirlineCode.concat(".png")" alt="@flightSegment.getAirlineCode" style="width: 5.0em" class="img img-circle flight-ico-img"/>
+                                            <span class="text-center">@flightSegment.getAirlineCode</span>
+                                        </td>
+                                        <td>
+                                            <strong>@flightSegment.getDepartureDt.replaceAll("T", " ")</strong> <br />
+                                            <p>
+                                                @if(flightSegment.getDepartureAirportId != null) {
+                                                    @flightSegment.getDepartureAirportId.getAirportName
+                                                }
+                                                (@flightSegment.getDepartureAirportCode)
+                                            </p>
+                                        </td>
+                                        <td><i class="icon icon-long-arrow-right"></i></td>
+                                        <td>
+                                            <strong>@flightSegment.getArrivalDt.replaceAll("T", " ")
+                                            </strong> <br />
+                                            <p>
+                                            @if(flightSegment.getArrivalAirportId != null) {
+                                                @flightSegment.getArrivalAirportId.getAirportName
+                                            }
+                                                (@flightSegment.getArrivalAirportCode)</p>
+                                        </td>
+
+                                        <td class="text-center" width="12%">
+                                            <small>
+                                                <span>@if(item.getNumOfStops == 0) {
+                                                    Non stop
+                                                } else {
+                                                    @item.getNumOfStops Stop(s)
+                                                }
+                                                </span>
+                                            </small>
+                                            <div class="clearfix"></div>
+                                            <small class="text-primary">@item.getCabinClass</small>
+                                        </td>
+                                    </tr>
+                                }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                }
+                </div>
+            </div>
+            <br /><br />
+            <div>
+                <p><strong><font color="#FF9049">Fare Break Down</font></strong><strong> </strong></p>
+            </div>
+            <table border="1" cellspacing="0" cellpadding="0" width="100%">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                @for(item <- PaymentCartItems.find.where().eq("paymentHistoryId", flightBookings.getBookings.getPaymentHistoryId).findList()) {
+                    @if(!item.getItemName.equalsIgnoreCase("DIP")) {
+                        <tr>
+                            <td width="113"><p>@item.getItemName</p></td>
+                            @if(item.getItemName.equalsIgnoreCase("Flight Cost")) {
+                                <td width="113"><p>@Math.addExact(item.getAmount.toInt, Math.multiplyExact(2000, FlightBookingTraveller.find.where().eq("flightBookingId", flightBookings).findRowCount()))</p></td>
+                            } else {
+                                <td width="113"><p>@item.getAmount</p></td>
+                            }
+                        </tr>
+                    }
+                }
+            </table>
+
+            <p>&nbsp;</p>
+            <div>
+                <p><br/><strong><font color="#FF9049">
+                    Payment</font></strong> <strong>  @utils.Utilities.moneyFormat(totalAmount)</strong></p>
+            </div>
+            <p>
+                Total Amount due: <small>@flightBookings.getBookings.getPaymentHistoryId.getCurrency @utils.Utilities.moneyFormat(totalAmount)</small>
+            </p>
+            <p>Passengers are hereby advised to make payment with their full names as it appears on their booking notification
+                including your @play.Configuration.root().getString("project.name") reference as a remark for all online payments.<br/> &nbsp;<br/>
+                Please be informed that if you choose to pay with any of your bank cards (Visacard, Mastercard, Verve card),
+                separate charges may apply by the issuing bank. The airfare amounts are charged per person by the airline(s)
+                directly. Our Travel Product fees are included in the total amount charged by @play.Configuration.root().getString("project.name")<br/>
+                <br/>
+                For Bank payments please deposit the money at any of the banks listed below:<br/>
+                <br/>
+                <strong>@play.Configuration.root().getString("project.name") BANK ACCOUNT NUMBERS</strong></p>
+            <p>Account Name:&nbsp;<strong>@play.Configuration.root().getString("project.company.name")</strong></p>
+            <ol>
+                @for(bank <- PaymentMethods.find.where().eq("paymentCategory", PaymentCategories.CASH_PAYMENT).findList()) {
+                    <li>@bank.getName: &nbsp;<strong>@bank.getAccountNo</strong></li>
+                }
+            </ol>
+            <p>
+            </p>
+            <div>
+                <p><strong><font color="#FF9049">Important Information</font></strong></p>
+            </div>
+            <ul>
+                <li>The price quote is only valid until @{new java.util.Date().format("yyyy-MM-dd")} 23:00hrs. (Nigerian time).&nbsp;</li>
+                <li>If we receive your funds after the above date, price differences may have occurred.</li>
+            </ul>
+            <p>&nbsp;</p>
+            <div>
+                <p><strong><font color="#FF9049">Travel Documents</font></strong></p>
+            </div>
+            <p>Please ensure that all travel documents including passports, visas to final destinations and transit visas where
+                applicable have been duly obtained before embarking on your trip as @play.Configuration.root().getString("project.name") will not be liable for boarding
+                denial.<br/>
+                <br/>
+                Please provide the following information for Passengers travelling to the USA / Canada to enable us issue your
+                ticket or alternatively you can send us the data page of your International Passport.</p>
+            <ul>
+                <li>Full given names and surname as per passport&nbsp;</li>
+                <li>Passport number&nbsp;</li>
+                <li>Passport date of issue &amp; expiration date (Please ensure that your international passport has at least
+                    six months validity prior to its expiration date)
+                </li>
+                <li>Date of birth, Gender and Nationality&nbsp;</li>
+                <li>Country of Issue</li>
+                <li>Please email the above information to&nbsp;@play.Configuration.root().getString("project.email")</li>
+            </ul>
+            <p><br/>
+                Please note that passport names provided are not verified against the flight booking. Tickets are issued against
+                booked names - should the names be incorrect, please contact us to assist with a correction before the ticket is
+                issued.&nbsp;</p>
+            <br/>
+            <p>Kindly note that all bookings made can auto cancel at Airlines discretion and are subject to fare change based on availability<br /></p>
+            <p>Bookings originating from outside Nigeria are also subject to fare change at any time due to currency fluctuations, government taxes, government policies, and other restrictions</p>
+            <p>
+                <b><i>Thank you for choosing @play.Configuration.root().getString("project.name")</i></b><br />
+                <b><i>Team @play.Configuration.root().getString("project.name")</i></b>
+            </p>
+            <br/>
+            <div></div>
+            <div style="">
+                <div class="row">
+                    <div class="sixteen columns clearfix">
+                        <br/>
+                        <div align="right"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </body>
+</html>

@@ -1,0 +1,41 @@
+@import crypto.Encrypt
+@(users: List[PrivateUsers])(implicit request: RequestHeader, messages: Messages, manager: PrivateUsers, encrypt: Encrypt)
+@import controllers.admin.routes
+@import views.html.admin.templates._
+@import views.html.admin.tags.myDataTable
+@default(title = "Users List", tab = "user") {
+    <a href="@routes.UserCtrl.createPrivate()" class="btn btn-md btn-primary"><i class="fa fa-user"></i> Add New User (Private)</a>
+    @myDataTable(Seq("#", "Full Name", "Email", "Role", "Status", "Phone", "Date Created", "Last Login", "Action")) {
+        @tags.alertFromRequest(request, "success")
+        @if(users.nonEmpty) {
+            @for(user <- users) {
+                <tr>
+                    <td>@user.getId</td>
+                    <td>@user.getFirstName @user.getLastName</td>
+                    <td>@user.getEmail</td>
+                    <td>@user.getPhone</td>
+                    <td>
+                        <ul>
+                            @for(role <- user.getuRoles.split("<<>>")) {
+                                <li>@role</li>
+                            }
+                        </ul>
+                    </td>
+                    <td>@if(user.getStatus.eq(Status.Active)){ <span class="btn btn-xs btn-success">Active</span> } else { <span class="btn btn-xs btn-danger">In-active</span> }</td>
+                    <td>@user.getUpdatedAt.format("dd-MM-yyyy")</td>
+                    <td>@user.getCreatedAt.format("dd-MM-yyyy")</td>
+                    <td>
+                        <a class="btn btn-default btn-info" href="">Edit Account<span class="fa fa-pencil"></span></a>
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Action <span class="caret"></span></button>
+                            <ul class="dropdown-menu">
+                                <li><a href="#">Update Account</a></li>
+                                @*<li><a href="@routes.UserCtrl.blockCustomer(encrypt.encrypt(user.getId.toString), models.Status.Inactive.name(), "private")" class="popAlert" data-message="Are you sure you want to block @user.getFirstName @user.getLastName?">Block User</a></li>*@
+                            </ul>
+                        </div>
+                    </td>
+                </tr>
+            }
+        }
+    }
+}

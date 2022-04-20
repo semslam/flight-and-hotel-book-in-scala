@@ -1,0 +1,66 @@
+@import controllers.admin.pricerule.AirlineBlacklistDAO
+@import helper._
+@import views.html.admin.tags.myDataTable
+@import controllers.admin.pricerule.routes
+@import crypto.Encrypt
+@(blacklistAirlineForm: Form[AirlineBlacklistDAO], blacklistedAirlines: List[BlacklistedAirlines])(implicit request: RequestHeader, manager: PrivateUsers, messages: Messages, encrypt: Encrypt)
+@views.html.admin.templates.default(title = "Airlines &amp; Airline Blacklisting", tab = "bookingSettings") {
+    <div class="panel">
+        <header class="panel-heading">
+            <h2 class="panel-name">Airline Blacklisting</h2><br />
+        </header>
+        <div class="panel-body">
+            <div class="row">
+                <div class="col-md-9">
+                    <div class="col-md-12 panel-heading"><h4><strong>Disabled Airlines</strong></h4></div>
+                    <div class="clearfix"></div>
+                    @myDataTable(Seq("#", "Name", "Code", "Created at", "Action"), "desc", "blacklisted") {
+                        @if(blacklistedAirlines.nonEmpty) {
+                            @for(item <- blacklistedAirlines) {
+                                <tr>
+                                    <td>@item.getId</td>
+                                    <td>@item.getAirlineName</td>
+                                    <td>@item.getAirlineCode</td>
+                                    <td>@item.getCreatedAt.format("yyyy-MM-dd HH:mm")</td>
+                                    <td>
+                                        <span>
+                                            <a href="@routes.FlightPriceRuleCtrl.deleteBlacklist(encrypt.encrypt(item.getId.toString))" class="btn btn-xs btn-danger"><span class="fa fa-times"></span> Delete</a>
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    }
+                </div>
+                <div class="col-md-3">
+                    <div class="panel-heading col-md-12"><h4><strong>Disable an Airline</strong></h4></div>
+                    <div class="clearfix"></div>
+                    @tags.alertFromRequest(request, "success")
+                    @tags.alertFromRequest(request, "error")
+                    @blacklistAirlineForm.globalError.map { error =>
+                        @tags.alert(error.message, "error")
+                    }
+                    <form method="post" data-validate="parsley" action="@routes.FlightPriceRuleCtrl.blacklistAirline()">
+                        @CSRF.formField
+                        <input type="hidden" value="@blacklistAirlineForm("id").value.orNull" name="@blacklistAirlineForm("id").name" />
+                        <div class="form-group">
+                            <label for="name">Airline Name</label>
+                            <input type="text" name="@blacklistAirlineForm("name").name" data-required="true" value="@blacklistAirlineForm("name").value" id="name" class="form-control" placeholder="Airline Name" />
+                        </div>
+                        <div class="form-group">
+                            <label for="itemTypes">Airline Code</label>
+                            <input type="text" name="@blacklistAirlineForm("code").name" data-required="true" value="@blacklistAirlineForm("code").value.orNull" id="itemTypes" class="form-control" placeholder="Airline Code" />
+                        </div>
+                        <p class="form-group">
+                            <label for="adv_opt"><input type="checkbox" name="adv_opt" id="adv_opt"  /> [+] Advanced Option</label>
+                        </p>
+                        <div class="form-group">
+                            <button type="reset" class="btn btn-md btn-danger"><span class="fa fa-times"></span></button>
+                            <button type="submit" class="btn btn-md btn-success">Submit</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+}

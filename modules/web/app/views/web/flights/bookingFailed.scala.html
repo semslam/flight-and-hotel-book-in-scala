@@ -1,0 +1,37 @@
+@import crypto.Encrypt
+@(flightBookings: FlightBookings)(implicit request: RequestHeader, messages: Messages, encrypt: Encrypt, loggedManager: Option[Users])
+@import views.html.paymentapi._
+@import views.html.bookingEngine._
+@views.html.web.templates.default(title = "Booking Failed", scripts = scripts, styles = style ,loggedManager) {
+    <style>
+            .search-section .trip-types .active {
+                color: #777
+            }
+    </style>
+    <div class="container">
+        <div class="spacer25 panel">
+            <div class="panel-heading text-center">
+                <h2 class="text-danger"><span class="glyphicon glyphicon-remove-circle"></span> Ooops!<br />
+                    Sorry, this fare is no more available.  </h2>
+                <h4>We'll redirect you to check other options</h4>
+                @tags.alertFromRequest(request, "error")
+            </div>
+            <div class="panel-body">
+            @("[flightBookingEngine]")
+            </div>
+        </div>
+    </div>
+}
+
+@style = {
+    <style>
+            .search-section .trip-types .active {
+                color: #777
+            }
+    </style>
+}
+@scripts = {
+    <script>
+
+    </script>
+}

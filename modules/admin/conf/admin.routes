@@ -1,0 +1,232 @@
+# ADMIN Routes
+# This file defines ADMIN application routes (Higher priority routes first)
+# ~~~~
+
+# Authentication pages
+GET         /signin                                                                    controllers.admin.AuthCtrl.signIn
+POST        /authenticate                                                              controllers.admin.AuthCtrl.authenticate
+GET         /signout                                                                   controllers.admin.AuthCtrl.signOut
+GET         /reset-password                                                            controllers.admin.AuthCtrl.forgotPassword(email: String ?= "")
+POST        /reset-password                                                            controllers.admin.AuthCtrl.handleForgotPassword
+GET         /reset-password/:token                                                     controllers.admin.AuthCtrl.resetPassword(token: String)
+POST        /reset-password/:token                                                     controllers.admin.AuthCtrl.handleResetPassword(token: String)
+GET         /change-password                                                           controllers.admin.AuthCtrl.changePassword
+POST        /change-password                                                           controllers.admin.AuthCtrl.handleChangePassword
+GET         /denied                                                                    controllers.admin.AuthCtrl.accessDenied
+
+GET         /bug-report                                                                controllers.admin.ApplicationCtrl.bugReport
+POST        /bug-report                                                                controllers.admin.ApplicationCtrl.submitBug
+
+
+# Home page
+GET         /                                                                          controllers.admin.ApplicationCtrl.index
+GET         /xhr-chart                                                                 controllers.admin.ApplicationCtrl.chartData(dtype: String ?= "")
+GET         /search                                                                    controllers.admin.ApplicationCtrl.appSearch
+GET         /uuid                                                                      controllers.admin.ApplicationCtrl.cookieUID(cookie_id: String, redirect_to: String)
+
+GET         /myaccount                                                                 controllers.admin.ApplicationCtrl.myAccount
+GET         /social                                                                    controllers.admin.ApplicationCtrl.social
+GET         /sales_or_high                                                             controllers.admin.ApplicationCtrl.salesOrHigh
+GET         /sales_and_high                                                            controllers.admin.ApplicationCtrl.salesAndHigh
+GET         /settings                                                                  controllers.admin.ApplicationCtrl.settings
+
+GET         /lang/$lang<(en|es)>                                                       controllers.admin.ApplicationCtrl.selectLang(lang: String)
+
+# User & Role Management
+GET         /user/agent/list                                                           controllers.admin.management.B2BSystemCtrl.index
+GET         /user/agent/detail/:id                                                     controllers.admin.management.B2BSystemCtrl.detail(id: String)
+GET         /user/agent/moderate                                                       controllers.admin.management.B2BSystemCtrl.moderateAgent(id: String)
+GET         /user/agent/block-customer                                                 controllers.admin.management.B2BSystemCtrl.blockCustomer(uid: String, status: String, uCat: String ?= "public")
+
+GET         /reset-u-password/:activationToken                                         controllers.admin.UserCtrl.resetPassword(activationToken: String)
+GET         /user/customer/list                                                        controllers.admin.UserCtrl.customers
+GET         /user/private-users                                                        controllers.admin.UserCtrl.privateUsers
+GET         /user/change-private-user-password/:uid                                    controllers.admin.UserCtrl.changePassword(uid: String)
+GET         /user/delete-user/:uid                                                     controllers.admin.UserCtrl.deletePrivate(uid: String)
+GET         /user/create-private                                                       controllers.admin.UserCtrl.createPrivate(id: String ?= "")
+POST        /user/save-private-users                                                   controllers.admin.UserCtrl.savePrivate
+
+
+# Content Manament System.
+GET         /cms/content-categories                                                    controllers.admin.cms.ContentCategoryCtrl.index
+GET         /cms/content-categories/create                                             controllers.admin.cms.ContentCategoryCtrl.create(id: String ?= "")
+POST        /cms/content-categories/create                                             controllers.admin.cms.ContentCategoryCtrl.save
+GET         /cms/content-categories/delete                                             controllers.admin.cms.ContentCategoryCtrl.delete(id: String ?= "")
+
+GET         /cms/fragments                                                             controllers.admin.cms.FragmentCtrl.index
+GET         /cms/container/toJson                                                      controllers.admin.cms.FragmentCtrl.toJson
+GET         /cms/fragment/create                                                       controllers.admin.cms.FragmentCtrl.create(id: String ?= "")
+POST        /cms/fragment/create                                                       controllers.admin.cms.FragmentCtrl.save
+GET         /cms/fragment/delete                                                       controllers.admin.cms.FragmentCtrl.delete(id: String ?= "")
+
+GET         /cms/templates                                                             controllers.admin.cms.TemplateCtrl.index
+GET         /cms/template/item-json/:id                                                controllers.admin.cms.TemplateCtrl.itemJson(id: Long)
+GET         /cms/template/create                                                       controllers.admin.cms.TemplateCtrl.create
+GET         /cms/template/edit                                                         controllers.admin.cms.TemplateCtrl.edit(id: String, pageId: String)
+POST        /cms/template/save                                                         controllers.admin.cms.TemplateCtrl.save
+GET         /cms/template/delete                                                       controllers.admin.cms.TemplateCtrl.delete(id: String ?= "")
+GET         /cms/template/items/:id                                                    controllers.admin.cms.TemplateCtrl.items(id: String)
+GET         /cms/template/preview/:id                                                  controllers.admin.cms.TemplateCtrl.previewTemplate(id: String)
+
+GET         /cms/pages                                                                 controllers.admin.cms.PageCtrl.index
+GET         /cms/page/create                                                           controllers.admin.cms.PageCtrl.create(id: String ?= "")
+POST        /cms/page/create                                                           controllers.admin.cms.PageCtrl.save
+GET         /cms/page/delete                                                           controllers.admin.cms.PageCtrl.delete(id: String)
+
+GET         /cms/deals                                                                 controllers.admin.cms.DealCtrl.index
+GET         /cms/deal/create                                                           controllers.admin.cms.DealCtrl.create(id: String ?= "")
+POST        /cms/deal/create                                                           controllers.admin.cms.DealCtrl.save
+GET         /cms/deal/delete                                                           controllers.admin.cms.DealCtrl.delete(id: String)
+
+GET         /cms/banners                                                               controllers.admin.cms.BannerCtrl.index
+GET         /cms/banner/create                                                         controllers.admin.cms.BannerCtrl.create(id: String ?= "")
+POST        /cms/banner/create                                                         controllers.admin.cms.BannerCtrl.save
+GET         /cms/banner/delete                                                         controllers.admin.cms.BannerCtrl.delete(id: String)
+
+GET         /cms/packages                                                              controllers.admin.cms.PackageCtrl.index
+GET         /cms/package/create                                                        controllers.admin.cms.PackageCtrl.create(id: String ?= "")
+POST        /cms/package/create                                                        controllers.admin.cms.PackageCtrl.save
+GET         /cms/package/delete                                                        controllers.admin.cms.PackageCtrl.delete(id: String)
+
+GET         /cms/products                                                              controllers.admin.cms.ProductCtrl.index
+GET         /cms/product/create                                                        controllers.admin.cms.ProductCtrl.create(id: String ?= "")
+POST        /cms/product/create                                                        controllers.admin.cms.ProductCtrl.save
+GET         /cms/product/delete                                                        controllers.admin.cms.ProductCtrl.delete(id: String)
+
+
+
+GET         /cms/package/theme                                                         controllers.admin.cms.PackageCtrl.manageTheme
+GET         /cms/package/theme/create                                                  controllers.admin.cms.PackageCtrl.createTheme(id: String ?= "")
+POST        /cms/package/theme/create                                                  controllers.admin.cms.PackageCtrl.saveTheme
+GET         /cms/package/theme/delete                                                  controllers.admin.cms.PackageCtrl.deleteTheme(id: String)
+
+GET         /cms/links                                                                 controllers.admin.cms.LinkCtrl.index
+GET         /cms/link/create                                                           controllers.admin.cms.LinkCtrl.create(id: String ?= "")
+POST        /cms/link/create                                                           controllers.admin.cms.LinkCtrl.save
+GET         /cms/link/delete                                                           controllers.admin.cms.LinkCtrl.delete(id: String)
+
+GET         /cms/appearances                                                           controllers.admin.cms.AppearanceCtrl.index
+POST        /cms/appearance/header                                                     controllers.admin.cms.AppearanceCtrl.header
+POST        /cms/appearance/footer                                                     controllers.admin.cms.AppearanceCtrl.footer
+POST        /cms/appearance/logo                                                       controllers.admin.cms.AppearanceCtrl.logo
+POST        /cms/appearance/searching                                                  controllers.admin.cms.AppearanceCtrl.searching
+
+# Reports
+GET         /report/audit-trail                                                        controllers.admin.reports.AuditCtrl.index
+GET         /report/generate-report                                                    controllers.admin.reports.ReportCtrl.generateReport()
+POST        /report/generate-report                                                    controllers.admin.reports.ReportCtrl.postGenerateReport
+GET         /report/users-and-newsletter-report                                        controllers.admin.reports.ReportCtrl.usersReport()
+POST        /report/users-and-newsletter-report                                        controllers.admin.reports.ReportCtrl.usersReportPost()
+
+# Queue Management Routes.
+GET         /flight/booking/queues                                                     controllers.admin.management.FlightBookingCtrl.index(qType: String  ?= null)
+GET         /flight/booking/itinerary                                                  controllers.admin.management.FlightBookingCtrl.itinerary(ref: String)
+POST        /flight/itinerary/send-mail/:itineraryId                                   controllers.admin.management.FlightBookingCtrl.sendMailSms(itineraryId: Long)
+POST        /flight/itinerary/comment/:itineraryId                                     controllers.admin.management.FlightBookingCtrl.comment(itineraryId: Long)
+GET         /flight/itinerary/preview-comment/:commentId                               controllers.admin.management.FlightBookingCtrl.previewComment(commentId: Long)
+POST        /flight/itinerary/save/to-queue/:itineraryId                               controllers.admin.management.FlightBookingCtrl.addItineraryToQueue(itineraryId: String)
+GET         /flight/itinerary/modify-queue                                             controllers.admin.management.FlightBookingCtrl.modifyQueue
+GET         /flight/vendor/perform-pnr-action                                          controllers.admin.management.FlightBookingCtrl.vendorApiAction(actionType: String ?= null, isAuthorized: String ?= null, itinerary: String ?= null)
+POST        /flight/vendor/invoice-action                                              controllers.admin.management.FlightBookingCtrl.bookingInvoice(itinerary: String)
+GET         /flight/itinerary/unlock-access                                            controllers.admin.management.FlightBookingCtrl.unlockAccess(itinerary: String)
+GET 		/flight/itinerary/pnr-ticketing-queue										controllers.admin.management.FlightBookingCtrl.ticketingQueue
+GET 		/flight/itinerary/remove-item-from-queue									controllers.admin.management.FlightBookingCtrl.removeQueue(id: Long)
+
+GET         /flight/result/:locale                                                     controllers.admin.bookingengine.FlightCtrl.result(locale: String, fl_tabHash: String )
+GET         /flight/detail                                                             controllers.admin.bookingengine.FlightCtrl.detail(itineraryRef: String, fl_tabHash: String ?= "")
+POST        /flight/travellers                                                         controllers.admin.bookingengine.FlightCtrl.submitTraveller(itineraryRef: String, fl_tabHash: String ?= "")
+GET         /flight/booking/checkout                                                   controllers.admin.bookingengine.FlightCtrl.bookingCheckingOut(itineraryRef: String, fl_tabHash: String ?= "")
+POST        /flight/complete                                                           controllers.admin.bookingengine.FlightCtrl.bookItinerary(itineraryRef: String, fl_tabHash: String ?= "")
+GET         /flight/booking/:status                                                    controllers.admin.bookingengine.FlightCtrl.complete(status: String, bookingid: Long)
+
+GET         /hotel/booking/queues                                                      controllers.admin.management.HotelBookingCtrl.index(qType: String ?= null)
+GET         /hotel/management/booking/manage-booking                                   controllers.admin.management.HotelBookingCtrl.manage(ref: String ?= "")
+GET         /hotel/management/booking/query                                            controllers.admin.management.HotelBookingCtrl.queryBooking(hid: String)
+GET         /hotel/management/booking/cancel                                           controllers.admin.management.HotelBookingCtrl.cancelBooking(hid: String)
+POST        /hotel/itinerary/comment/:bid                                              controllers.admin.management.HotelBookingCtrl.comment(bid: Long)
+POST        /hotel/vendor/invoice-action                                               controllers.admin.management.HotelBookingCtrl.bookingInvoice(itinerary: String)
+
+GET         /package/booking/queues                                                    controllers.admin.management.PackageBookingCtrl.index(qType: String ?= null)
+GET         /package/booking/manage                                                    controllers.admin.management.PackageBookingCtrl.manage(qType: String ?= null)
+
+# TO be Served to Customer to view and make payment for booking
+GET         /booking/:transactionRef                                                   controllers.admin.management.FlightBookingCtrl.enquiry(transactionRef: String)
+GET         /pay/:transactionRef                                                       controllers.admin.management.FlightBookingCtrl.payOnline(transactionRef: String)
+
+GET         /cms/media                                                                 controllers.admin.cms.MediaCtrl.index
+POST        /cms/media/xhr-upload                                                      controllers.admin.cms.MediaCtrl.xhrUpload
+POST        /cms/media/upload                                                          controllers.admin.cms.MediaCtrl.upload
+GET         /cms/media/delete/:id                                                      controllers.admin.cms.MediaCtrl.delete(id: String)
+
+GET         /system/email-sms                                                          controllers.admin.systems.EmailSmsCtrl.index
+POST        /system/email-sms/save                                                     controllers.admin.systems.EmailSmsCtrl.emailSmsSetting
+GET         /system/email-sms/create-sms-template                                      controllers.admin.systems.EmailSmsCtrl.createSmsTemplate(id: String ?= null)
+GET         /system/email-sms/delete-sms-template                                      controllers.admin.systems.EmailSmsCtrl.deleteSmsTemplate(id: String ?= null)
+POST        /system/email-sms/create-sms-template                                      controllers.admin.systems.EmailSmsCtrl.saveSms
+GET         /system/email-sms/create-email-template                                    controllers.admin.systems.EmailSmsCtrl.createEmailTemplate(id: String ?= null)
+POST        /system/email-sms/create-email-template                                    controllers.admin.systems.EmailSmsCtrl.saveEmail
+POST        /system/email-sms/delete-email-template                                    controllers.admin.systems.EmailSmsCtrl.deleteEmailTemplate(id: String ?= null)
+GET         /system/email-sms/get-email                                                controllers.admin.systems.EmailSmsCtrl.getEmailXhr
+
+GET         /settings/price-rule/flight/commissionable-airline                         controllers.admin.pricerule.FlightPriceRuleCtrl.commissionableAirline(id: String ?= null)
+POST        /settings/price-rule/flight/save-commissionable-airline                    controllers.admin.pricerule.FlightPriceRuleCtrl.saveCommissionableAirline
+GET         /settings/price-rule/flight/delete-commissionable-airline/:id              controllers.admin.pricerule.FlightPriceRuleCtrl.deleteCommissionableAirline(id: String)
+GET         /settings/price-rule/flight/flight-fare-rule                               controllers.admin.pricerule.FlightPriceRuleCtrl.fareRuleManagement
+GET         /settings/price-rule/flight/create-airline-fare-rule                       controllers.admin.pricerule.FlightPriceRuleCtrl.createFareRuleManagement(id: String ?= null)
+GET         /settings/price-rule/flight/create-non-commission-airline-fare-rule        controllers.admin.pricerule.FlightPriceRuleCtrl.createNonCommissionFareRule(id: String ?= null)
+POST        /settings/price-rule/flight/save-flight-fare-rule                          controllers.admin.pricerule.FlightPriceRuleCtrl.saveFareRule
+GET         /settings/price-rule/flight/airlines                                       controllers.admin.pricerule.FlightPriceRuleCtrl.blacklistAirlines
+POST        /settings/price-rule/flight/blacklist-airlines                             controllers.admin.pricerule.FlightPriceRuleCtrl.blacklistAirline
+GET         /settings/price-rule/flight/blacklist-airline-status/:id                   controllers.admin.pricerule.FlightPriceRuleCtrl.deleteBlacklist(id: String)
+GET         /settings/price-rule/flight/delete-fare-rule/:id                           controllers.admin.pricerule.FlightPriceRuleCtrl.deleteFareRule(id: String)
+GET         /settings/price-rule/hotel                                                 controllers.admin.pricerule.HotelPriceRuleCtrl.index
+GET         /settings/price-rule/hotel/create                                          controllers.admin.pricerule.HotelPriceRuleCtrl.create(id: String ?= null)
+POST        /settings/price-rule/hotel/save                                            controllers.admin.pricerule.HotelPriceRuleCtrl.save
+GET         /settings/price-rule/hotel/delete                                          controllers.admin.pricerule.HotelPriceRuleCtrl.delete(id: String ?= null)
+GET         /settting/airline                                                          controllers.admin.systems.StaticDataCRUDCtrl.airlines
+GET         /settting/airline/create                                                   controllers.admin.systems.StaticDataCRUDCtrl.createAirline(id: Long ?= 0)
+GET         /settting/airline/save                                                     controllers.admin.systems.StaticDataCRUDCtrl.saveAirline
+GET         /settting/airport                                                          controllers.admin.systems.StaticDataCRUDCtrl.airports
+GET         /settting/airport/create                                                   controllers.admin.systems.StaticDataCRUDCtrl.createAirport(id: Long ?= 0)
+GET         /settting/airport/save                                                     controllers.admin.systems.StaticDataCRUDCtrl.saveAirport
+GET         /settting/countries                                                        controllers.admin.systems.StaticDataCRUDCtrl.country
+GET         /settting/country/create                                                   controllers.admin.systems.StaticDataCRUDCtrl.createCountry(id: Long ?= 0)
+GET         /settting/country/save                                                     controllers.admin.systems.StaticDataCRUDCtrl.saveCountry
+GET         /settting/facilities                                                       controllers.admin.systems.StaticDataCRUDCtrl.facilities
+GET         /settting/facility/create                                                  controllers.admin.systems.StaticDataCRUDCtrl.createFacility(id: Long ?= 0)
+GET         /settting/facility/save                                                    controllers.admin.systems.StaticDataCRUDCtrl.saveFacility
+
+GET         /settting/control/settings                                                 controllers.admin.systems.ControlSettingsCtrl.index
+GET         /settting/control/settings/save                                            controllers.admin.systems.ControlSettingsCtrl.save
+
+#GET         /system/currencies                                                         controllers.admin.systems.CurrencyLangCtrl.currencies(currencyId: String ?= null)
+#GET         /system/currencies/disable/:currencyId                                     controllers.admin.systems.CurrencyLangCtrl.disableCurrency(currencyId: String)
+#POST        /system/currencies/save                                                    controllers.admin.systems.CurrencyLangCtrl.saveCurrency
+
+GET         /system/settings/payment-methods                                           controllers.admin.systems.PaymentCtrl.index
+GET         /system/settings/payment-method/:category                                  controllers.admin.systems.PaymentCtrl.manage(category: String)
+GET         /system/settings/payment-method/create/:category                           controllers.admin.systems.PaymentCtrl.create(category: String)
+POST        /system/settings/payment-method/:category/save                             controllers.admin.systems.PaymentCtrl.save(category: String)
+
+# Map static resources from the /public folder to the /assets URL path
+GET         /admin/public/*file                                                        controllers.admin.Assets.public(path="/public/lib/web", file: Asset)
+GET         /admin/lib/*file                                                           controllers.admin.Assets.lib(path="/public/lib/web", file: Asset)
+GET         /admin/css/*file                                                           controllers.admin.Assets.css(path="/public/lib/admin/css", file: Asset)
+GET         /admin/fonts/*file                                                         controllers.admin.Assets.fonts(path="/public/lib/admin/fonts", file: Asset)
+GET         /admin/js/*file                                                            controllers.admin.Assets.js(path="/public/lib/admin/js", file: Asset)
+GET         /admin/my_js/*file                                                         controllers.admin.Assets.myJs(path="/public/lib/admin/my_js", file: Asset)
+GET         /admin/images/*file                                                        controllers.admin.Assets.img(path="/public/lib/admin/images", file: Asset)
+
+GET         /common/*file                                                              controllers.admin.Assets.commonPublic(path="/public/lib/common", file: Asset)
+GET         /common/css/*file                                                          controllers.admin.Assets.commonCss(path="/public/lib/common/css", file: Asset)
+GET         /common/js/*file                                                           controllers.admin.Assets.commonJs(path="/public/lib/common/js", file: Asset)
+GET         /common/my_js/*file                                                        controllers.admin.Assets.commonMyJs(path="/public/lib/common/my_js", file: Asset)
+GET         /common/plugins/*file                                                      controllers.admin.Assets.commonLib(path="/public/lib/common/plugins", file: Asset)
+GET         /common/fonts/*file                                                        controllers.admin.Assets.commonFont(path="/public/lib/common/fonts", file: Asset)
+GET         /common/images/*file                                                       controllers.admin.Assets.commonImg(path="/public/lib/common/images", file: Asset)
+
+
+GET         /rsc/*file                                                                 controllers.admin.SharedResources.rsc(file: String)
+
+
+->          /                                                                          common.Routes

@@ -1,0 +1,57 @@
+@import controllers.common.routes
+@import com.avaje.ebean.Ebean
+@import com.avaje.ebean.RawSqlBuilder
+@import scala.collection.JavaConversions._
+@import scala.collection.JavaConverters._
+@(users: Option[Users])(implicit request: RequestHeader, messages: Messages)
+@import models.Countries; val countries = Countries.find.all().asScala.toList
+<form method="/post-visa" name="b2cVisaForm" id="b2cVisaForm" style="padding: 0 10px;">
+    <div style="padding: 5px 18px; border-radius: 3px;">
+        <div class="row">
+            <div style="padding-right: 2px;padding-left: 2px;" class="col-md-2 col-xs-6 col-sm-6">
+                <label>Residential Country</label>
+                <select class="form-control" data-required="true" name="residentCountry" required>
+                    @for(country <- countries) {
+                        <option @if(request.getQueryString("country_id").getOrElse("156").toInt == country.getId) { selected="selected" } value="@country.getId">@country.getName (@country.getIsoCode3)</option>
+                    }
+                </select>
+            </div>
+            <div style="padding-right: 2px;padding-left: 2px;" class="col-md-2 col-xs-6">
+                <label>Destination Country</label>
+                <select class="form-control" data-required="true" data-required="true" name="arrivingCountry" required>
+                    <option value="">Select</option>
+                    @for(country <- countries) {
+                        <option value="@country.getId">@country.getName (@country.getIsoCode3)</option>
+                    }
+                </select>
+            </div>
+            <div style="padding-right: 2px;padding-left: 2px;" class="col-md-1 col-xs-6">
+                <label>Departing</label>
+                <input readonly class="form-control departure_date" value="@request.getQueryString("dDate").orNull" placeholder="Pick-Up" data-type="dateIso" data-required="true" name="dDate" data-error-message="Incorrect Date Specified" type="text">
+                <input name="aDate" type="hidden" value="N/A">
+            </div>
+            <div style="padding-right: 2px;padding-left: 2px;" class="col-md-2 col-xs-6">
+                <label for="spinner7">Full name</label>
+                <input type="text" class="form-control" name="fullName" data-required="true" required placeholder="First & Last Name " />
+            </div>
+            <div style="padding-right: 2px;padding-left: 2px;" class="col-md-2 col-xs-6">
+                <label for="spinner7">Email</label>
+                <input name="email" type="email" class="form-control" data-required="true" required placeholder="example@@domain.com" />
+            </div>
+            <div style="padding-right: 2px;padding-left: 2px;" class="col-md-2 col-xs-6">
+                <label for="spinner7">Mobile Phone</label>
+                <input type="text" name="phone" required class="form-control" data-required="true" placeholder="Mobile Phone Number" />
+            </div>
+            <div style="padding-right: 2px;padding-left: 2px;" class="col-md-1 col-xs-6">
+                <button class="btn search-button button" type="submit">Submit</button>
+            </div>
+        </div>
+    </div>
+</form>
+<script>
+    $(function() {
+        $("form[name=b2cVisaForm]").on('submit', function () {
+
+        });
+    })
+</script>

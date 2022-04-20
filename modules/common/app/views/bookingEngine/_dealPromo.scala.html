@@ -1,0 +1,15 @@
+@(deal: Deals, code: String)
+@if(deal != null) {
+    <div class="one_fourth gallery4 grid static filterable portfolio_type themeborder" style="background-image:url('@deal.getUrl');">
+        <a class="tour_image" @if(deal.getUrl != null) { href="@deal.getUrl" }></a>
+        <div class="portfolio_info_wrapper row">
+            <div class="col-md-7">
+                <h3>@deal.getName</h3>
+                <h6>@deal.getOriginCity <span class="fa fa-exchange"></span> @deal.getDestinationCity</h6>
+            </div>
+            <div class="col-md-5">&#x20a6; @deal.getPriceFrom</div>
+        </div>
+    </div>
+} else {
+    <p class="text-danger">Deal @code Not Found.</p>
+}

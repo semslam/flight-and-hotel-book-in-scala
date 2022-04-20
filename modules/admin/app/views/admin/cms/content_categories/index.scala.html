@@ -1,0 +1,35 @@
+@import views.html.admin.tags.myDataTable
+@import crypto.Encrypt
+
+
+@(items: List[CmsContentCategories])(implicit request: RequestHeader, messages: Messages, manager: PrivateUsers, encrypt: Encrypt)
+@import controllers.admin.cms.routes
+@import views.html.admin.templates._
+@default(title = "Content Categories", tab = "cms") {
+    <div class="panel">
+        <header class="panel-heading">
+            <h2 class="panel-name">Content Categories</h2>
+            <br />
+            <a href="@routes.ContentCategoryCtrl.create()" class="btn btn-default"><i class="fa fa-plus"></i> Create New Category</a><br />
+        </header>
+        <div class="panel-body">
+            @myDataTable(Seq("#", "Cat. Path", "Name", "Updated at", "Action")) {
+                @tags.alertFromRequest(request, "success")
+                @if(items.nonEmpty) {
+                    @for(item <- items) {
+                        <tr>
+                            <td>@item.getId</td>
+                            <td>@item.getBreadcrumbStr.replaceAllLiterally("/", " / ")</td>
+                            <td>@item.getName</td>
+                            <td>@item.getUpdatedAt.format("dd-MM-YYYY")</td>
+                            <td>
+                                <span><a href="@routes.ContentCategoryCtrl.create(encrypt.encrypt(item.getId.toString))" class="btn btn-xs btn-primary"><i class="fa fa-pencil"></i> Edit</a></span>
+                                <span><a href="@routes.ContentCategoryCtrl.delete(encrypt.encrypt(item.getId.toString))" class="btn btn-xs btn-danger"><i class="fa fa-times"></i> Delete</a></span>
+                            </td>
+                        </tr>
+                    }
+                }
+            }
+        </div>
+    </div>
+}

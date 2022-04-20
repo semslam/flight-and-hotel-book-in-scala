@@ -1,0 +1,72 @@
+
+@()(implicit request: RequestHeader, manager: Users, messages: Messages)
+
+@import controllers.b2b.routes
+
+@views.html.b2b.templates.default(title = "My account", tab = "myaccount") {
+
+    @tags.alertFromRequest(request, "success")
+    @tags.alertFromRequest(request, "error")
+
+    <div class="panel panel-body">            <!-- Nav tabs -->
+        <ul class="nav nav-tabs" role="tablist">
+            <li role="presentation" class="active"><a href="#profile" aria-controls="profile" role="tab" data-toggle="tab">Profile</a></li>
+            @*<li role="presentation"><a href="#messages" aria-controls="messages" role="tab" data-toggle="tab">Messages</a></li>*@
+            @*<li role="presentation"><a href="#settings" aria-controls="settings" role="tab" data-toggle="tab">Settings</a></li>*@
+        </ul>
+
+            <!-- Tab panes -->
+        <div class="tab-content">
+            <div role="tabpanel" class="tab-pane active" id="profile">
+                <h1>@Messages("b2b.myaccount.title") <a class="btn btn-default btn-sm pull-right" href="@routes.AuthCtrl.changePassword">@Messages("changepass")</a></h1>
+                <table class="table table-bordered table-condensed">
+                    <tr>
+                        <td>@Messages("field.email")</td>
+                        <td>@manager.getEmail</td>
+                    </tr>
+                    <tr>
+                        <td>Phone</td>
+                        <td>@manager.getPhone</td>
+                    </tr>
+                    <tr>
+                        <td>@Messages("field.firstname")</td>
+                        <td>@manager.getPrefix @manager.getFirstName</td>
+                    </tr>
+                    <tr>
+                        <td>@Messages("field.lastname")</td>
+                        <td>@manager.getLastName</td>
+                    </tr>
+                    <tr>
+                        <td>Company Name</td>
+                        <td>@manager.getAgentCorporateDetailId.getCompanyName</td>
+                    </tr>
+                    <tr>
+                        <td>Company Address</td>
+                        <td>@manager.getAgentCorporateDetailId.getContactAddress</td>
+                    </tr>
+                    <tr>
+                        <td>Country</td>
+                        <td>@manager.getAgentCorporateDetailId.getCountryId.getName @manager.getAgentCorporateDetailId.getCity</td>
+                    </tr>
+                    <tr>
+                        <td>City</td>
+                        <td>@manager.getAgentCorporateDetailId.getCity</td>
+                    </tr>
+                    <tr>
+                        <td>Account Status</td>
+                        <td>@manager.getStatus.name()</td>
+                    </tr>
+                    <tr>
+                        <td><img src="@manager.getAgentCorporateDetailId.logo()" class="img img-responsive" height="55px" style="height: 55px"></td>
+                        <td><a href="@routes.ApplicationCtrl.editProfile" class="btn btn-md btn-primary ajax">Edit Logo</a></td>
+                    </tr>
+                </table>
+            </div>
+            <div role="tabpanel" class="tab-pane" id="messages">...</div>
+            <div role="tabpanel" class="tab-pane" id="settings">...</div>
+        </div>
+
+    </div>
+
+
+}

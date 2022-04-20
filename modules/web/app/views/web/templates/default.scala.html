@@ -1,0 +1,4 @@
+@import crypto.Encrypt
+@(title: String, scripts: Html = Html(""), styles: Html = Html(""), loggedUser: Option[Users] = None, modals: Html = Html(""), bodyClass: String = "load-full-screen")(content: Html)(implicit messages: Messages, request: RequestHeader, encrypt: Encrypt)
+@import controllers.web.routes
+@views.html.web.templates.main(title, scripts, styles, loggedUser, bodyClass = bodyClass)(content)

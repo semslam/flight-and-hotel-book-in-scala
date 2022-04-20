@@ -1,0 +1,56 @@
+@import crypto.Encrypt
+@import controllers.web.KycFormDAO
+@import controllers.web.routes
+@(visaForm: Form[KycFormDAO])(implicit request: RequestHeader, maybeUser: Option[Users], messages: Messages, encrypt: Encrypt)
+@views.html.web.templates.default(title = "KYC Form", loggedUser = maybeUser) {
+	<div class="container">
+		<ul class="breadcrumb">
+			<li><a href="/" title="Home">Home</a></li>
+			<li>Know your Customer</li>
+		</ul>
+		<div class="row">
+			<aside class="col-md-5 col-md-offset-3 right-sidebar">
+				<h2>Know your Customer Form</h2>
+				<p>We want to know your interests, to help us serve you better.</p>
+				<article class="widget" style="padding: 10px;border: 1px solid #CCC;border-radius: 5px;">
+					@tags.alertFromRequest(request, "success")
+					<form method="post" action="@routes.ApplicationCtrl.postKyc">
+						@helper.CSRF.formField
+						<fieldset>
+							<div id="message"></div>
+							<div class="row">
+								<div class="f-item col-md-12">
+									<label for="name">Full Name <small class="text-danger">* Required</small>s</label>
+									<input type="text" id="fname" name="@visaForm("fullName").name" class="form-control" value="@visaForm("fullName").value.orNull" required />
+								</div>
+								<div class="f-item col-md-6">
+									<label for="name">Phone <small class="text-danger">* Required</small></label>
+									<input type="text" id="phone" name="@visaForm("phone").name" class="form-control" value="@visaForm("phone").value.orNull" required />
+								</div>
+								<div class="f-item col-md-6">
+									<label for="email">Email</label>
+									<input type="text" id="email" name="@visaForm("email").name" class="form-control" value="@visaForm("email").value.orNull" />
+								</div>
+								<div class="f-item col-md-12">
+									<label for="name">Area of Interest <small class="text-danger">* Required</small></label>
+									<select name="@visaForm("interest").name" id="airline" class="form-control" data-required="true">
+										<option value="">-------</option>
+										@for(airline <- Array("Flight", "Hotel", "Flight & Hotels", "Tour Packages")) {
+											<option @if(visaForm("interest").value.isDefined && visaForm("interest").value.get.equals(airline)) { selected="selected"
+											} value="@airline">@airline</option>
+										}
+									</select>
+								</div>
+								<div class="f-item col-md-12" style="margin-top: 15px">
+									<button type="submit" class="form-control btn btn-md btn-primary">Submit</button>
+								</div>
+
+							</div>
+						</fieldset>
+					</form>
+				</article>
+			</aside>
+		</div>
+	</div>
+	<div class="gap"></div>
+}

@@ -1,0 +1,98 @@
+@import crypto.Encrypt
+@import controllers.web.VisaFormDAO
+@import controllers.web.routes
+@(visaForm: Form[VisaFormDAO])(implicit request: RequestHeader, maybeUser: Option[Users], messages: Messages, encrypt: Encrypt)
+@views.html.web.templates.default(title = "Visa Application", loggedUser = maybeUser) {
+	<div class="container">
+		<ul class="breadcrumb">
+			<li><a href="/" title="Home">Home</a></li>
+			<li>Visa Application</li>
+		</ul>
+		<div class="row">
+			<div class="col-md-7">
+				<div class="map-wrap">
+					<h1>Let's sort you out!</h1>
+					<img src="https://s3-us-west-2.amazonaws.com/travelden/f0b3e3b9e2ad4290af8a98c12be7975c.jpg" class="img img-responsive" />
+					<p>We know its quite a hassle applying for a Visa. Hoping to secure
+						a tourist visa or permanent residency, get assistance with
+						interview preparation, visa application forms,
+						documents vetting, getting appointment dates,
+						we have experienced experts who can ensure a 99% chance.
+					</p>
+					<br />
+					<p>We know it can be a hassle applying for a visa. Let's take the stress off you. We handle</p>
+					<div class="col-md-6"><strong>*</strong> Tourist visas and permanent residency</div>
+					<div class="col-md-6"><strong>*</strong> Document verification</div>
+
+					<div class="col-md-6"><strong>*</strong> Getting an appointment with the consular</div>
+					<div class="col-md-6"><strong>*</strong> Interview tips and hints</div>
+					<br />
+					<p>Fast track your application for personal, business and emergency travels with TravelDen today!</p>
+					<br />
+					<small><strong>VISA ISSUANCE AT THE DISCRETION OF THE CONSULAR</strong></small>
+					<div class="row">
+						<h4 class="col-md-12">Contact our visa consultants for all your Travel visa related questions.</h4>
+						<div class="clearfix"></div>
+						<ul class="list-inline">
+							<li><span class="fa fa-mobile-phone"></span> @play.Configuration.root().getString("project.phone1")</li>
+							<li><span class="fa fa-mobile-phone"></span> @play.Configuration.root().getString("project.phone2")</li>
+							<li><span class="fa fa-mobile-phone"></span> @play.Configuration.root().getString("project.phone3")</li>
+							<li style="text-transform: lowercase"><span class="fa fa-envelope-o"></span> @play.Configuration.root().getString("project.email")</li>
+						</ul>
+					</div>
+				</div>
+			</div>
+			<aside class="col-md-5 right-sidebar">
+				<article class="widget">
+					<h2>Get Started!</h2>
+					@tags.alertFromRequest(request, "success")
+					<form method="post" action="@routes.ApplicationCtrl.postVisa">
+						@helper.CSRF.formField
+						<fieldset>
+							<div id="message"></div>
+							<div class="row">
+								<div class="f-item col-md-12">
+									<label for="name">First Name</label>
+									<input type="text" id="fname" name="@visaForm("fullName").name" class="form-control" value="@visaForm("fullName").value.orNull" required />
+								</div>
+								<div class="f-item col-md-6">
+									<label for="name">Phone</label>
+									<input type="text" id="email" name="@visaForm("phone").name" class="form-control" value="@visaForm("phone").value.orNull" required />
+								</div>
+								<div class="f-item col-md-6">
+									<label for="name">Email</label>
+									<input type="text" id="email" name="@visaForm("email").name" class="form-control" value="@visaForm("visaForm").value.orNull" required />
+								</div>
+								<div class="f-item col-md-6">
+									<label for="name">Departing Date</label>
+									<input type="text" id="ddate" name="@visaForm("dDate").name" class="dtpicker form-control" value="@visaForm("dDate").value.orNull" required />
+								</div>
+								<div class="f-item col-md-6">
+									<label for="name">Arriving Date</label>
+									<input type="text" id="dcountry" class="dtpicker form-control" name="@visaForm("aDate").name" value="@visaForm("aDate").value.orNull" />
+								</div>
+								<div class="f-item col-md-6">
+									<label for="name">Residential Country</label>
+									<input type="text" id="acountry" name="@visaForm("residentCountry").name" class="form-control" value="@visaForm("residentCountry").value.orNull" required />
+								</div>
+								<div class="f-item col-md-6">
+									<label for="name">Arriving Country</label>
+									<input type="text" id="acountry" name="@visaForm("arrivingCountry").name" class="form-control" value="@visaForm("arrivingCountry").value.orNull" required />
+								</div>
+								<div class="f-item col-md-12">
+									<label for="name">Message/Remark</label>
+									<textarea class="form-control" id="dcountry" rows="5" name="@visaForm("message").name">@visaForm("message").value.orNull</textarea>
+								</div>
+								<div class="f-item col-md-12" style="margin-top: 15px">
+									<button type="submit" class="form-control btn btn-md btn-primary">Submit</button>
+								</div>
+
+							</div>
+						</fieldset>
+					</form>
+				</article>
+			</aside>
+		</div>
+	</div>
+	<div class="gap gap-small"></div>
+}

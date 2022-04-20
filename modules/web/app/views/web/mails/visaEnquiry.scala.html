@@ -1,0 +1,99 @@
+@import controllers.web.VisaFormDAO
+@(data: VisaFormDAO)
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+        <title>Visa Enquiry</title>
+        <style type="text/css">
+
+        /* Table */
+        .aqua_table {
+        margin: 20px 0;
+        }
+        .aqua_table th {
+        border: 1px solid #e2e2e2;
+        background: #4c4d4f url('http://jadorecakesonline.com/images/grad_menu.png') top left repeat-x;
+        text-align: center;
+        padding: 8px 14px;
+        font-size: 14px;
+        text-align: left;
+        font-weight: 600;
+        }
+        .aqua_table td {
+        padding: 8px 14px;
+        border: #e2e2e2 1px solid;
+
+        -webkit-transition: all 0.3s linear;
+        -moz-transition: all 0.3s linear;
+        -ms-transition: all 0.3s linear;
+        -o-transition: all 0.3s linear;
+        transition: all 0.3s linear;
+        }
+        table {
+        border-collapse: collapse;
+        }
+        table, td, th {
+        border-bottom: 1px solid black;
+        }
+        </style>
+    </head>
+    <body>
+        <div align="" style="max-width:100%">
+
+
+            <p>Hello Team,</p>
+            <br />
+            <p>New Visa Enquiry Submitted on the Website</p>
+
+            <br />
+            <p>Detail of the customer are below</p>
+            <table width="60%" border="0">
+                <tbody>
+                    <tr>
+                        <th>Full Name</th>
+                        <th>@data.fullName</th>
+                    </tr>
+                    <tr>
+                        <th>Phone</th>
+                        <th>@data.phone</th>
+                    </tr>
+                    <tr>
+                        <th>Email</th>
+                        <th>@data.email</th>
+                    </tr>
+                    <tr>
+                        <th>Departing Date</th>
+                        <th>@data.dDate</th>
+                    </tr>
+                    <tr>
+                        <th>Arriving Date</th>
+                        <th>@data.aDate</th>
+                    </tr>
+                    <tr>
+                        <th>Residential Country</th>
+                        <th>@data.residentCountry</th>
+                    </tr>
+                    <tr>
+                        <th>Arriving Country</th>
+                        <th>@data.arrivingCountry</th>
+                    </tr>
+                    <tr>
+                        <th>Message/Remark</th>
+                        <th>@data.message.orNull</th>
+                    </tr>
+
+                </tbody>
+            </table>
+            <div></div>
+            <div style="">
+                <div class="row">
+                    <div class="sixteen columns clearfix">
+                        <br/>
+                        <div align="right"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

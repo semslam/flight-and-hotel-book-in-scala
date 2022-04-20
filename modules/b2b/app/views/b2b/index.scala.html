@@ -1,0 +1,73 @@
+@import com.avaje.ebean.ExpressionList
+@import utils.Utilities
+@import views.html.bookingEngine._
+@import crypto.Encrypt
+@(title: String, bookingQuery: ExpressionList[FlightBookings])(implicit loggedManager: Users, messages: Messages, requestHeader: RequestHeader, encrypt: Encrypt)
+@import controllers.b2b.routes
+@rolesString = @{
+    ""
+}
+@views.html.b2b.templates.default(title = title, tab = "dashboard", script) {
+    <div class="panel">
+        <div class="panel-body row">
+            <div class="col-md-10 col-md-offset-1">
+                <div class="row">
+                    <div class="col-xs-12 col-md-6 col-lg-3">
+                        <div class="widget widget-tile panel-primary">
+                            <div id="spark1" class="chart sparkline"></div>
+                            <div class="data-info">
+                                <div class="desc">Total Users</div>
+                                <div class="value"><span class="indicator indicator-equal mdi mdi-accounts-alt"></span><span data-toggle="counter" data-end="113" class="number">@loggedManager.getAgentCorporateDetailId.getUsersList.size()</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 col-md-6 col-lg-3">
+                        <div class="widget widget-tile panel-primary">
+                            <div id="spark2" class="chart sparkline"></div>
+                            <div class="data-info">
+                                <div class="desc">Total Bookings</div>
+                                <div class="value"><span class="indicator indicator-positive mdi mdi-flight-land"></span><span data-toggle="counter" data-end="80" data-suffix="%" class="number">@bookingQuery.findRowCount()</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 col-md-6 col-lg-3">
+                        <div class="widget widget-tile panel-primary">
+                            <div id="spark3" class="chart sparkline"></div>
+                            <div class="data-info">
+                                <div class="desc">Total Sold/Issued</div>
+                                <div class="value"><span class="indicator indicator-positive mdi mdi-trending-up"></span><span data-toggle="counter" data-end="532" class="number">@bookingQuery.where().eq("status", BookingStatus.TICKET_ISSUED).findRowCount()</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 col-md-6 col-lg-3">
+                        <div class="widget widget-tile panel-primary">
+                            <div id="spark4" class="chart sparkline"></div>
+                            <div class="data-info">
+                                <div class="desc">Total Sales</div>
+                                <div class="value"><span class="indicator indicator-negative mdi mdi-star-circle"></span><span data-toggle="counter" data-end="113" class="number">@utils.Utilities.moneyFormat(bookingQuery.where().eq("status", BookingStatus.TICKET_ISSUED).findList().map(_.getBookings.getPaymentHistoryId.getTotalAmount).sum)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <hr />
+    <div class="clearfix"></div>
+    <h4><strong>Top Flight Deals</strong></h4>
+    @for(banner <- CmsBanners.find.where().in("code", "B2B001", "B2B002", "B2B003", "B2B004", "B2B005", "B2B006", "B2B007", "B2B008").findList()) {
+        <div class="col-xs-12 col-md-3 col-lg-3">
+        @Html(banner.getHtmlCode)
+        </div>
+    }
+}
+
+@script = {
+    <script type="text/javascript" src="@routes.Assets.myJs("jsDashboard.js")"></script>
+    <script src="@routes.Assets.myJs("jsB2bFlight.js")"></script>
+    <script src="@routes.Assets.myJs("jsB2bHotel.js")"></script>
+}

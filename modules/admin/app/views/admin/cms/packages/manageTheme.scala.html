@@ -1,0 +1,34 @@
+@import views.html.admin.tags.myDataTable
+@import crypto.Encrypt
+@(items: List[PackageTheme])(implicit request: RequestHeader, messages: Messages, manager: PrivateUsers, encrypt: Encrypt)
+@import controllers.admin.cms.routes
+@import views.html.admin.templates._
+@default(title = "Package Themes", tab = "package") {
+    <div class="panel">
+        <header class="panel-heading">
+            <h2 class="panel-name">Package Themes</h2>
+            <br />
+            <a href="@routes.PackageCtrl.createTheme()" class="btn btn-default"><i class="fa fa-plus"></i> Create New Package Theme</a><br />
+        </header>
+        <div class="panel-body">
+            @myDataTable(Seq("#", "Name", "Description", "Auth User", "Created at", "Updated at", "Action")) {
+                @if(items.nonEmpty) {
+                    @for(item <- items) {
+                        <tr>
+                            <td>@item.getId</td>
+                            <td>@item.getName</td>
+                            <td>@item.getDescription</td>
+                            <td>@item.getPrivateUserId.getFirstName</td>
+                            <td>@item.getCreatedAt.format("yyyy-MM-dd HH:mm")</td>
+                            <td>@item.getUpdatedAt.format("yyyy-MM-dd HH:mm")</td>
+                            <td>
+                                <span><a href="@routes.PackageCtrl.createTheme(encrypt.encrypt(item.getId.toString))" class="btn btn-xs btn-primary"><i class="fa fa-pencil"></i> Edit</a></span>
+                                <span><a href="@routes.PackageCtrl.deleteTheme(encrypt.encrypt(item.getId.toString))" class="btn btn-xs btn-danger"><i class="fa fa-times"></i> Delete</a></span>
+                            </td>
+                        </tr>
+                    }
+                }
+            }
+        </div>
+    </div>
+}

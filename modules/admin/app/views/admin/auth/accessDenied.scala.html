@@ -1,0 +1,6 @@
+@()(implicit manager: PrivateUsers, request: RequestHeader, messages: Messages)
+@views.html.admin.templates.default("Access Denied") {
+	@tags.alertFromRequest(request, "error")
+	<h1 class="text-primary">@Messages("admin.denied.title")</h1>
+	<h3 class="text-danger">@Messages("admin.denied.text")</h3>
+}(manager, messages)

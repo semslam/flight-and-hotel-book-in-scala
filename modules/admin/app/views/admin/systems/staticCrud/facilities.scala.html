@@ -1,0 +1,30 @@
+@import views.html.admin.tags.myDataTable
+@import controllers.admin.systems.routes
+@import crypto.Encrypt
+@(airlines: List[Facilities])(implicit request: RequestHeader, manager: PrivateUsers, messages: Messages, encrypt: Encrypt)
+@views.html.admin.templates.default(title = "Facilities", tab = "bookingSettings") {
+    <div class="panel">
+        <header class="panel-heading">
+            <h2 class="panel-name">Facilities</h2><br />
+            <a class="btn btn-default btn-md" href="@routes.StaticDataCRUDCtrl.createFacility()">Create New Facility</a>
+        </header>
+        <div class="panel-body">
+            @tags.alertFromRequest(request, "error")
+            @tags.alertFromRequest(request, "success")
+            @myDataTable(Seq("#", "Name", "Icon","Created at", "Updated at",  "Action"), "desc", "facilities") {
+                @if(airlines.nonEmpty) {
+                    @for(item <- airlines) {
+                        <tr>
+                            <td>@item.getId</td>
+                            <td>@item.getName</td>
+                            <td><span class="@item.getFontCode"></span></td>
+                            <td>@item.getCreatedAt.format("yyyy-MM-dd HH:mm")</td>
+                            <td>@item.getUpdatedAt.format("yyyy-MM-dd HH:mm")</td>
+                            <td><a href="@routes.StaticDataCRUDCtrl.createFacility(item.getId)">Edit</a></td>
+                        </tr>
+                    }
+                }
+            }
+        </div>
+    </div>
+}

@@ -1,0 +1,90 @@
+@import helper._
+@import utils.silhouette.B2BSignUp
+@import b3.vertical.fieldConstructor
+@import controllers.b2b.routes
+@import views.html.helper.CSRF
+@(form: Form[B2BSignUp])(implicit request: RequestHeader, messages: Messages)
+@default("Sign Up", "signup") {
+    <style>
+    .form-group {
+        margin-bottom: 5px;
+    }
+
+    .splash-container .panel .panel-body {
+        padding: 0px 30px 15px;
+    }
+    </style>
+    <div class="splash-container">
+        <div class="panel panel-default panel-border-color panel-border-color-primary">
+            <div class="panel-heading"><img src="@routes.Assets.commonImg("logo.png")" alt="logo" width="102" class="logo-img">
+                <span class="splash-description">Sign Up as agent & StartSELLING!</span>
+            </div>
+            <div class="panel-body">
+            @b3.formCSRF(routes.AuthCtrl.handleStartSignUp, 'class -> "form-signup") {
+                @tags.alertFromRequest(request, "error")
+                @tags.alertFromRequest(request, "success")
+                <div class="row">
+                    <div class="col-sm-6 form-group">
+                    @b3.select(form("title"), options(Titles.options(form("title").value.getOrElse(""))), 'class -> "form-control", '_label -> "Title")
+                    </div>
+                    <div class="col-sm-6 form-group">
+                    @b3.text(form("firstName"), 'class -> "form-control", '_label -> Html("""First Name <span class="text-danger">*</span>"""))
+                    </div>
+                    <div class="col-sm-6 form-group">
+                    @b3.text(form("lastName"), 'class -> "form-control", '_label -> Html("""Last Name <span class="text-danger">*</span>"""))
+                    </div>
+                    <div class="col-sm-6 form-group">
+                    @b3.text(form("phone"), 'class -> "form-control", '_label -> Html("""Mobile Phone <span class="text-danger">*</span>"""))
+                    </div>
+                    <div class="col-sm-12 form-group">
+                    @b3.text(form("email"), 'class -> "form-control", '_label -> Html("""Email (Required for Sign In) <span class="text-danger">*</span>"""))
+                    </div>
+                    <div class="col-sm-12 form-group">
+                    @b3.text(form("confirmEmail"), 'class -> "form-control", '_label -> Html("""Retype email <span class="text-danger">*</span>"""))
+                    </div>
+                    <div class="col-sm-12 form-group">
+                    @b3.text(form("companyName"), 'class -> "form-control", '_label -> Html("""Company/Agency Name <span class="text-danger">*</span>"""))
+                    </div>
+                    <div class="col-sm-12 form-group">
+                    @b3.textarea(form("address"), 'class -> "form-control", '_label -> Html("""Company/Agency Address <span class="text-danger">*</span>"""))
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label for="country">Country</label>
+                        <select name="@form("country").name" class="form-control">
+                        @for(country <- Countries.getCountries) {
+                            @if(country.getIsoCode2.equals("NG")) {
+                                <option selected="selected" value="@country.getId">@country.getName</option>
+                            } else {
+                                <option value="@country.getId">@country.getName</option>
+                            }
+                        }
+                        </select>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                    @b3.text(form("city"), 'class -> "form-control", '_label -> "City")
+                    </div>
+                    <div class="col-sm-12 form-group ">
+                        <label class="control-label" for="websiteUrl">Website URL</label>
+                        <input type="text" id="websiteUrl" name="websiteUrl" class="form-control" />
+                    </div>
+                    <div class="col-sm-12 form-group">
+                        <label for="@form("termsCondition").name">
+                            <input type="checkbox" id="@form("termsCondition").name" name="@form("termsCondition").name" value="true" checked="true"> @Html("""By signing up you agree to the <a href="">Terms and Conditions</a>""")
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group login-submit">
+                    <button type="submit" class="btn btn-primary btn-xl">Sign Up</button>
+                </div>
+                <br /> <br />
+                <div class="form-footer">
+                    <div class="clearfix">
+                        <p class="new-here">Already a member? <a href="@routes.AuthCtrl.signIn()">Sign In</a></p>
+                    </div>
+                </div>
+            }
+            </div>
+        </div>
+        <div class="splash-footer"><span>Don't have an account? <a href="@routes.AuthCtrl.signIn">Have an account? Sign In</a></span></div>
+    </div>
+}

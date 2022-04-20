@@ -1,0 +1,10 @@
+
+@import crypto.Encrypt
+@(title: String, loggedUser: Option[Users] = None, scripts: Html = Html(""), styles: Html = Html(""), modals: Html = Html(""))(content: Html)(implicit messages: Messages, request: RequestHeader, encrypt: Encrypt)
+@views.html.web.templates.default(title, scripts, styles, loggedUser, modals) {
+	<div class="row">
+		<div class="col-md-8 col-md-offset-2">
+			@content
+		</div>
+	</div>
+}

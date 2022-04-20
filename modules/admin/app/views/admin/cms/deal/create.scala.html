@@ -1,0 +1,67 @@
+@import helper._
+@import crypto.Encrypt
+@import controllers.admin.cms.routes
+@import views.html.admin.templates._
+@import b3.vertical.fieldConstructor
+@import controllers.admin.cms.DealDOA
+@(form: Form[DealDOA])(implicit request: RequestHeader, messages: Messages, manager: PrivateUsers, encrypt: Encrypt)
+@default(title = "Create/Edit Deal", tab = "cms") {
+    <div class="panel">
+        <div class="panel-heading">
+            <h2 class="panel-name">Create/Edit Offers Deals</h2>
+        </div>
+        <div class="panel-body">
+            <div class="row">
+                <div class="col-md-12 col-md-offset-1">
+                    @tags.alertFromRequest(request, "error")
+                    @form.globalError.map { error =>
+                        @tags.alert(error.message, "error")
+                    }
+                </div>
+
+                @b3.formCSRF(routes.DealCtrl.save) {
+                        @if(form("id").value.nonEmpty) {
+                            <input type="hidden" value="@encrypt.encrypt(form("id").value.get)" name="@form("id").name" />
+                        }
+                        <div class="col-md-4">
+                            <label>Product/Service Type</label>
+                            <select name="@form("serviceType").name" required class="form-control">
+                                <option value="">Select</option>
+                                @for(service <- Services.values()) {
+                                    <option value="@service.name()" @if(service.name.equals(form("serviceType").value.orNull)) { selected="selected" }>@service.name()</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            @helper.inputText(form("name"), 'class -> "form-control", '_label -> "Name")
+                        </div>
+                        <div class="col-md-4">
+                            @helper.inputText(form("code"), 'class -> "form-control", '_label -> "Unique Identify code. Max 6 Characters", 'placeholder -> "Max 6. Characters")
+                        </div>
+                        <div class="col-md-6">
+                            @helper.inputText(form("carrierName"), 'class -> "form-control", '_label -> "Supplier/Carrier Vendor", 'placeholder -> "e.g. Airline Name")
+                        </div>
+                        <div class="col-md-6">
+                            @helper.inputText(form("originCity"), 'class -> "form-control", '_label -> "Origin City", 'placeholder -> "e.g. Lagos")
+                        </div>
+                        <div class="col-md-6">
+                            @helper.inputText(form("destinationCity"), 'class -> "form-control", '_label -> "Destination City", 'placeholder -> "e.g. London")
+                        </div>
+                        <div class="col-md-6">
+                            @helper.inputText(form("url"), 'class -> "form-control", '_label -> "Search Engine URL", 'placeholder -> "Search Engine URL")
+                        </div>
+                        <div class="col-md-6">
+                            @helper.inputText(form("imageUrl"), 'class -> "form-control", '_label -> Html(s"""Image. Click <a target="_blank" href="${routes.MediaCtrl.index}">Here</a> to upload files"""), 'placeholder -> "Image URL")
+                        </div>
+                        <div class="col-md-6"> @helper.inputText(form("priceFrom"), 'class -> "form-control",  '_label -> "Price From")
+                            <input type="hidden" name="@form("priority").name" value="1" />
+                        </div>
+                        <div class="col-md-12">
+                            <button type="submit" name="submit" class="btn btn-primary">Save</button>
+                            <span><a href="@routes.DealCtrl.index" class="btn btn-default">Cancel</a></span>
+                        </div>
+                    }
+            </div>
+        </div>
+    </div>
+}

@@ -1,0 +1,226 @@
+@import controllers.b2b.routes
+@import crypto.Encrypt
+@import views.html.paymentapi._
+@(flightBookings: FlightBookings)(implicit loggedManager: Users, request: RequestHeader, messages: Messages, encrypt: Encrypt)
+@originDestination = @{
+    FlightBookingDestinations.find.where.eq("flightBookingId", flightBookings).findList()
+}
+@currentDate = @{
+    new java.util.Date().format("dd MMM, yyyy")
+}
+@views.html.b2b.templates.default("Booking Successful", "flight", script) {
+    <h2 class="text-info">Thank you for your booking, @flightBookings.getBookings.getContactFirstname @flightBookings.getBookings.getContactSurname</h2>
+    <div class="panel">
+        <div class="panel-body row">
+            <div class="col-xs-9 col-md-9 col-sm-9">
+                <h4 class="text-success"><strong>Your booking has been successfully completed.</strong></h4>
+                @tags.alertFromRequest(request, "success")
+                @if(flightBookings.getBookings.getPaymentHistoryId.getPaymentMethodId.getPaymentCategory.eq(PaymentCategories.Debit_Card)) {
+                    @if(flightBookings.getBookings.getPaymentHistoryId.getPaymentMethodId.getCode.equalsIgnoreCase("gt")) {
+                        @gtpay(flightBookings.getBookings.getPaymentHistoryId, flightBookings.getBookings.getContactFirstname + "" + flightBookings.getBookings.getContactSurname, flightBookings.getBookings.getContactEmail)
+                    }
+                    @if(flightBookings.getBookings.getPaymentHistoryId.getPaymentMethodId.getCode.equalsIgnoreCase("gp")) {
+                        @globalPay(flightBookings.getBookings.getPaymentHistoryId, flightBookings.getBookings.getContactFirstname + "" + flightBookings.getBookings.getContactSurname, flightBookings.getBookings.getContactEmail)
+                    }
+                    @if(flightBookings.getBookings.getPaymentHistoryId.getPaymentMethodId.getCode.equalsIgnoreCase("qt")) {
+                        @quickteller(flightBookings.getBookings.getPaymentHistoryId, flightBookings.getBookings.getContactFirstname + "" + flightBookings.getBookings.getContactSurname, flightBookings.getBookings.getContactEmail)
+                    }
+                }
+            </div>
+            <div class="clearfix"></div>
+            <hr />
+            <div class="col-md-12 col-lg-12 col-xs-12 row">
+                <div class="col-md-4 col-xs-12 col-lg-4 col-sm-4">
+                    <h4 class="text-primary">Booking reference</h4>
+                    <p>
+                        You have booked a @flightBookings.getTripType.name().toLowerCase.replaceFirst("_", " ") flight, from @originDestination.get(0).getDepartureAirportName to @originDestination.get(0).getArrivalAirportName. Please use reference number <strong>@flightBookings.getBookings.getTransactionRef</strong> when contacting @loggedManager.getAgentCorporateDetailId.getCompanyName
+                        <br /><br />
+                        Travel Documentation: Please be informed that it is the Passenger's responsibility to ensure that all travel documents including passports, visas to final destinations and transit visas where applicable have been duly obtained before embarking on your trip.
+                        <br /><br />
+                    </p>
+                    <h4 class="text-primary">Ticketing Summary</h4>
+                    <p>
+                        Your ticket will be issued as soon as we receive your payment.<br /> <br />
+                        Once the payment has been confirmed your e-ticket will be sent within the hour.
+                    </p>
+                </div>
+                <div class="col-md-4 col-xs-12 col-lg-4 col-sm-4">
+                    <h4 class="text-primary">Booking Summary</h4>
+                    <p>Below is a summary for the details provided for the confirmed booking.</p><hr />
+                    <div>
+                        @for(itinerary <- originDestination) {
+                            <section class="row">
+                                <div class="col-md-5">
+                                    @if(itinerary.getDepartureAirportId != null) { @itinerary.getDepartureAirportId.getState }
+                                    (@itinerary.getDepartureAirportCode) @itinerary.getDepartureDate
+                                </div>
+                                <div class="col-md-2"><span class="fa fa-plane"></span></div>
+                                <div class="col-md-5">@if(itinerary.getArrivalAirportId != null) { @itinerary.getArrivalAirportId.getState }
+                                    (@itinerary.getArrivalAirportCode) @itinerary.getArrivalDate</div>
+                            </section> <br />
+                        }
+                        <hr />
+                        <a href="#full-booking-summary" class="btn btn-default btn-md show-info"> Show full details</a>
+                    </div>
+                </div>
+                <div class="col-md-4 col-xs-12 col-lg-4 col-sm-4">
+                    <h4 class="text-primary">Payment information</h4>
+                    <p>Pay now to secure this booking. <br /><br />
+                        Please send us proof of payment to our email <span class="text-info">@loggedManager.getAgentCorporateDetailId.getSuUserId.getEmail</span>
+                        or call @loggedManager.getAgentCorporateDetailId.getSuUserId.getPhone</p>
+                    <h4 class="text-primary">Bank Details</h4>
+                    <table class="table table-striped" width="100%">
+                        <tbody>
+                            <tr>
+                                <th>Bank Name</th>
+                                <td>@flightBookings.getBookings.getPaymentHistoryId.getPaymentMethodId.getName</td>
+                            </tr>
+                            <tr>
+                                <th>Account Name</th>
+                                <td>@flightBookings.getBookings.getPaymentHistoryId.getPaymentMethodId.getAccountName</td>
+                            </tr>
+                            <tr>
+                                <th>Account Number</th>
+                                <td>@flightBookings.getBookings.getPaymentHistoryId.getPaymentMethodId.getAccountNo</td>
+                            </tr>
+                            <tr>
+                                <th>Amount to Pay</th>
+                                <td>@utils.Utilities.moneyFormat(flightBookings.getBookings.getPaymentHistoryId.getTotalAmount)</td>
+                            </tr>
+                            <tr>
+                                <td colspan="2">Please use @flightBookings.getBookings.getTransactionRef as your reference.</td>
+                            </tr>
+                            <tr>
+                                <td colspan="2"><a href="#other-banks-detail" class="btn btn-default btn-md show-info"><span class="fa fa-bank"></span>
+                                    Show Other Banks</a></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="clearfix"></div>
+                <div id="other-banks-detail" style="padding: 10px;
+                    display: none">
+                    <table class="table table-striped">
+                        @if(flightBookings.getBookings.getUserId.getAgentCorporateDetailId != null) {
+                            @for(bank <- flightBookings.getBookings.getUserId.getAgentCorporateDetailId.getBankAccountDetailsList) {
+                                <tr>
+                                    <td><strong>@bank.getBankId.getName</strong></td>
+                                    <td><strong>@bank.getAccountNo</strong></td>
+                                    <td><strong>@bank.getAccountName</strong></td>
+                                </tr>
+                            }
+                        }
+                    </table>
+                </div>
+                <div class="full-itinerary-info" id="full-booking-summary" style="display: none">
+                    <div class="tab-content" style="padding: 10px;
+                        background: rgba(255, 90, 0, 0.08);">
+                        <div role="tabpanel" class="tab-pane active row">
+                        @for(item <- originDestination) {
+                            <div>
+                                <div class="col-md-10"><i class="icon icon-departure"></i> @item.getAirlineName <span> <i class="icon icon-long-arrow-right"></i> </span> <i class="icon icon-arrival"></i> @item.getArrivalAirportName </div>
+                                <div class="col-md-2 pull-right">Duration: @item.getDuration</div>
+                                <div class="clearfix"></div>
+                                <div class="col-md-12">
+                                    <table class="table table-responsive" cellspacing="0" width="100%">
+                                        <tbody>
+                                        @for(flightSegment <- item.getFlightBookingDestinationSegmentsList) {
+                                            <tr>
+                                                <td>
+                                                    <img src="https://s3-us-west-2.amazonaws.com/travelden/airline/@flightSegment.getAirlineCode.concat(".png")" alt="@flightSegment.getAirlineCode" style="width: 5.0em" class="img img-circle flight-ico-img"/>
+                                                    <span class="text-center">@flightSegment.getAirlineCode</span>
+                                                </td>
+                                                <td>
+                                                    <strong>@flightSegment.getDepartureDt</strong> <br />
+                                                    <small>
+                                                        @if(flightSegment.getDepartureAirportId != null) {
+                                                            @flightSegment.getDepartureAirportId.getAirportName
+                                                        }
+                                                        (@flightSegment.getDepartureAirportCode)</small>
+                                                </td>
+                                                <td><i class="icon icon-long-arrow-right"></i></td>
+                                                <td>
+                                                    <strong>@flightSegment.getArrivalDt
+                                                    </strong> <br />
+                                                    <small>
+                                                        @if(flightSegment.getArrivalAirportId != null){
+                                                            @flightSegment.getArrivalAirportId.getAirportName
+                                                        }
+                                                        (@flightSegment.getArrivalAirportCode)</small>
+                                                </td>
+
+                                                <td class="text-center" width="12%">
+                                                    <small>
+                                                        <span>@if(item.getNumOfStops == 0) {
+                                                            Non stop
+                                                        } else {
+                                                            @item.getNumOfStops Stop(s)
+                                                        }
+                                                        </span>
+                                                    </small>
+                                                    <div class="clearfix"></div>
+                                                    <small class="text-primary">@item.getCabinClass</small>
+                                                </td>
+                                            </tr>
+                                        }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        }
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <hr />
+            <div class="col-md-12 col-xs-12">
+                <form method="get" class="send-mail" action="@routes.FlightCtrl.sendInvoiceToMail(flightBookings.getId)">
+                    <div class="form-group">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <label for="email">Send Invoice to E-mail</label>
+                                <input type="email" name="email" class="form-control" required="required" />
+                            </div>
+                            <div class="col-md-2">
+                                <label>.</label>
+                                <button type="submit" class="btn btn-md btn-success form-control">Send Mail</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}
+@script = {
+    <script>
+            jQuery(function () {
+                $(".show-info").on('click', function () {
+                    var idField = $(this).attr('href');
+                    $(idField).toggle();
+                    window.location.href = idField;
+                });
+                $(".send-mail").on('submit', function () {
+                    var $this = $(this);
+                    var btn = $this.find('.btn-success');
+                    btn.attr('disabled', 'disabled');
+                    btn.html("<span class=\"fa fa-spinner\"><span> Sending...")
+                    $.ajax({
+                        url: $this.attr('action'),
+                        type: $this.attr('method'),
+                        dataType: 'JSON',
+                        data: $this.serialize(),
+                        success: function (response) {
+                            if (response.status === 200) {
+                                alert("Mail sent successfully.");
+                                $this.find('input[name=email]').val('');
+                            }
+                            btn.html("Send");
+                            btn.removeAttr("disabled");
+                        }
+                    });
+                    return false;
+                })
+            });
+    </script>
+}

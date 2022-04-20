@@ -1,0 +1,273 @@
+@import controllers.admin.pricerule.FlightFareRuleDAO
+@import helper._
+@import views.html.admin.tags.myDataTable
+@import controllers.admin.pricerule.routes
+@import crypto.Encrypt
+@import b3.vertical.fieldConstructor
+@(form: Form[FlightFareRuleDAO], isNonCommissionable: Boolean = false)(implicit request: RequestHeader, manager: PrivateUsers, messages: Messages, encrypt: Encrypt)
+@views.html.admin.templates.default(title = "Fare Rule Management", tab = "bookingSettings", scripts, style) {
+    <div class="panel">
+        <header class="panel-heading">
+            @if(form("id").value.isDefined) {
+                <h2 class="panel-name">Edit @models.FlightsFareRules.find.byId(form("id").value.get.toLong).getName Flight Fare Rules</h2>
+
+            } else {
+                <h2 class="panel-name">Create Flight Fare Rules</h2>
+            }
+            <br />
+        </header>
+        <div class="panel-body row">
+            @helper.form(routes.FlightPriceRuleCtrl.saveFareRule(), 'enctype -> "application/x-www-form-urlencoded") {
+                @helper.CSRF.formField
+            <input type="hidden" name="@form("id").name" value="@form("id").value.getOrElse("")" />
+            <input type="hidden" name="@form("b2cFareRule.id").name" value="@form("b2cFareRule.id").value.getOrElse("")" />
+            <input type="hidden" name="@form("b2bFareRule.id").name" value="@form("b2bFareRule.id").value.getOrElse("")" />
+            <div class="col-md-2">
+                <div class="col-md-12 col-sm-12 col-xs-12 col-lg-12">
+                    <a href="@routes.FlightPriceRuleCtrl.fareRuleManagement()" class="btn btn-md btn-danger">Close</a>
+                    <button type="submit" class="btn btn-md btn-success">Apply</button>
+                </div>
+            </div>
+            <div class="col-md-10">
+                <div class="nav-tabs-custom">
+                    @tags.alertFromRequest(request, "success")
+                    @tags.alertFromRequest(request, "error")
+                    @form.globalError.map { error =>
+                        @tags.alert(error.message, "error")
+                    }
+                    <ul class="nav nav-tabs">
+                        <li class="active"><a href="#tab_1-1" data-toggle="tab">Flight / Airline Rules</a></li>
+                        <li><a href="#tab_1-2" data-toggle="tab">B2C Fares</a></li>
+                        <li><a href="#tab_1-3" data-toggle="tab">B2B Fares</a></li>
+                        <li><a href="#tab_1-4" data-toggle="tab">Properties</a></li>
+                        <li><a href="#tab_1-5" data-toggle="tab">Popup Notice</a></li>
+                    </ul>
+                    <div class="panel-body">
+                        <div class="tab-content">
+                            <div class="tab-pane active" id="tab_1-1">
+                                <div class="row">
+                                    <div class="panel-heading">
+                                        <h4><strong>Fare Rules & Condition</strong></h4>
+                                    </div>
+                                    <div class="col-md-4 col-sm-12 col-xs-12 col-lg-4">
+                                        <label>Ticket Class</label>
+                                        <div class="clearfix"></div>
+                                        @{
+                                            var i = 0;
+                                            val re = helper.repeat(form("ticketClass"), min = CabinPreference.values().size) { cabinPref =>
+                                                val aa = Html(s"""<label for="${CabinPreference.values()(i).name()}" class="block checkbox-inline mt15 option option-warning"><input type="checkbox" ${if(CabinPreference.values()(i).name().equals(cabinPref.value.getOrElse(""))) { "checked" } } name="${cabinPref.name}" value="${CabinPreference.values()(i).name()}" /> ${CabinPreference.values()(i).name()} </label>""")
+                                                i += 1
+                                                aa
+                                            }
+                                            re
+                                        }
+                                    </div>
+                                    <div class="col-md-4 col-sm-12 col-xs-12 col-lg-4">
+                                        <label>Trip Type</label>
+                                        <div class="clearfix"></div>
+                                        @{
+                                            var i = 0;
+                                            val re = helper.repeat(form("tripType"), min = TripType.values().size) { tripType =>
+                                                val aa = Html(s"""<label for="${TripType.values()(i).name()}" class="block checkbox-inline mt15 option option-warning"><input type="checkbox" id="${TripType.values()(i).name()}" name="${tripType.name}" ${if(TripType.values()(i).name().equals(tripType.value.getOrElse(""))) { "checked" } } value="${TripType.values()(i).name()}" /> ${TripType.values()(i).name()} </label>""")
+                                                i += 1
+                                                aa
+                                            }
+                                            re
+                                        }
+                                    </div>
+                                    <div class="col-md-4 col-sm-12 col-xs-12 col-lg-4">
+                                        <div class="form-group">
+                                            @{
+                                                var i = 0;
+                                                val re = helper.repeat(form("destinationLocale"), min = TicketLocale.values().size) { tripType =>
+                                                    val aa = Html(s"""<label for="${TicketLocale.values()(i).name()}" class="block checkbox-inline mt15 option option-warning"><input type="checkbox" id="${TicketLocale.values()(i).name()}" name="${tripType.name}" ${if(TicketLocale.values()(i).name().equals(tripType.value.getOrElse(""))) { "checked" } } value="${TicketLocale.values()(i).name()}" /> ${TicketLocale.values()(i).name()} </label>""")
+                                                    i += 1
+                                                    aa
+                                                }
+                                                re
+                                            }
+                                        </div>
+                                    </div>
+                                    @if(isNonCommissionable) {
+                                        <input type="hidden" name="@form("airlineCommissionableId").name" value="0" />
+                                    } else {
+                                        <div class="col-md-4" id="iscommissionableDiv">
+                                            <label for="airlineId">Select Airline</label>
+                                            @b3.select(form("airlineCommissionableId"), options(AirlineCommissionable.options()))
+                                            <small>Airline not found? <a class="text-primary" href="@routes.FlightPriceRuleCtrl.commissionableAirline()" target="_blank"> Add Sellable Airline</a></small>
+                                        </div>
+                                    }
+                                    <label class="col-md-12"><a class="text-primary" style="cursor: pointer ;" onclick="javascript: document.getElementById('advanceOptionDiv').classList.toggle('hide');"><strong><i class="fa fa-plus"></i>Advanced Options</strong></a></label>
+                                    <div class="clearfix"></div>
+                                    <div id="advanceOptionDiv" class="row">
+                                        <div class="col-md-4 form-group hide">
+                                            <label for="hotelIncl">Apply to Hotel Combo Only? <input type="checkbox" value="1" @if(form("isHotelCombo").value.isDefined) { checked="checked"} name="@form("isHotelCombo").name" id="hotelIncl"></label>
+                                        </div>
+                                        <div class="col-md-4 form-group hide">
+                                            <label for="displayGdsFare">Display GDS Price on website? <input @if(form("displayGdsFare").value.isDefined) { checked="checked" } type="checkbox" name="@form("displayGdsFare").name" value="1" id="displayGdsFare"></label>
+                                        </div>
+                                        <div class="clearfix"></div>
+                                        <div class="col-md-12 form-group">
+                                            <label for="destinationAirports">Apply to Destination Airports Only (Select One or More Options)</label>
+                                            <select data-placeholder="Choose an airport(s)" multiple="multiple" name="destinationAirports[]" id="destinationAirports" class="form-control chosen-select">
+                                                @for(airport <- Airports.find.where().isNotNull("countryId").findList()) {
+                                                    <option value="@airport.getAirCode">@airport.getAirCode</option>
+                                                }
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tab-pane" id="tab_1-2">
+                                <div class="row">
+                                        <!--<div class="panel-heading"><h4><strong>B2C Fares</strong></h4></div>-->
+                                    <fieldset>
+                                        <legend class="col-md-12"><strong>B2C / SITI</strong></legend>
+                                        <div class="col-md-2">
+                                        @helper.select(form("b2cFareRule.sitiFareDirection"), Seq("+" -> "+", "-" -> "-"), '_label -> "Price Direction")
+                                        </div>
+                                        <div class="col-md-2">
+                                        @helper.select(form("b2cFareRule.sitiFareOption"), options(GdsFareOptions.optionsNoTax()), '_label -> "Fare Option")
+                                        </div>
+                                        <div class="col-md-3">
+                                            @helper.inputText(form("b2cFareRule.sitiDispenseValue"), 'type -> "number", 'min -> "0", 'step -> "0.05", 'placeholder -> "Value", '_label -> "Dispense Value")
+                                        </div>
+                                        <div class="col-md-3">
+                                        @helper.inputRadioGroup(form("b2cFareRule.sitiValueType"), options(ValueTypes.options()), '_label -> "Value Type")
+                                        </div>
+                                    </fieldset>
+                                    <fieldset>
+                                        <legend class="col-md-12"><strong>B2C / SOTI</strong></legend>
+                                        <div class="col-md-2">
+                                        @helper.select(form("b2cFareRule.sotiFareDirection"), Seq("+" -> "+", "-" -> "-"), '_label -> "Price Direction")
+                                        </div>
+                                        <div class="col-md-2">
+                                        @helper.select(form("b2cFareRule.sotiFareOption"), options(GdsFareOptions.optionsNoTax()), '_label -> "Fare Option")
+                                        </div>
+                                        <div class="col-md-3">
+                                            @helper.inputText(form("b2cFareRule.sotiDispenseValue"), 'type -> "number", 'min -> "0", 'step -> "0.05", 'placeholder -> "Value", '_label -> "Dispense Value")
+                                        </div>
+                                        <div class="col-md-3">
+                                        @helper.inputRadioGroup(form("b2cFareRule.sotiValueType"), options(ValueTypes.options()), '_label -> "Value Type")
+                                        </div>
+                                    </fieldset>
+                                    <fieldset>
+                                        <legend class="col-md-12"><strong>B2C / SOTO</strong></legend>
+                                        <div class="col-md-2">
+                                            @helper.select(form("b2cFareRule.sotoFareDirection"), Seq("+" -> "+", "-" -> "-"), '_label -> "Price Direction")
+                                        </div>
+                                        <div class="col-md-2">
+                                            @helper.select(form("b2cFareRule.sotoFareOption"), options(GdsFareOptions.optionsNoTax()), '_label -> "Fare Option")
+                                        </div>
+                                        <div class="col-md-3">
+                                            @helper.inputText(form("b2cFareRule.sotoDispenseValue"), 'type -> "number", 'min -> "0", 'step -> "0.05", 'placeholder -> "Value", '_label -> "Dispense Value")
+                                        </div>
+                                        <div class="col-md-3">
+                                            @helper.inputRadioGroup(form("b2cFareRule.sotoValueType"), options(ValueTypes.options()), '_label -> "Value Type")
+                                        </div>
+                                    </fieldset>
+                                </div>
+                            </div>
+                            <div class="tab-pane" id="tab_1-3">
+                                <div class="row">
+                                        <!--<div class="panel-heading"><h4><strong>B2C Fares</strong></h4></div>-->
+                                    <fieldset>
+                                        <legend class="col-md-12"><strong>B2B / SITI</strong></legend>
+                                        <div class="col-md-2">
+                                        @helper.select(form("b2bFareRule.sitiFareDirection"), Seq("+" -> "+", "-" -> "-"), '_label -> "Price Direction")
+                                        </div>
+                                        <div class="col-md-2">
+                                        @helper.select(form("b2bFareRule.sitiFareOption"), options(GdsFareOptions.optionsNoTax()), '_label -> "Fare Option")
+                                        </div>
+                                        <div class="col-md-3">
+                                        @helper.inputText(form("b2bFareRule.sitiDispenseValue"), 'type -> "number", 'step -> "0.05", 'min -> "0", 'placeholder -> "Value", '_label -> "Dispense Value")
+                                        </div>
+                                        <div class="col-md-3">
+                                        @helper.inputRadioGroup(form("b2bFareRule.sitiValueType"), options(ValueTypes.options()), '_label -> "Value Type")
+                                        </div>
+                                    </fieldset>
+                                    <fieldset>
+                                        <legend class="col-md-12"><strong>B2B / SOTI</strong></legend>
+                                        <div class="col-md-2">
+                                        @helper.select(form("b2bFareRule.sotiFareDirection"), Seq("+" -> "+", "-" -> "-"), '_label -> "Price Direction")
+                                        </div>
+                                        <div class="col-md-2">
+                                        @helper.select(form("b2bFareRule.sotiFareOption"), options(GdsFareOptions.optionsNoTax()), '_label -> "Fare Option")
+                                        </div>
+                                        <div class="col-md-3">
+                                        @helper.inputText(form("b2bFareRule.sotiDispenseValue"), 'type -> "number", 'step -> "0.05", 'min -> "0", 'placeholder -> "Value", '_label -> "Dispense Value")
+                                        </div>
+                                        <div class="col-md-3">
+                                        @helper.inputRadioGroup(form("b2bFareRule.sotiValueType"), options(ValueTypes.options()), '_label -> "Value Type")
+                                        </div>
+                                    </fieldset>
+                                    <fieldset>
+                                        <legend class="col-md-12"><strong>B2B / SOTO</strong></legend>
+                                        <div class="col-md-2">
+                                        @helper.select(form("b2bFareRule.sotoFareDirection"), Seq("+" -> "+", "-" -> "-"), '_label -> "Price Direction")
+                                        </div>
+                                        <div class="col-md-2">
+                                        @helper.select(form("b2bFareRule.sotoFareOption"), options(GdsFareOptions.optionsNoTax()), '_label -> "Fare Option")
+                                        </div>
+                                        <div class="col-md-3">
+                                        @helper.inputText(form("b2bFareRule.sotoDispenseValue"), 'type -> "number", 'step -> "0.05", 'min -> "0", 'placeholder -> "Value", '_label -> "Dispense Value")
+                                        </div>
+                                        <div class="col-md-3">
+                                        @helper.inputRadioGroup(form("b2bFareRule.sotoValueType"), options(ValueTypes.options()), '_label -> "Value Type")
+                                        </div>
+                                    </fieldset>
+                                </div>
+                            </div>
+                            <div class="tab-pane" id="tab_1-4">
+                                <div class="row">
+                                    <div class="panel-heading"><h4><strong>Properties</strong></h4></div>
+                                    <div class="col-md-3">
+                                        @helper.inputText(form("name"), 'type -> "text", 'placeholder -> "Specify a name", 'required -> "required", '_label -> "Name")
+                                    </div>
+                                    <div class="col-md-3">
+                                        @helper.textarea(form("description"), 'type -> "text", '_label -> "Description", 'required -> "required")
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tab-pane" id="tab_1-5">
+                                <div class="panel-heading"><h4><strong>Popup Notice</strong></h4></div>
+                                @helper.inputText(form("disclaimerTitle"), 'type -> "text", 'placeholder -> "Disclaimer Title", '_label -> "Disclaimer Title", 'class -> "form-control")
+                                @helper.textarea(form("disclaimerContent"), 'type -> "text", '_label -> "Content", 'id -> "editable", 'class -> "form-control sm-editor")
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+        </div>
+    </div>
+}
+@scripts = {
+    <script type="text/javascript" src="@controllers.admin.routes.Assets.commonLib("editors/summernote/summernote.js")"></script>
+    <script>
+        $(function() {
+            $('select[name=displayHtmlCode]').on('click', function() {
+                var isHtml = $(this).is(':checked');
+                var summernote = $('.sm-editor').summernote({
+                    minHeight: 200,
+                    height: 200
+                });
+                if(isHtml) {
+                    //display the
+                    summernote.summernote({
+                        minHeight: 200,
+                        height: 200
+                    });
+                } else {
+                    //remove WYSIWYG from the textarea.
+                    summernote.destroy();
+                    summernote.summernote('destroy');
+                }
+            });
+        })
+    </script>
+}
+@style = {
+    <link rel="stylesheet" type="text/css" href="@controllers.admin.routes.Assets.commonLib("editors/summernote/summernote-bs3.css")">
+    <link rel="stylesheet" type="text/css" href="@controllers.admin.routes.Assets.commonLib("editors/summernote/summernote.css")">
+}

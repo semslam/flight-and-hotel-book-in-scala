@@ -1,0 +1,21 @@
+@import crypto._
+@import views.html.tags.myDataTable
+@import controllers.web.routes
+@()(implicit messages: Messages, user: Users, requestHeader: RequestHeader, encrypt: Encrypt)
+@views.html.web.templates.default("Dashboard") {
+    <!-- START: USER PROFILE -->
+    <div class="row user-profile">
+        <div class="container">
+            <div class="col-md-12 user-name">
+                <h3>Welcome, @user.fullName()</h3>
+            </div>
+            <div class="col-md-2 col-sm-2">
+                @views.html.web.user._sidebar()
+            </div>
+            <div class="col-md-10 col-sm-10">
+
+            </div>
+        </div>
+    </div>
+    <!-- END: USER PROFILE -->
+}

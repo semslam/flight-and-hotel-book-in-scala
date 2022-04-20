@@ -1,0 +1,50 @@
+@import views.html.admin.tags.auth._
+@import controllers.admin.management.routes
+@import views.html.admin.tags.myDataTable
+@import crypto.Encrypt
+@(catTitle: String, queues: List[FlightBookings])(implicit loggedManager: PrivateUsers, messages: Messages, requestHeader: RequestHeader, encrypt: Encrypt)
+@views.html.admin.templates.default(title = catTitle, tab = "queue") {
+    <div class="panel" style="border-radius: 0px">
+        <div class="panel-heading">
+            <h3>@catTitle</h3>
+            @tags.alertFromRequest(requestHeader, "error")
+            @tags.alertFromRequest(requestHeader, "failed")
+            @tags.alertFromRequest(requestHeader, "success")
+        </div>
+        <div class="panel panel-body">
+        @myDataTable(Seq("", "TD Ref.", "PNR", "P.Cat", "Dest.", "Contact Detail", "Email", "Phone", "Carrier", "Cabin", "Status", "Amount", "Booking Date", "Tk. Officer")) {
+            @if(queues.nonEmpty) {
+                @for(item <- queues) {
+                    <tr>
+                        <td>@item.getId</td>
+                        <td><small><a target="_blank" class="text-primary text-bold @if(item.getBookings.getAuthOperatorId == null) { work-on-ticket }" href="@routes.FlightBookingCtrl.itinerary(encrypt.encrypt(item.getId.toString))">@item.getBookings.getTransactionRef</a></small></td>
+                        <td><small>@item.getPnrRef</small></td>
+                        <td><small>@item.getBookings.getSalesCategory.name()</small></td>
+                        <td>
+                        @for(dd <- item.getOriginDestinationsList) {
+                            <small>@dd.getDepartureAirportCode to @dd.getArrivalAirportCode</small>
+                            <br />
+                        }
+                        </td>
+                        <td><small>@item.getBookings.getContactTitle @item.getBookings.getContactFirstname @item.getBookings.getContactSurname </small></td>
+                        <td><small>@item.getBookings.getContactEmail</small></td>
+                        <td><small>@item.getBookings.getContactPhone</small></td>
+                        <td><small>@item.getAirlineCode</small></td>
+                        <td><small>@item.getCabinClass</small></td>
+                        <td><small>@item.getBookings.getStatus.name()</small></td>
+                        <td><small>@item.getBookings.getPaymentHistoryId.getTotalAmount</small></td>
+                        <td><small>@item.getCreatedAt.format("yy-MM-dd HH:mm")</small></td>
+                        @{
+                            try {
+                                Html(s"""<td><small>${item.getBookings.getAuthOperatorId.getFirstName}</small></td>""")
+                            } catch {
+                                case e: Throwable => Html(s"""<td><small>-</small></td>""")
+                            }
+                        }
+                    </tr>
+                }
+            }
+        }
+        </div>
+    </div>
+}

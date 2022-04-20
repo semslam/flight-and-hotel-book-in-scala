@@ -1,0 +1,48 @@
+@import helper._
+@import crypto.Encrypt
+@import controllers.admin.cms.routes
+@import views.html.admin.templates._
+@import b3.vertical.fieldConstructor
+@import controllers.admin.cms.PackageThemeDAO
+@(form: Form[PackageThemeDAO])(implicit request: RequestHeader, messages: Messages, manager: PrivateUsers, encrypt: Encrypt)
+@default(title = "Create/Edit Package Theme", tab = "package", scripts = script) {
+    <div class="panel">
+        <div class="panel-heading">
+            <h2 class="panel-name">Create/Edit Package Theme</h2>
+        </div>
+        <div class="panel-body">
+            <div class="row">
+                <div class="col-md-12 col-md-offset-1">
+                    @tags.alertFromRequest(request, "error")
+                    @form.globalError.map { error =>
+                        @tags.alert(error.message, "error")
+                    }
+                </div>
+                @b3.formCSRF(routes.PackageCtrl.saveTheme()) {
+                    @if(form("id").value.nonEmpty) {
+                        <input type="hidden" value="@encrypt.encrypt(form("id").value.get)" name="@form("id").name" />
+                    }
+                    <div class="col-md-12">
+                        @helper.inputText(form("name"), 'class -> "form-control", '_label -> "Name", 'placeholder -> "Romantic, Beach Holiday etc.")
+                    </div>
+                    <div class="col-md-12">
+                        @helper.inputText(form("desc"), 'class -> "form-control", '_label -> "Theme Description")
+                    </div>
+
+                    <div class="col-md-3">
+                        <button type="submit" name="submit" class="btn btn-primary">Save</button>
+                        <span><a href="@routes.PackageCtrl.index" class="btn btn-default">Cancel</a></span>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@script = {
+    <script>
+        $(function () {
+
+        });
+    </script>
+}

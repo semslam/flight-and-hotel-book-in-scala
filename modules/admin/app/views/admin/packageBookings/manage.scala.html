@@ -1,0 +1,17 @@
+@import controllers.admin.management.routes
+@import b3.vertical.fieldConstructor
+@import views.html.admin.tags.myDataTable
+@import crypto.Encrypt
+@import hotel.dto.entity.HotelSearchResponse
+@import java.util.function.ToDoubleFunction
+@(packageBooking: PackageBookings)(implicit loggedManager: PrivateUsers, messages: Messages, requestHeader: RequestHeader, encrypt: Encrypt)
+@views.html.admin.templates.default(title = "Package Booking Manager", tab = "queue") {
+    <div class="panel" style="border-radius: 0px">
+        <div class="panel-heading">
+            <h3>Hotel Queues</h3>
+            @tags.alertFromRequest(requestHeader, "error")
+            @tags.alertFromRequest(requestHeader, "success")
+        </div>
+
+    </div>
+}

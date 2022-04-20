@@ -1,0 +1,63 @@
+@import controllers.web.routes
+@import views.html.paymentapi._
+@import crypto.Encrypt
+@import views.html.helper.CSRF
+@(booking: Bookings)(implicit request: RequestHeader, messages: Messages, encrypt: Encrypt, maybeUser: Option[Users])
+@views.html.web.templates.default(title = "Payment Online", scripts, Html(""), maybeUser) {
+    <div class="container">
+        <div class="panel">
+            <div class="panel-body">
+                    <div class="row">
+                        <div class="col-md-6 col-md-offset-3">
+                            <div class="col-md-12">
+                                <h5>Complete Payment</h5>
+                                <p>Please find transaction details below. Kindly proceed to payment.</p>
+                                <table class="col-md-12 table table-bordered table-responsive">
+                                    <tr>
+                                        <th>Transaction ID</th>
+                                        <td>@booking.getTransactionRef</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Booking Status</th>
+                                        <td>@booking.getStatus.name()</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Service Type</th>
+                                        <td>@booking.getPaymentHistoryId.getServiceCategory.name()</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Total Amount</th>
+                                        <td>@booking.getPaymentHistoryId.getCurrency  @utils.Utilities.numberFormat(booking.getPaymentHistoryId.getTotalAmount)</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            @if(booking.getPaymentHistoryId.getCurrency.equalsIgnoreCase("NGN")) {
+                                <div class="col-md-12">
+                                @gtpayNoRedirect(booking.getPaymentHistoryId, s"${booking.getContactSurname} ${booking.getContactFirstname}", booking.getContactEmail)
+                                </div>
+                                <div class="col-md-12 text-center"><h4><i>- Or -</i></h4></div>
+                                <div class="col-md-12">
+                                    <div>
+                                        <p>Bank Transfer</p>
+                                        <table class="table table-striped" width="100%">
+                                            @for(bank <- PaymentMethods.find.where().eq("paymentCategory", PaymentCategories.CASH_PAYMENT).findList()) {
+                                                <tr>
+                                                    <td><img src="@bank.getLogoUrl" class="img" style="width: 50px" alt="@bank.getName"></td>
+                                                    <td><strong>@bank.getName</strong></td>
+                                                    <td><strong>@bank.getAccountNo</strong></td>
+                                                </tr>
+                                            }
+                                        </table>
+                                    </div>
+                                </div>
+
+                            }
+                        </div>
+                    </div>
+            </div>
+        </div>
+    </div>
+}
+
+@scripts = {
+}

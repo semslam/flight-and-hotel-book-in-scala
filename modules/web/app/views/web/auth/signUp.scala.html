@@ -1,0 +1,30 @@
+@import crypto.Encrypt
+@import controllers.web.UserSignUp
+@(signUpForm: Form[UserSignUp])(implicit request: RequestHeader, messages: Messages, encrypt: Encrypt)
+@import b3.vertical.fieldConstructor
+@import controllers.web.routes
+@import helper._
+<div class="">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">Create an Account</h4>
+    </div>
+    <div class="modal-body">
+        <div class="signup-error label label-danger"></div>
+        <div class="signup-success label label-success"></div>
+        <form method="post" action="@routes.AuthCtrl.handleStartSignUp" id="register_form" data-validate="parsley" class="form" role="form">
+            @helper.CSRF.formField
+            <div class="">@b3.text(signUpForm("firstName"), '_label -> Messages("field.firstname"), 'placeholder -> Messages("field.firstname"))</div>
+            <div class="">@b3.text(signUpForm("lastName"), '_label -> Messages("field.lastname"), 'placeholder -> Messages("field.lastname"))</div>
+            <div class="">@b3.email(signUpForm("email"), '_label -> Messages("field.email"), 'id -> "regEmail", 'placeholder -> "your@email.com")</div>
+            <div class="">@b3.text(signUpForm("phone"), '_label -> Messages("field.phone"), 'placeholder -> "Mobile Phone")</div>
+            <div class="">@b3.password(signUpForm("password"), '_label -> Messages("field.password"), 'id -> "regPassword", 'placeholder -> Messages("field.password"))</div>
+            <div class="">@b3.password(signUpForm("rePassword"), '_label -> Messages("field.password.repeat"), 'id -> "regRePassword", 'placeholder -> Messages("field.password.repeat"))</div>
+            <div class="">@b3.submit('class -> "btn btn-primary gradient-button", 'id -> "submitRegister") {
+                @Messages("signup")
+            }</div>
+        </form>
+        <p>@Messages("signup.signin.question") <a href="@routes.AuthCtrl.signIn()" data-modal-size="modal-sm" class="sign-in ajax"><strong>@Messages("signup.signin")</strong></a></p>
+        <script src="@routes.Assets.myJs("jsAuthReg.js")"></script>
+    </div>
+</div>

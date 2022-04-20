@@ -1,0 +1,99 @@
+# WEB Routes
+# This file defines WEB application routes (Higher priority routes first)
+# ~~~~
+
+# Authentication pages
+GET         /sign-up                                             controllers.web.AuthCtrl.startSignUp
+POST        /sign-up                                             controllers.web.AuthCtrl.handleStartSignUp
+GET         /sign-up/:token                                      controllers.web.AuthCtrl.signUp(token: String)
+GET         /sign-in                                             controllers.web.AuthCtrl.signIn
+GET         /bloggers-pride/sign-in                              controllers.web.AuthCtrl.bloggerSignIn
+GET         /bloggers-pride/sign-up                              controllers.web.AuthCtrl.bloggerSignUp
+POST        /authenticate                                        controllers.web.AuthCtrl.authenticate
+GET         /sign-out                                            controllers.web.AuthCtrl.signOut
+GET         /reset-password                                      controllers.web.AuthCtrl.forgotPassword
+POST        /reset-password                                      controllers.web.AuthCtrl.handleForgotPassword
+GET         /reset-password/:token                               controllers.web.AuthCtrl.resetPassword(token: String)
+POST        /reset-password/:token                               controllers.web.AuthCtrl.handleResetPassword(token: String)
+GET         /change-password                                     controllers.web.AuthCtrl.changePassword
+POST        /change-password                                     controllers.web.AuthCtrl.handleChangePassword
+
+# Home page
+GET         /                                                    controllers.web.ApplicationCtrl.index
+GET         /landing/know-your-customer                          controllers.web.ApplicationCtrl.kycIndex
+POST        /landing/know-your-customer                          controllers.web.ApplicationCtrl.postKyc
+GET         /visas                                               controllers.web.ApplicationCtrl.visa
+GET         /exclusive-offers                                    controllers.web.ApplicationCtrl.exclusiveOffer
+POST        /post-visa                                           controllers.web.ApplicationCtrl.postVisa
+GET         /uuid                                                controllers.web.ApplicationCtrl.cookieUID(cookie_id: String, redirect_to: String)
+GET         /price-alert-subscribe                               controllers.web.ApplicationCtrl.priceAlertSubscribe
+POST        /newsletter-subscribe                                controllers.web.ApplicationCtrl.newsletterSubscribe
+
+GET         /api-test-call/:pnrRef                               controllers.web.ApplicationCtrl.testApiCall(pnrRef: String)
+
+GET         /test                                                controllers.web.ApplicationCtrl.testPage
+
+GET         /myaccount                                           controllers.web.UserCtrl.myAccount
+GET         /edit-profile                                        controllers.web.UserCtrl.editProfile
+POST        /edit-profile                                        controllers.web.UserCtrl.postEditProfile
+GET         /dashboard                                           controllers.web.UserCtrl.dashboard
+GET         /booking-history                                     controllers.web.UserCtrl.bookings
+GET         /flight/booking/detail                               controllers.web.UserCtrl.flightDetail(ref ?= null)
+
+GET         /lang/$lang<(en|es)>                                 controllers.web.ApplicationCtrl.selectLang(lang: String)
+
+GET 		/savevisitor										 controllers.web.ApplicationCtrl.saveVisitor(name: String, email: String)
+
+
+# Booking Engine
+
+GET         /package/search                                      controllers.web.PackageCtrl.search
+GET         /packages                                            controllers.web.PackageCtrl.vacationPackages(page: Int ?= 1, apply_filter: Boolean ?= false, country_id: Long ?= 0, theme_id: String ?= "", pick_up: String ?= "", num_of_adult: Int ?= 1, num_of_children: Int ?= 0)
+GET         /package/select/:id                                  controllers.web.PackageCtrl.select(id: String)
+POST        /package/book-item/:packageId                        controllers.web.PackageCtrl.book(packageId: String)
+
+
+GET         /flight/result/$region<(local|international)>        controllers.web.FlightCtrl.result(region: String, fl_tabHash: String ?= "")
+GET         /flight/detail                                       controllers.web.FlightCtrl.detail(ref: String, fl_tabHash: String ?= "")
+POST        /flight/traveller-detail                             controllers.web.FlightCtrl.submitTraveller(itineraryRef: String, fl_tabHash: String ?= "", uri: String ?= "")
+GET         /flight/book/product-add-on                          controllers.web.FlightCtrl.reviewProduct(itineraryRef: String, fl_tabHash: String ?= "", uri: String ?= "")
+POST        /flight/book/product-add-on-save                     controllers.web.FlightCtrl.saveProduct(itineraryRef: String, fl_tabHash: String ?= "", uri: String ?= "")
+GET         /flight/book/payment-option                          controllers.web.FlightCtrl.paymentOption(itineraryRef: String, fl_tabHash: String ?= "", uri: String ?= "")
+GET         /flight/complete                                     controllers.web.FlightCtrl.bookItinerary(itineraryRef: String, fl_tabHash: String ?= "")
+GET         /flight/book/review                                  controllers.web.FlightCtrl.reviewItinerary(itineraryRef: String, fl_tabHash: String ?= "", uri: String ?= "")
+GET         /flight/booking/:status                              controllers.web.FlightCtrl.confirm(status: String, id: String)
+GET         /flight/no-result-found                              controllers.web.FlightCtrl.noResult(statusCode ?= null)
+GET         /flight/close-session                                controllers.web.FlightCtrl.closeSession(fl_tabHash ?= null)
+
+GET         /pay/:transactionRef                                 controllers.web.PaymentCtrl.payment(transactionRef: String)
+
+GET         /hotel/search                                        controllers.web.HotelCtrl.search
+GET         /hotel/search-result                                 controllers.web.HotelCtrl.result(page:Int ?= 1, perPage:Int ?= 15)
+GET         /hotel/availability/detail                           controllers.web.HotelCtrl.checkAvailability(hotelId: String, fl_tabHash: String, async: Boolean)
+GET         /hotel/no-result                                     controllers.web.HotelCtrl.noResult
+GET         /hotel/booking/traveller                             controllers.web.HotelCtrl.bookRoomTraveller(rix: String, hid: String, fl_tabHash: String ?= "")
+POST        /hotel/book-hotel-room                               controllers.web.HotelCtrl.postBookRoom(hotelId: String, roomRateId: String, fl_tabHash: String ?= "")
+GET         /hotel/book/:status                                  controllers.web.HotelCtrl.confirmation(status: String, bookingId: String ?= "")
+
+# Map static resources from the /public folder to the /assets URL path
+GET         /web/public/*file                                    controllers.web.Assets.public(path="/public/lib/web", file: Asset)
+GET         /web/lib/*file                                       controllers.web.Assets.lib(path="/public/lib/web", file: Asset)
+GET         /web/css/*file                                       controllers.web.Assets.css(path="/public/lib/web/css", file: Asset)
+GET         /web/fonts/*file                                     controllers.web.Assets.fonts(path="/public/lib/web/fonts", file: Asset)
+GET         /web/js/*file                                        controllers.web.Assets.js(path="/public/lib/web/js", file: Asset)
+GET         /web/my_js/*file                                     controllers.web.Assets.myJs(path="/public/lib/web/my_js", file: Asset)
+GET         /web/images/*file                                    controllers.web.Assets.img(path="/public/lib/web/images", file: Asset)
+
+GET         /common/*file                                        controllers.web.Assets.commonPublic(path="/public/lib/common", file: Asset)
+GET         /common/css/*file                                    controllers.web.Assets.commonCss(path="/public/lib/common/css", file: Asset)
+GET         /common/js/*file                                     controllers.web.Assets.commonJs(path="/public/lib/common/js", file: Asset)
+GET         /common/my_js/*file                                  controllers.web.Assets.commonMyJs(path="/public/lib/common/my_js", file: Asset)
+GET         /common/plugins/*file                                controllers.web.Assets.commonLib(path="/public/lib/common/plugins", file: Asset)
+GET         /common/fonts/*file                                  controllers.web.Assets.commonFont(path="/public/lib/common/fonts", file: Asset)
+GET         /common/images/*file                                 controllers.web.Assets.commonImg(path="/public/lib/common/images", file: Asset)
+
+GET         /rsc/*file                                           controllers.web.SharedResources.rsc(file: String)
+
+->          /                                                    common.Routes
+
+GET         /*url                                                controllers.web.ApplicationCtrl.page(url)

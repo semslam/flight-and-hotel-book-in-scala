@@ -1,0 +1,152 @@
+@import crypto.Encrypt
+@(users: Option[Users])(implicit request: RequestHeader, messages: Messages, encrypt: Encrypt)
+<form ng-controller="FlightBookingEngineController" name="b2cForm" id="b2cForm" ng-submit="submitFormB2C()" data-storage="localStorage" novalidate>
+    <input type="hidden" name="num_of_destination" value="1"/>
+    <input type="hidden" name="trip_type" value="RETURN"/>
+    <input type="hidden" name="sale_category" value="B2C">
+    <input type="hidden" name="uuid" value="@users.getOrElse(new Users).getId">
+    <div class="container clear-padding">
+        <div class="row">
+            <div>
+                <div class="clearfix"></div>
+                <div class="row">
+                    <div class="col-md-10 col-sm-10 col-xs-12 search-section" style="padding-right: 2px; padding-left: 2px;">
+                        <ul class="list-inline trip-types">
+                            <li class="ttype" for="ONE_WAY" data-value="ONE_WAY"><p>One-way</p></li>
+                            <li class="ttype active" for="RETURN" data-value="RETURN"><p>Round-trip</p></li>
+                            <li class="ttype" for="MULTI_CITY" data-value="MULTI_CITY"><p>Multi-destination</p></li>
+                        </ul>
+                        <div class="clearfix"></div>
+                        <div class="row" style="background:rgb(69, 75, 131); padding: 9px; border-radius: 5px;">
+                            <div class="col-md-3 col-sm-3 themeborder" style="padding-right: 2px; padding-left: 2px;">
+                                @*<label>Departing</label>*@
+                                <input type="text" class="search_airport_from form-control" style="border: unset; border-radius: 5px" id="dp_airport1" required placeholder="Departure Airport or City e.g. Lagos" name="departure_airport_1" data-section="1" autoselect="true" data-error-message="Departure airport is required" data-required="true" autocomplete="off" aria-autocomplete="none">
+                                <input type="hidden" name="departure_airport_code_1" value=""/>
+                                <input type="hidden" name="departure_country_id_1" value="" />
+                            </div>
+                            <div class="col-md-3 col-sm-3 themeborder" style="padding-right: 2px; padding-left: 2px;">
+                                @*<label>Arriving</label>*@
+                                <input type="text" name="arrival_airport_1" id="ar_airport1" style="border: unset; border-radius: 5px" class="form-control search_airport_to" required placeholder="Arriving Airport or City e.g. Dubai" data-section="1" autocomplete="off" autoselect="true" data-error-message="Arrival airport is required" data-required="true" aria-autocomplete="none" />
+                                <input type="hidden" name="arrival_airport_code_1"/>
+                                <input type="hidden" name="arrival_country_id_1"/>
+                            </div>
+                            <div class="col-md-2 col-sm-2 themeborder" id="div_dt_depart" style="padding-right: 2px; padding-left: 2px;">
+                                @*<label>Departing Date</label>*@
+                                <input type="text" readonly class="form-control departure_date" style="border: unset; border-radius: 5px" data-index="1" name="departure_date_1" style="cursor: pointer;" id="dp_date1" data-type="dateIso" placeholder="Departure Date" data-required="true" data-error-message="Incorrect Date Specified">
+                            </div>
+                            <div class="col-md-2 col-sm-2 themeborder" id="div_dt_to" style="padding-right: 2px; padding-left: 2px;">
+                                @*<label>Return Date</label>*@
+                                <input readonly class="form-control arrival_date" data-index="1" style="border: unset; border-radius: 5px" style="cursor: pointer;" name="arrival_date_1" id="ar_date1" data-type="dateIso" placeholder="Return Date" data-required="true" data-error-message="Incorrect Date Specified" type="text">
+                            </div>
+                            <div class="col-md-2 col-sm-2 themeborder popup" style="padding-right: 2px; padding-left: 2px;">
+                                @*<label>&nbsp;</label>*@
+                                <input value="1 Passenger, Economy" name="pass_desc" class="form-control passenger-cabin-btn" readonly style="border: unset; border-radius: 5px; cursor: pointer; text-transform: capitalize"/>
+                            </div>
+                            <div class="clearfix"></div>
+                            <div class="multi_city_div" style="display: none">
+                                <div class="more_multi_city_div"></div>
+                                <div class="clearfix"></div>
+                                <div class="col-sm-12 col-xs-12" style="padding: 3px;">
+                                    <button type="button" class="add_more_multi_city btn btn-primary btn-xs" style="color:#FFF; border-right: 1px solid #333; padding-right: 10px;">Add</button>
+                                    <button type="button" class="delete_multi btn btn-danger btn-xs" style="color:#FFF">Remove</button>
+                                </div>
+                                <div class="clearfix"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2 col-sm-2 col-xs-12">
+                        @*<label>&nbsp;</label>*@
+                        <button type="submit" name="submitBtn" style="color: #FFF;/* width:100%; */background-color: rgba(0, 0, 0, 0.23);border-color: rgb(90, 98, 170);width: 90px;height: 90px;font-size: 15px;font-weight: 400;border-radius: 50%;text-shadow: none;transition-duration: .25s;margin-left: 15px;margin-top: 35px;transition-timing-function: cubic-bezier(.27,.67,.28,.87);" id="submitBtn" class="search-button btn transition-effect search-submit">Search</button>
+                    </div>
+                        <!-- END: TAB PANE -->
+                </div>
+                <div style="padding-right: 2px; padding-left: 2px;">
+                    <input type="hidden" name="flexible_date" value="">
+                    @*<label id="flexible_date_div" for="flexible_date" class="text-white" style="color: #FFF"><input type="checkbox" ng-checked="flexibleDate" ng-model="flexible_date" value="1" id="flexible_date" name="flexible_date" /> +/-3 Flexible Date</label>*@
+                </div>
+                <div class="col-md-3" style="padding-right: 2px; padding-left: 2px;">
+                    <input type="hidden" name="is_refundable" >
+                    <label id="is_refundable" style="color: #FFF" for="is_refundable" class="text-white">
+                            <!--<input type="checkbox" ng-checked="isRefundable" ng-model="is_refundable" value="1" name="is_refundable" /> Refundable Tickets Only -->
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="passengerCabinModal" tabindex="-1" role="dialog" aria-labelledby="passengerCabinModal">
+        <div class="modal-dialog modal-md" role="document">
+            <div class="modal-content ">
+                <div class="modal-body">
+                    <h5>Traveller(s) Detail</h5>
+                    <div class="row">
+                        <div class="form-group col-md-4 col-sm-4">
+                            <label for="spinner6">Adults <small>(12+ Yrs)</small></label>
+                            <select name="num_of_adult" class="form-control">
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                                <option value="6">6</option>
+                                <option value="7">7</option>
+                                <option value="8">8</option>
+                                <option value="9">9</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-4 col-sm-4">
+                            <label for="spinner7">Children <small>(2-11 Yrs)</small></label>
+                            <select name="num_of_children" class="form-control">
+                                <option value="0">0</option>
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                                <option value="6">6</option>
+                                <option value="7">7</option>
+                                <option value="8">8</option>
+                                <option value="9">9</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-4 col-sm-4">
+                            <label for="spinner8">Infants <small>(< 2 Yrs)</small></label>
+                            <select name="num_of_infant" class="form-control">
+                                <option value="0">0</option>
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                                <option value="6">6</option>
+                                <option value="7">7</option>
+                                <option value="8">8</option>
+                                <option value="9">9</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-6 col-sm-6">
+                            <label>Cabin Class</label>
+                            <select name="cabin_class" class="form-control">
+                                <option value="ECONOMY">ECONOMY</option>
+                                <option value="PREMIUM">PREMIUM</option>
+                                <option value="BUSINESS">BUSINESS</option>
+                                <option value="FIRST">FIRST</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-6 col-sm-6">
+                            <label>Preferred Airline</label>
+                            <select name="airline_id" class="form-control">
+                                <option value="">All Airlines</option>
+                                @for(airline <- AirlineCommissionable.find.all()) {
+                                    <option value="@airline.getAirlineId.getAirlineCode">@airline.getAirlineId.getName</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" data-dismiss="modal" class="btn btn-primary">Okay</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>

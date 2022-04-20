@@ -1,0 +1,36 @@
+@import helper._
+@import views.html.admin.tags.myDataTable
+@import crypto.Encrypt
+@import b3.vertical.fieldConstructor
+@import controllers.admin.systems.routes
+@import views.html.admin.templates._
+@import controllers.admin.systems.ControlSettings
+@(header: Form[ControlSettings])(implicit request: RequestHeader, messages: Messages, manager: PrivateUsers, encrypt: Encrypt)
+@default(title = "Control Settings", tab = "systems") {
+    <div class="panel">
+        <header class="panel-heading">
+            <h2 class="panel-name">Control Settings</h2>
+        </header>
+        <div class="panel-body">
+            @tags.alertFromRequest(request, "success")
+            @tags.alertFromRequest(request, "error")
+            @b3.formCSRF(routes.ControlSettingsCtrl.save()) {
+                @header.globalError.map { error =>
+                    @tags.alert(error.message, "error")
+                }
+                @helper.inputText(header("usd2ngn"), 'class -> "form-control", '_label -> Html("USD to NGN Exchange Rate"))
+                @helper.select(header("system_currency"), options(List("NGN", "USD")), 'class -> "form-control", '_label -> Html("System Default Currency"))
+                @helper.inputText(header("webpay_api_fee"), 'class -> "form-control", '_label -> Html(s"""Payment Gateway Fee"""))
+                @helper.inputText(header("flights_dip"), 'class -> "form-control", '_label -> Html(s"""Flight DIP Charge"""))
+                @helper.inputText(header("hotels_dip"), 'class -> "form-control", '_label -> Html(s"""Hotels DIP Charge"""))
+                @helper.inputText(header("tax_on_commission"), 'class -> "form-control", '_label -> Html(s"""Tax on Commission In (%)"""))
+                @helper.inputText(header("economy_service_charge"), 'class -> "form-control", '_label -> Html(s"""Economy Class Ticket Service Charge"""))
+                @helper.inputText(header("business_service_charge"), 'class -> "form-control", '_label -> Html(s"""Business Class Ticket Service Charge"""))
+                @helper.inputText(header("premium_service_charge"), 'class -> "form-control", '_label -> Html(s"""Premium Class Ticket Service Charge"""))
+                @helper.inputText(header("first_service_charge"), 'class -> "form-control", '_label -> Html(s"""First Class Ticket Service Charge"""))
+                @helper.inputText(header("operation_country"), 'class -> "form-control", '_label -> Html(s"""Operating Country"""))
+                <button type="submit" name="submit" class="btn btn-primary">Save Settings</button>
+            }
+        </div>
+    </div>
+}

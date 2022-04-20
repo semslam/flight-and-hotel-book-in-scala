@@ -1,0 +1,47 @@
+@import controllers.admin.routes
+@(thead: Seq[String], order: String = "desc", className: String = "myTable")(tbody: Html)(implicit request: RequestHeader, messages: Messages)
+<link rel="stylesheet" type="text/css" href="@routes.Assets.commonLib("datatables/Datatables-1.10.12/css/dataTables.bootstrap.css")">
+<table class="table table-striped table-bordered table-hover @className" cellspacing="0" width="100%">
+    <thead>
+        <tr>
+            @if(thead.nonEmpty) {
+                @for(label <- thead) {
+                    <th>@label</th>
+                }
+            }
+        </tr>
+    </thead>
+    <tbody>
+        @tbody
+    </tbody>
+</table>
+
+    <!-- Datatables -->
+<script type="text/javascript" src="@routes.Assets.commonJs("jquery-2.1.1.min.js")"></script>
+<script type="text/javascript" src="@routes.Assets.commonLib("datatables/datatables.min.js")"></script>
+<script type="text/javascript" src="@routes.Assets.commonLib("datatables/extensions/TableTools/js/dataTables.tableTools.min.js")"></script>
+<script>
+        $('.@className').dataTable({
+            "aoColumnDefs": [{
+                'bSortable': true,
+                'aTargets': [-1]
+            }],
+            "processing": true,
+            "oLanguage": {
+                "oPaginate": {
+                    "sPrevious": "",
+                    "sNext": ""
+                }
+            },
+            "order": [[ 0, "@order" ]],
+            "iDisplayLength": 20,
+            "aLengthMenu": [
+                [10, 25, 50, -1],
+                [10, 25, 50, "All"]
+            ]
+//            "sDom": 'T<"dt-panelmenu clearfix"lfr>t<"dt-panelfooter clearfix"ip>',
+//            "oTableTools": {
+                @*"sSwfPath": "@routes.Assets.commonLib("datatables/extensions/TableTools/swf/copy_csv_xls_pdf.swf")"*@
+//            }
+        });
+</script>

@@ -1,0 +1,24 @@
+@import helper._
+@import views.html.admin.tags.myDataTable
+@import crypto.Encrypt
+@import views.html.helper.CSRF
+@import b3.vertical.fieldConstructor
+@import controllers.admin.systems._
+@(form: Form[Facility])(implicit request: RequestHeader, messages: Messages, manager: PrivateUsers)
+@import views.html.admin.templates._
+@default(title = "Create/Edit Facility", tab = "systems") {
+    <div class="panel">
+        <header class="panel-heading">
+            <h2 class="panel-name">Create/Edit Facility</h2>
+        </header>
+        <div class="panel-body">
+        @b3.formCSRF(routes.StaticDataCRUDCtrl.saveFacility) {
+            <input type="hidden" value="@form("id").value.orNull" name="id" />
+            @b3.text(form("name"), '_label -> "Country Name")
+            @b3.text(form("fontCode"), '_label -> "Icon Code", 'placeholder -> "e.g. fa fa-plane")
+            <br />
+            <button type="submit" name="submit" class="btn form-control btn-primary">Submit</button>
+        }
+        </div>
+    </div>
+}

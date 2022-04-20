@@ -1,0 +1,86 @@
+# b2b Routes
+# This file defines b2b application routes (Higher priority routes first)
+# ~~~~
+
+# Authentication pages
+GET         /signin                                                          controllers.b2b.AuthCtrl.signIn
+GET         /signup                                                          controllers.b2b.AuthCtrl.signUp
+GET         /email-confirmation/:token                                       controllers.b2b.AuthCtrl.confirmAccount(token: String)
+POST        /signup                                                          controllers.b2b.AuthCtrl.handleStartSignUp
+POST        /authenticate                                                    controllers.b2b.AuthCtrl.authenticate
+GET         /signout                                                         controllers.b2b.AuthCtrl.signOut
+GET         /reset-password                                                  controllers.b2b.AuthCtrl.forgotPassword
+POST        /reset-password                                                  controllers.b2b.AuthCtrl.handleForgotPassword
+GET         /reset-password/:token                                           controllers.b2b.AuthCtrl.resetPassword(token: String)
+POST        /reset-password/:token                                           controllers.b2b.AuthCtrl.handleResetPassword(token: String)
+GET         /change-password                                                 controllers.b2b.AuthCtrl.changePassword
+POST        /change-password                                                 controllers.b2b.AuthCtrl.handleChangePassword
+GET         /denied                                                          controllers.b2b.AuthCtrl.accessDenied
+
+#
+#
+## Home page
+GET         /                                                                controllers.b2b.ApplicationCtrl.index
+GET         /search-for-flight                                               controllers.b2b.FlightCtrl.index
+GET         /flight/no-result                                                controllers.b2b.FlightCtrl.noResult(statusCode ?= null)
+POST        /flight/traveller-detail                                         controllers.b2b.FlightCtrl.submitTraveller(itineraryRef: String, fl_tabHash: String ?= "")
+GET         /sales-report                                                    controllers.b2b.ApplicationCtrl.report
+GET         /view-booking-itinerary-ref                                      controllers.b2b.ApplicationCtrl.viewBookingItinerary(ref: String)
+GET         /gen-report/:format                                              controllers.b2b.ApplicationCtrl.genInvoice(format)
+POST        /download-report                                                 controllers.b2b.ApplicationCtrl.genReport
+
+# Flight Routes
+GET         /flight/search-result/:locale                                    controllers.b2b.FlightCtrl.result(locale: String)
+GET         /flight/detail                                                   controllers.b2b.FlightCtrl.detail(itineraryRef: String, fl_tabHash: String ?= "")
+GET         /flight/booking/:bookingStatus/:bookingId                        controllers.b2b.FlightCtrl.confirm(bookingStatus: String, bookingId: String)
+GET         /flight/booking/product-checkout                                 controllers.b2b.FlightCtrl.bookingCheckingOut(itineraryRef: String, fl_tabHash: String ?= "")
+POST        /flight/complete/:itineraryRef                                   controllers.b2b.FlightCtrl.bookItinerary(itineraryRef: String, fl_tabHash: String ?= "")
+
+# Packages  Routes
+GET         /package/search                                                  controllers.b2b.PackageCtrl.search
+GET         /the-pride                                                       controllers.b2b.PackageCtrl.vacationPackages(page: Int ?= 1, apply_filter: Boolean ?= false, country_id: Long ?= 0, theme_id: String ?= "", pick_up: String ?= "", num_of_adult: Int ?= 1, num_of_children: Int ?= 0)
+GET         /the-pride/select/:id                                            controllers.b2b.PackageCtrl.select(id: String)
+POST        /the-pride/book-item/:packageId                                  controllers.b2b.PackageCtrl.book(packageId: String)
+
+# Hotel Routes
+
+
+GET         /flight/send-email-invoice/:bookingId                            controllers.b2b.FlightCtrl.sendInvoiceToMail(bookingId: Long)
+GET         /flight/itinerary-info/:ref                                      controllers.b2b.FlightCtrl.viewItineraryModal(ref: String, displayFare: Boolean ?= true)
+
+GET         /uuid                                                            controllers.b2b.ApplicationCtrl.cookieUID(cookie_id: String, redirect_to: String)
+GET         /lang/$lang<(en|es)>                                             controllers.b2b.ApplicationCtrl.selectLang(lang: String)
+
+GET         /booking-confirmation-payment/:paymentId/:fullName/:email        controllers.b2b.PaymentCtrl.flCardPayment(paymentId, fullName, email)
+
+GET         /profile                                                         controllers.b2b.ApplicationCtrl.myAccount
+GET         /edit-profile                                                    controllers.b2b.ApplicationCtrl.editProfile
+POST        /upload-logo                                                     controllers.b2b.ApplicationCtrl.uploadLogo
+
+GET         /user/agents/create                                              controllers.b2b.UserCtrl.create(id: String ?= null)
+POST        /user/agents/save                                                controllers.b2b.UserCtrl.saveAgent(id: String ?= null)
+GET         /user/agents                                                     controllers.b2b.UserCtrl.index
+#
+# Map static resources from the /public folder to the /assets URL path
+GET         /b2b/public/*file                                                controllers.b2b.Assets.public(path="/public/lib/web", file: Asset)
+GET         /b2b/css/*file                                                   controllers.b2b.Assets.css(path="/public/lib/b2b/css", file: Asset)
+GET         /b2b/fonts/*file                                                 controllers.b2b.Assets.fonts(path="/public/lib/b2b/fonts", file: Asset)
+GET         /b2b/js/*file                                                    controllers.b2b.Assets.js(path="/public/lib/b2b/js", file: Asset)
+GET         /b2b/plugins/*file                                               controllers.b2b.Assets.plugins(path="/public/lib/b2b/plugins", file: Asset)
+GET         /b2b/lib/*file                                                   controllers.b2b.Assets.plugins(path="/public/lib/b2b/plugins", file: Asset)
+GET         /b2b/my_js/*file                                                 controllers.b2b.Assets.myJs(path="/public/lib/b2b/my_js", file: Asset)
+GET         /b2b/img/*file                                                   controllers.b2b.Assets.img(path="/public/lib/b2b/img", file: Asset)
+
+GET         /common/*file                                                    controllers.b2b.Assets.commonPublic(path="/public/lib/common", file: Asset)
+GET         /common/css/*file                                                controllers.b2b.Assets.commonCss(path="/public/lib/common/css", file: Asset)
+GET         /common/js/*file                                                 controllers.b2b.Assets.commonJs(path="/public/lib/common/js", file: Asset)
+GET         /common/my_js/*file                                              controllers.b2b.Assets.commonMyJs(path="/public/lib/common/my_js", file: Asset)
+GET         /common/plugins/*file                                            controllers.b2b.Assets.commonLib(path="/public/lib/common/plugins", file: Asset)
+GET         /common/fonts/*file                                              controllers.b2b.Assets.commonFont(path="/public/lib/common/fonts", file: Asset)
+GET         /common/images/*file                                             controllers.b2b.Assets.commonImg(path="/public/lib/common/images", file: Asset)
+
+
+GET         /rsc/*file                                                       controllers.b2b.SharedResources.rsc(file: String)
+
+
+->          /                                                                common.Routes

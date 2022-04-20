@@ -1,0 +1,44 @@
+
+@(user: Users)
+<div class="panel">
+    <div class="panel-body">
+        <table class="table table-responsive">
+            <tr>
+                <th>Full Name</th>
+                <td>@user.fullName()</td>
+            </tr>
+            <tr>
+                <th>Company Name</th>
+                <td>@user.getAgentCorporateDetailId.getCompanyName</td>
+            </tr>
+            <tr>
+                <th>Company Address</th>
+                <td>@user.getAgentCorporateDetailId.getContactAddress</td>
+            </tr>
+            <tr>
+                <th>City, Country</th>
+                <td>@user.getAgentCorporateDetailId.getCity, @user.getAgentCorporateDetailId.getCountryId.getName</td>
+            </tr>
+            <tr>
+                <th>Code</th>
+                <td>@user.getAgentCorporateDetailId.getCorporateCode</td>
+            </tr>
+            <tr>
+                <th>Email<th>
+                <td>@user.getEmail</td>
+            </tr>
+            <tr>
+                <th>Website URL<th>
+                <td>@user.getAgentCorporateDetailId.getWebsiteUrl</td>
+            </tr>
+            <tr>
+                <th>Contact Phone</th>
+                <td>@user.getPhone</td>
+            </tr>
+            <tr>
+                <th>Logo</th>
+                <td><img src="@user.getAgentCorporateDetailId.logo()" class="img img-responsive" /> </td>
+            </tr>
+        </table>
+    </div>
+</div>

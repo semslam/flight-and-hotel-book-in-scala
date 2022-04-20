@@ -1,0 +1,27 @@
+@import helper._
+@import b3.vertical.fieldConstructor
+@import controllers.admin.systems.routes
+@(form: Form[(Option[Long], String, String)])(implicit request: RequestHeader, messages: Messages, manager: PrivateUsers)
+@import views.html.admin.templates._
+@default(title = "Email Template Settings", tab = "systems") {
+    <div class="panel">
+        <div class="panel-heading"><h2>Create/Edit Email Template</h2></div>
+        <div class="panel-body">
+        @b3.formCSRF(routes.EmailSmsCtrl.saveEmail) {
+            <div class="row">
+                <div class="col-md-12">
+                    @tags.alertFromRequest(request, "error")
+                    @form.globalError.map { error =>
+                        @tags.alert(error.message, "error")
+                    }
+                    @b3.text(form("subject"), 'placeholder -> "Email Subject", 'required -> "required")
+                    <label>Message Template</label>
+                    <textarea rows="12" class="editable" name="@form("message").name">@form("message").value.orNull</textarea>
+@*//                    @b3.textarea(form("message"), 'rows -> "12", 'id -> "editable", 'class -> "editable", 'placeholder -> Html("Message Template"))*@
+                    @b3.submit('class -> "btn btn-md btn-primary") { Save Template }
+                </div>
+            </div>
+        }
+        </div>
+    </div>
+}

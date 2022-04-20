@@ -1,0 +1,30 @@
+@import crypto.Encrypt
+@import controllers.web.routes
+@(flightBookings: PackageBookings)(implicit request: RequestHeader, messages: Messages, encrypt: Encrypt,loggedManager: Option[Users])
+@views.html.web.templates.default(title = "Booking Confirmation", script, Html(""), loggedManager) {
+    <div class="container">
+        <div class="booking-tab">
+            <div class="container clear-padding">
+                <ul class="nav nav-tabs">
+                    <li class="col-md-4 col-sm-3 col-xs-3"><a data-toggle="tab" class="text-center"><i class="fa fa-male"></i> <span>Tour Packages</span></a></li>
+                    <li class="col-md-4 col-sm-3 col-xs-3"><a data-toggle="tab" href="#" class="text-center"><i class="fa fa-circle-o-notch"></i> <span>Review & Traveler</span></a></li>
+                    <li class="col-md-4 col-sm-3 col-xs-3 active"><a data-toggle="tab" href="#" class="text-center"><i class="fa fa-check"></i> <span>Complete</span></a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="row">
+            <h2 class="text-info col-md-12">Thank you @flightBookings.getBookings.getContactFirstname for your booking. </h2>
+            <div class="clearfix"></div>
+            <div class="gap gap-small"></div>
+            <div class="col-xs-2 col-md-2 hidden-xs">
+                <h5>We've received your booking information. We'll get back to your shortly.</h5>
+                <br /><br/>
+                <h3><strong>Thank you!</strong></h3>
+            </div>
+            <div class="clearfix"></div>
+            <div class="gap gap-small"></div>
+        </div>
+    </div>
+}
+@script = {
+}

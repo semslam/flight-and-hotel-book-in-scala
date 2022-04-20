@@ -1,0 +1,142 @@
+@import helper._
+@import controllers.b2b.routes
+@import b3.vertical.fieldConstructor
+@import controllers.b2b.AgentUser
+@import crypto.Encrypt
+@(form: Form[AgentUser])(implicit loggedManager: Users, requestHeader: RequestHeader, messages: Messages, encrypt: Encrypt)
+@views.html.b2b.templates.default(title = "Create Sub-Agent", tab = "user") {
+    <h2><strong>Create Sub-Agents</strong></h2>
+    <div class="row" style="margin: 0 5px 0 5px">
+        <div class="col-md-12 col-xs-12 col-lg-12 col-sm-12 row" style="background: #fff;padding: 10px; border-radius: 5px;">
+        @b3.formCSRF(routes.UserCtrl.saveAgent()) {
+            <input type="hidden" name="@form("id").name" value="@form("id").value.getOrElse("")">
+            <input type="hidden" name="@form("uid").name" value="@form("uid").value.getOrElse("")">
+            <div class="col-md-12"><h3>Agent Bio-Data</h3></div>
+            <div class="col-md-3">
+            @b3.select(form("title"), options(Titles.options(form("title").value.getOrElse(""))), '_label -> "Title")
+            </div>
+            <div class="col-md-3">
+            @b3.text(form("firstName"), '_label -> "First Name")
+            </div>
+            <div class="col-md-3">
+            @b3.text(form("lastName"), '_label -> "Last Name")
+            </div>
+            <div class="col-md-3">
+            @b3.text(form("phone"), '_label -> "Mobile Phone")
+            </div>
+            <div class="col-md-3">
+            @b3.text(form("email"), '_label -> "Email (Required for Sign In)")
+            </div>
+            <div class="col-md-3">
+                <div class="form-group  " id="password_field">
+                    <label class="control-label" for="password">Password</label>
+                    <input type="password" id="password" name="@form("password").name" value="@form("password").value" class="form-control">
+                    @if(form("password").hasErrors){
+                        <ul class="list-group">
+                        @for(error <- form("password").errors) {
+                            <li class="text-danger">@error.message</li>
+                        }
+                        </ul>
+                    }
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-group  " id="password_field">
+                    <label class="control-label" for="password">Retype Password</label>
+                    <input type="password" id="password" name="@form("rePassword").name" value="@form("rePassword").value" class="form-control">
+                </div>
+            </div>
+            <div class="col-md-3">
+            @if(loggedManager.getRole.equalsIgnoreCase(Roles.b2b_owner.name())) {
+                @if(form("id").value.nonEmpty) {
+                    @b3.select(form("role"), options(Roles.b2b_owner.name() -> Roles.b2b_owner.name().replaceAll("_", " ").toUpperCase), '_label -> "Role")
+                } else {
+                    @b3.select(form("role"), options(Roles.b2b_sales_agent.name() -> Roles.b2b_sales_agent.name().replaceAll("_", " ").toUpperCase), '_label -> "Role")
+                }
+            } else {
+                @b3.select(form("role"), options(Roles.b2b_sales_agent.name() -> Roles.b2b_sales_agent.name().replaceAll("_", " ").toUpperCase), '_label -> "Role")
+            }
+            </div>
+            <div class="clearfix"></div>
+            <h4 class="col-md-12">Agent Markups Rules (Prices in NGN)</h4>
+            <div class="clearfix"></div>
+            <div class="col-md-3 hide">
+            @b3.checkbox(form("isPercentage"), 'value -> true, 'checked -> false, '_text -> "Markup as Percentage", 'hidden -> "hidden")
+            </div>
+            <div class="col-md-3">
+            @b3.checkbox(form("autoApplyMarkup"), 'value -> true, 'checked -> true, '_text -> "Auto Apply Markup")
+            </div>
+            <div class="col-md-3">
+            @b3.checkbox(form("canSetupMarkUpOnFly"), 'value -> true, 'checked -> false, '_text -> "Can add Markup on Fly")
+            </div>
+            <div class="clearfix">
+                <div class="col-md-12"><h4>Adult Fares Markup</h4></div>
+            </div>
+            <div class="col-md-4">
+            @b3.text(form("adt.local__oneWay"), '_label -> "Local One Way")
+            </div>
+            <div class="col-md-4">
+            @b3.text(form("adt.local__return"), '_label -> "Local Return")
+            </div>
+            <div class="col-md-4">
+            @b3.text(form("adt.local__multiCity"), '_label -> "Local Multi City")
+            </div>
+            <div class="col-md-4">
+            @b3.text(form("adt.int__oneWay"), '_label -> "International One Way")
+            </div>
+            <div class="col-md-4">
+            @b3.text(form("adt.int__return"), '_label -> "International Return")
+            </div>
+            <div class="col-md-4">
+            @b3.text(form("adt.int__multiCity"), '_label -> "International Multi City")
+            </div>
+            <div class="clearfix">
+                <div class="col-md-12"><h4>Child Fares Markup</h4></div>
+            </div>
+            <div class="col-md-4">
+            @b3.text(form("chd.local__oneWay"), '_label -> "Local One Way")
+            </div>
+            <div class="col-md-4">
+            @b3.text(form("chd.local__return"), '_label -> "Local Return")
+            </div>
+            <div class="col-md-4">
+            @b3.text(form("chd.local__multiCity"), '_label -> "Local Multi City")
+            </div>
+            <div class="col-md-4">
+            @b3.text(form("chd.int__oneWay"), '_label -> "International One Way")
+            </div>
+            <div class="col-md-4">
+            @b3.text(form("chd.int__return"), '_label -> "International Return")
+            </div>
+            <div class="col-md-4">
+            @b3.text(form("chd.int__multiCity"), '_label -> "International Multi City")
+            </div>
+            <div class="clearfix">
+                <div class="col-md-12"><h4>Infant Fares Markup</h4></div>
+            </div>
+            <div class="col-md-4">
+            @b3.text(form("inf.local__oneWay"), '_label -> "Local One Way")
+            </div>
+            <div class="col-md-4">
+            @b3.text(form("inf.local__return"), '_label -> "Local Return")
+            </div>
+            <div class="col-md-4">
+            @b3.text(form("inf.local__multiCity"), '_label -> "Local Multi City")
+            </div>
+            <div class="col-md-4">
+            @b3.text(form("inf.int__oneWay"), '_label -> "International One Way")
+            </div>
+            <div class="col-md-4">
+            @b3.text(form("inf.int__return"), '_label -> "International Return")
+            </div>
+            <div class="col-md-4">
+            @b3.text(form("inf.int__multiCity"), '_label -> "International Multi City")
+            </div>
+            <div class="clearfix"></div>
+            <div class="col-md-12">
+            @b3.submit('class -> "btn btn-md btn-login btn-success") { Submit }
+            </div>
+        }
+        </div>
+    </div>
+}

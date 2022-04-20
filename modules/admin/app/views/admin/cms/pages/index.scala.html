@@ -1,0 +1,46 @@
+@import views.html.admin.tags.myDataTable
+@import crypto.Encrypt
+
+
+@(items: List[CmsPages])(implicit request: RequestHeader, messages: Messages, manager: PrivateUsers, encrypt: Encrypt)
+@import controllers.admin.cms.routes
+@import views.html.admin.templates._
+@default(title = "CMS Pages", tab = "cms") {
+    <div class="panel">
+        <header class="panel-heading">
+            <h2 class="panel-name">CMS Pages</h2>
+            <br />
+            <a href="@routes.PageCtrl.create()" class="btn btn-default"><i class="fa fa-plus"></i> Create New Page</a><br />
+        </header>
+        <div class="panel-body">
+            @myDataTable(Seq("#", "Name", "URL Path", "Is Published", "Created at", "Updated at", "Action")) {
+                @if(items.nonEmpty) {
+                    @for(item <- items) {
+                        <tr>
+                            <td>@item.getId</td>
+                            <td>@item.getName</td>
+                            <td>@item.getSlugUrl</td>
+                            <td>@item.getIsPublish</td>
+                            <td>@item.getCreatedAt.format("yyyy-MM-dd HH:mm")</td>
+                            <td>@item.getUpdatedAt.format("yyyy-MM-dd HH:mm")</td>
+                            <td>
+                                <span>
+                                    <div class="btn-group" role="group" aria-label="...">
+                                        <div class="btn-group" role="group">
+                                            <button type="button" class="btn btn-primary btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span class="caret"></span> Edit</button>
+                                            <ul class="dropdown-menu">
+                                                <li><a href="@routes.PageCtrl.create(encrypt.encrypt(item.getId.toString))" target="_blank">Edit Page Properties</a></li>
+                                                <li><a href="@routes.TemplateCtrl.edit(encrypt.encrypt(item.getCmsTemplateId.getId.toString), encrypt.encrypt(item.getId.toString))" target="_blank">Edit Page Contents</a></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </span>
+                                <span><a href="@routes.PageCtrl.delete(encrypt.encrypt(item.getId.toString))" class="btn btn-xs btn-danger"><i class="fa fa-times"></i> Delete</a></span>
+                            </td>
+                        </tr>
+                    }
+                }
+            }
+        </div>
+    </div>
+}

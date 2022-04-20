@@ -1,0 +1,15 @@
+@import payapi.interswitch.WebPaymentQuery
+@(wSQueryResponse: WebPaymentQuery)(implicit requestHeader: RequestHeader)
+<div style="text-align: center">
+    <h1>
+        @if(wSQueryResponse.isSuccessful) {
+            Transaction Successful
+        } else {
+            Transaction Failed
+        }
+    </h1>
+    <h4>@wSQueryResponse.transDesc</h4>
+</div>
+<hr />
+<p>Amount Paid: <strong>@wSQueryResponse.currency @wSQueryResponse.amount</strong></p>
+<p>Transaction ID: <strong>@wSQueryResponse.transRef</strong></p>

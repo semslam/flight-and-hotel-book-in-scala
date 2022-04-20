@@ -1,0 +1,17 @@
+@()(implicit requestHeader: RequestHeader, messages: Messages)
+@import controllers.web.routes
+<div class="">
+    <div class="panel-body row">
+        <form method="POST" class="col-md-8" id="newsletterSubscribe" data-validate="parsley" action="@routes.ApplicationCtrl.newsletterSubscribe" enctype="application/x-www-form-urlencoded">
+            @helper.CSRF.formField
+            <div class="searchbox">
+                <input type="email" name="email" data-required="true" placeholder="mail@@example.com" required="true" />
+                <input type="submit" value="Subscribe"/>
+            </div>
+        </form>
+        <div class="col-md-4">
+            <h4>We'll notify you!</h4>
+            <p class="text">Never miss out, stay updated with out cheapest fare ever!</p>
+        </div>
+    </div>
+</div>

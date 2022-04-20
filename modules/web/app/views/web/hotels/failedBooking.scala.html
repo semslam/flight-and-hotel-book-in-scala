@@ -1,0 +1,13 @@
+@import crypto.Encrypt
+@import views.html.web.templates._
+@()(implicit request: RequestHeader, maybeUser: Option[Users], messages: Messages, encrypt: Encrypt)
+@import controllers.web.routes
+@default(title = "Booking Failed",loggedUser = maybeUser) {
+    <div class="container">
+        <div class="spacer25">
+            <h2 class="text-info">Ooops! Booking failed.</h2>
+            <p>We don't know why this happened. We'll get in touch with you </p><br /><br />
+            <h3><strong>Thank you!</strong></h3>
+        </div>
+    </div>
+}

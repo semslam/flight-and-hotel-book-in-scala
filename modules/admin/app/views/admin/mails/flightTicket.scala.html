@@ -1,0 +1,257 @@
+@import controllers.common._
+@import com.alajobi.ota.utils._
+@import scala.collection.JavaConversions._
+@(flightBooking: FlightBookings)(implicit requestHeader: RequestHeader)
+@isB2B = @{
+    flightBooking.getBookings.getSalesCategory.eq(SalesCategory.B2B)
+}
+@companyName = @{ if(isB2B) {
+    flightBooking.getBookings.getUserId.getAgentCorporateDetailId.getCompanyName
+} else {
+    play.Configuration.root().getString("project.name")
+}
+}
+@companyPhone = @{ if(isB2B) {
+    flightBooking.getBookings.getUserId.getPhone
+    } else {
+        play.Configuration.root().getString("project.phone1")
+    }
+}
+@bookingTravellers = @{
+    FlightBookingTraveller.find.where().eq("flightBookingId", flightBooking)
+}
+@totalAmount = @{
+    utils.Utilities.numberFormat(flightBooking.getBookings.getPaymentHistoryId.getTotalAmount + flightBooking.getBookings.getPaymentHistoryId.getTotalB2bMarkup)
+}
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+        <title>@play.Configuration.root().getString("project.name") - Invoice (@flightBooking.getBookings.getTransactionRef)</title>
+        <style type="text/css">
+
+                /* Table */
+                .aqua_table {
+                    margin: 20px 0;
+                }
+
+                .aqua_table th {
+                    border: 1px solid #e2e2e2;
+                    background: #4c4d4f url('http://jadorecakesonline.com/images/grad_menu.png') top left repeat-x;
+                    text-align: center;
+                    padding: 8px 14px;
+                    font-size: 14px;
+                    text-align: left;
+                    font-weight: 600;
+                }
+
+                .aqua_table td {
+                    padding: 8px 14px;
+                    border: #e2e2e2 1px solid;
+
+                    -webkit-transition: all 0.3s linear;
+                    -moz-transition: all 0.3s linear;
+                    -ms-transition: all 0.3s linear;
+                    -o-transition: all 0.3s linear;
+                    transition: all 0.3s linear;
+                }
+
+                table {
+                    border-collapse: collapse;
+                }
+
+                table, td, th {
+                    border-bottom: 1px solid black;
+                }
+        </style>
+    </head>
+    <body>
+        <p style="max-width: 100%">
+            @if(isB2B) {
+                <img src="@flightBooking.getBookings.getUserId.getAgentCorporateDetailId.getLogoUrl" height="120px" alt="" />
+            } else {
+                <img src="@SystemControlSetting.getInstance().get(SystemControlSetting.CMS_LOGO)" height="120px" alt="" />
+            }
+            <br />
+    <h1 style="color: #f47d20; text-align: center;">This is your E-Ticket<br /> @flightBooking.getBookings.getTransactionRef</h1>
+        <br />
+        <p>Dear @flightBooking.getBookings.getContactTitle <strong>@flightBooking.getBookings.getContactFirstname <strong> @flightBooking.getBookings.getContactSurname</strong></strong></p>
+        <p>Thank you for placing a flight booking with @companyName<p>
+    <p>Please note that this is your E-Ticket. You can print of present this email confirmation at check-in.<p>
+    <p>Ensure you verify details, expecially passenger names and travel dates<br/><p>
+
+    <h2><strong style="color: #f47d20">Booking Details</strong></h2>
+        <p>Booking Reference: @flightBooking.getBookings.getTransactionRef</p>
+        <p>Ticket Number: @bookingTravellers.findList().head.getTicketRef</p>
+        <p>Booking Date: @flightBooking.getCreatedAt.format("hh:mm a, dd MMM, yyyy")</p>
+
+        <h2><strong style="color: #f47d20">Flight Details</strong></h2>
+        <table width="85%">
+            <thead style="background: rgb(0, 112, 192); color: #FFF">
+                <tr>
+                    <td>AIRLINE DETAILS</td>
+                    <td></td>
+                    <td>DEPARTURE</td>
+                    <td>ARRIVING</td>
+                    <td>CLASS</td>
+                    <td>STOPS</td>
+                    <td>DURATION</td>
+                </tr>
+            </thead>
+        </table>
+        <table  width="85%">
+            <tbody>
+            @for((item, index) <- FlightBookingDestinations.find.where().eq("flightBookingId", flightBooking).findList().zipWithIndex) {
+                <tr height="25px" style="color: #FFF; background: #333">
+                    <td colspan="7"><h5><strong>Flight @(index + 1) Itinerary Details</strong></h5></td>
+                </tr>
+                <tr>
+                    <td>
+                        <img src="https://s3-us-west-2.amazonaws.com/otatravels/airline/@item.getAirlineCode.concat(".png")" style="height: 50px; width: 50px;" />
+                    </td>
+                    <td>@item.getAirlineName</td>
+                    <td>
+                        @if(item.getDepartureAirportName == null) {
+                            @defining(models.Airports.getAirport(item.getDepartureAirportCode)) { a =>
+                                @if(a != null) { @a.getAirportName }
+                            }
+                        } else {
+                            @item.getDepartureAirportName
+                        } (@item.getDepartureAirportCode)
+                    </td>
+                    <td>
+                        @if(item.getArrivalAirportName == null) {
+                            @defining(models.Airports.getAirport(item.getArrivalAirportCode)) { a =>
+                                @if(a != null) { @a.getAirportName } else { @item.getArrivalAirportName }
+                            }
+                        } else {
+                            @item.getArrivalAirportName
+                        } (@item.getArrivalAirportCode)
+                    </td>
+                    <td>@item.getCabinClass</td>
+                    <td>@if(item.getNumOfStops == 0) { Non stop } else { @item.getNumOfStops Stop(s) }</td>
+                    <td>@item.getDuration</td>
+                </tr>
+                <tr>
+                    <td colspan="7">
+                        <table class="table table-responsive" cellspacing="0" width="100%">
+                            <thead style="background: #333; color: #FFF">
+                                <tr>
+                                    <th>SEGMENT AIRLINE</th>
+                                    <th>SEGMENT DEPARTURE & TIME</th>
+                                    <th>SEGMENT ARRIVING & TIME</th>
+                                    <th>CABIN</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            @for(flightSegment <- item.getFlightBookingDestinationSegmentsList){
+                                <tr>
+                                    <td>
+                                        <img src="https://s3-us-west-2.amazonaws.com/travelden/airline/@flightSegment.getAirlineCode.concat(".png")" style="height: 50px;" alt="@flightSegment.getAirlineCode" class="img img-circle flight-ico-img"/><span>@flightSegment.getAirlineCode</span>
+                                    </td>
+                                    <td>
+                                        <small>@if(flightSegment.getDepartureAirportId != null) { @flightSegment.getDepartureAirportId.getAirportName } (@flightSegment.getDepartureAirportCode)</small><br />
+                                        <strong>@flightSegment.getDepartureDt</strong>
+                                    </td>
+                                    <td>
+                                        <small>@if(flightSegment.getArrivalAirportId != null) { @flightSegment.getArrivalAirportId.getAirportName } (@flightSegment.getArrivalAirportCode)</small><br />
+                                        <strong>@flightSegment.getArrivalDt</strong>
+                                    </td>
+                                    <td><small class="text-primary">@item.getCabinClass</small></td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+
+        <h2><strong style="color: #f47d20">Passenger(s) Details</strong></h2>
+        <table width="70%">
+            <thead style="background: rgb(0, 112, 192); color: #FFF">
+                <tr>
+                    <td>PASSENGER NAME</td>
+                    <td>TYPE</td>
+                    <td>CLASS</td>
+                    <td>TICKET NO</td>
+                </tr>
+            </thead>
+            <tbody>
+            @for(item <- bookingTravellers.findList()) {
+                <tr>
+                    <td>@item.getNamePrefix @item.getFirstName @item.getMiddleName @item.getLastName</td>
+                    <td>@item.getPassengerCat</td>
+                    <td>@flightBooking.getCabinClass</td>
+                    <td>@item.getTicketRef</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+
+        <p>Email Id: @flightBooking.getBookings.getContactEmail <br/> Contact Number: @flightBooking.getBookings.getContactPhone</p>
+        <p>&nbsp;</p>
+
+        <h2><strong style="color: #f47d20">Payment Details</strong></h2>
+        <p><strong>TOTAL:</strong> @totalAmount</p>
+        <p><strong>PAYMENT METHOD:</strong> @flightBooking.getBookings.getPaymentHistoryId.getPaymentMethodId.getName</p>
+
+        <p>&nbsp;</p>
+
+        <h2><strong style="color: #f47d20">Check In Requirements</strong></h2>
+        <ol>
+            <li>Standard check-in time is 2 hours before flight departure and we strongly recommend that you check-in early. </li>
+            <li>Some airlines may close their check-in 1 hour before scheduled time of flight departure and they reserve the right to refuse boarding to any passengers who does not comply with these check-in deadlines.</li>
+            <li>For travel to the USA / Canada, it is advised to arrive at the airport at least 3 hours before the flight departure because of the more extensive security checks.</li>
+            <li>@companyName will not be responsible for passengers arriving late for check in.</li>
+        </ol>
+
+        <h2>Travel Requirements</h2>
+        <p>@companyName will not be liable for boarding denials. Please ensure that all travel documents including passports, visas and transit visas (when transiting) have been duly obtained before your trip.</p>
+        <p>Passengers travelling to the United State of America / Canada are expected to provide the following.        </p>
+        <ol>
+            <li>Full given names and surname as per passport</li>
+            <li>Passport number</li>
+            <li>Passport date of issue & expiration date (Please ensure that your international passport has at least six months validity prior to its expiration date)</li>
+            <li> Date of birth</li>
+            <li>Gender</li>
+            <li>Nationality</li>
+            <li>Country of Issue</li>
+        </ol>
+        <p>For domestic flights ID or Passport are accepted, on international flights Passport only.</p>
+        <p>You will need to provide a valid form of photo identification for each passenger (including children and infants) when checking in for all flights.</p>
+        <h2><strong style="color: #f47d20">Terms</strong></h2>
+        <p>
+    <ul>
+        <li>Baggage allowance may differ for airlines</li>
+        <li>Should you wish to change your booking and the originally purchased fare or booking class is not available for your new flights, difference of fare will be collected on top of the change fee if the rule permits changes.</li>
+        <li>An additional administrative/service fee for rebooking/cancellation may apply.</li>
+        <li>If any of the information you have supplied is incorrect please do not hesitate to contact us immediately by sending an e-mail to @companyName or by calling us on @companyPhone</li>
+    </ul>
+        </p>
+        <h2><strong style="color: #f47d20">Contact Details</strong></h2>
+        <h4>@companyName</h4>
+        @if(isB2B) {
+            <p>@flightBooking.getBookings.getUserId.getAgentCorporateDetailId.getContactAddress</p>
+            <p>@flightBooking.getBookings.getUserId.getPhone</p>
+            <p>@flightBooking.getBookings.getUserId.getAgentCorporateDetailId.getAuthUserId.getEmail</p>
+        }else{
+            <p>@play.Configuration.root().getString("project.company.address")</p>
+            <p>@play.Configuration.root().getString("project.phone1")</p>
+            <p>@play.Configuration.root().getString("project.phone2")</p>
+            <p>@play.Configuration.root().getString("project.email")</p>
+        }
+        <br/>
+        <div></div>
+        <div style="">
+            <div class="row">
+                <div class="sixteen columns clearfix">
+                    <br/>
+                    <div align="right"></div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
+

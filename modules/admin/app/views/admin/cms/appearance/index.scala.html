@@ -1,0 +1,96 @@
+@import helper._
+@import views.html.admin.tags.myDataTable
+@import crypto.Encrypt
+@import b3.vertical.fieldConstructor
+@import controllers.admin.cms.routes
+@(header: Form[(String, Option[String], Option[String], Option[String], Option[String], Option[String])], footer: Form[(String, Option[String])], logo: Form[String], searching: Form[(Option[String], Option[String], Option[String], Option[String])])(implicit request: RequestHeader, messages: Messages, manager: PrivateUsers, encrypt: Encrypt)
+@import views.html.admin.templates._
+@default(title = "Cms Page Appearance", tab = "cms") {
+    <div class="panel">
+        <header class="panel-heading">
+            <h2 class="panel-name">Page Appearance &amp; Styling</h2>
+            <br />
+        </header>
+        <div class="panel-body">
+            @tags.alertFromRequest(request, "success")
+            @tags.alertFromRequest(request, "error")
+            <div class="nav-tabs-custom">
+                <ul class="nav nav-tabs pull-right">
+                    <li class="active"><a href="#tab_1-1" data-toggle="tab">Headers</a></li>
+                    <li><a href="#tab_2-1" data-toggle="tab">Footers</a></li>
+                    <li><a href="#tab_3-1" data-toggle="tab">Logo</a></li>
+                    <li><a href="#tab_4-1" data-toggle="tab">While Searching Inventory</a></li>
+                    @*<li><a href="#tab_5-1" data-toggle="tab"></a></li>*@
+                </ul>
+                <div class="tab-content">
+                    <div class="tab-pane active row" id="tab_1-1">
+                    @b3.formCSRF(routes.AppearanceCtrl.header) {
+                        @header.globalError.map { error =>
+                            @tags.alert(error.message, "error")
+                        }
+                        @helper.inputText(header("tabTitle"), 'class -> "form-control", '_label -> Html("Tab Title"))
+                        @helper.inputText(header("seoKeywords"), 'class -> "form-control", '_label -> Html(s"""SEO Keywords (Separate each word with ",")"""))
+                        @helper.textarea(header("seoDescription"), 'class -> "form-control", '_label -> Html(s"""SEO Description"""), 'rows -> "8")
+                        @helper.textarea(header("header"), 'class -> "form-control", '_label -> "Header HTML", 'required -> "required", 'rows -> "8")
+                        @helper.textarea(header("headerTags"), 'class -> "form-control", '_label -> Html(s"""Contents Before </head> Tag"""), 'rows -> "8")
+                        @helper.textarea(header("headerMobileTags"), 'class -> "form-control", '_label -> Html(s"""Contents Before </head> Tag"""), 'rows -> "8")
+                        <button type="submit" name="submit" class="btn btn-primary">Save</button>
+                    }
+                    </div>
+                    <div class="tab-pane panel" id="tab_2-1">
+                    @b3.formCSRF(routes.AppearanceCtrl.footer) {
+                        @footer.globalError.map { error =>
+                            @tags.alert(error.message, "error")
+                        }
+                        @helper.textarea(footer("footer"), 'class -> "form-control", '_label -> "Footer HTML", 'required -> "required", 'rows -> "8")
+                        @helper.textarea(footer("footerTags"), 'class -> "form-control", '_label -> Html(s"""Contents Before </body> Tag"""), 'rows -> "8")
+                        <button type="submit" name="submit" class="btn btn-primary">Save</button>
+                    }
+                    </div>
+                    <div class="tab-pane" id="tab_3-1">
+                    @b3.formCSRF(routes.AppearanceCtrl.logo, 'enctype -> "multipart/form-data") {
+                        <div class="row">
+                            <div class="col-md-4">
+                                <label>Current Logo</label>
+                                <img src="@logo.get" height="45px" class="img img-responsive" style="width: 45px" />
+                            </div>
+                            <div class="col-md-7">
+                            @helper.form(action = routes.AppearanceCtrl.logo, 'enctype -> "multipart/form-data") {
+                                @helper.CSRF.formField
+                                @logo.globalError.map { error =>
+                                    @tags.alert(error.message, "error")
+                                }
+                                <div class="form-group">
+                                    <label>Change Logo</label>
+                                    <input type="file" name="file" accept="image/*" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <button type="submit" class="btn btn-primary btn-md">Upload <span class="fa fa-cloud"></span></button>
+                                </div>
+                            }
+                            </div>
+                        </div>
+                    }
+                    </div>
+                    <div class="tab-pane" id="tab_4-1">
+                    @b3.formCSRF(routes.AppearanceCtrl.searching) {
+                        @header.globalError.map { error =>
+                            @tags.alert(error.message, "error")
+                        }
+                        @helper.inputText(searching("cms_load_background"), 'class -> "form-control", '_label -> "Background Image while Searching")
+                        @helper.textarea(searching("flightLoadHtml"), 'class -> "form-control editable", '_label -> "While Searching for Flights", 'rows -> "8")
+                        @helper.textarea(searching("hotelLoadHtml"), 'class -> "form-control editable", '_label -> "While Searching for Hotels", 'rows -> "8")
+                        @helper.textarea(searching("flightHotelLoadHtml"), 'class -> "form-control editable", '_label -> "While Searching for Flight+Hotels", 'rows -> "8")
+                        <button type="submit" name="submit" class="btn btn-primary">Save</button>
+                    }
+                    </div>
+                    <div class="tab-pane" id="tab_5-1">
+                        In progress
+                    </div>
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+}

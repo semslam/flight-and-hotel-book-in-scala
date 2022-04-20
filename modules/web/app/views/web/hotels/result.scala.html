@@ -1,0 +1,131 @@
+@import scala.collection.JavaConverters._
+@import crypto.Encrypt
+@import java.text.SimpleDateFormat
+@import hotel.dto.entity.SearchRequest
+@import hotel.dto.entity.Hotel
+@(a: (List[Hotel], Int, Int, Int), searchRequest: SearchRequest)(implicit request: RequestHeader, maybeUser: Option[Users], messages: Messages, encrypt: Encrypt)
+@import controllers.web.routes; val (hotels, currentPage, totalSize, perPage) = a
+@views.html.web.templates.default(title = "Hotels", loggedUser = maybeUser) {
+	<div class="clearfix gap gap-small"></div>
+	<div ng-controller="B2C_HotelResultController">
+		<div class="container">
+			<div class="row">
+				<div class="col-md-3 hidden-xs hidden">
+					<aside class="booking-filters booking-filters-white">
+						<h3>Filter By:</h3>
+						<ul class="list booking-filters-list">
+							<li>
+								<h5 class="booking-filters-title">Star Rating</h5>
+								<div class="checkbox">
+									<label>
+										<input class="i-check" type="checkbox" />5 star (220)</label>
+								</div>
+								<div class="checkbox">
+									<label>
+										<input class="i-check" type="checkbox" />4 star (112)</label>
+								</div>
+								<div class="checkbox">
+									<label>
+										<input class="i-check" type="checkbox" />3 star (75)</label>
+								</div>
+								<div class="checkbox">
+									<label>
+										<input class="i-check" type="checkbox" />2 star (60)</label>
+								</div>
+								<div class="checkbox">
+									<label>
+										<input class="i-check" type="checkbox" />1 star (20)</label>
+								</div>
+							</li>
+						</ul>
+					</aside>
+				</div>
+				<div class="col-md-10 col-xs-12 col-md-offset-1">
+					<h3 class="booking-title">@totalSize hotel(s) found <small><a class="popup-text" data-toggle="modal" data-target="#myModal" data-effect="mfp-zoom-out">Change search</a></small></h3>
+					@*<div class="nav-drop booking-sort">
+						<h5 class="booking-sort-title"><a href="#">Sort: Aviability<i class="fa fa-angle-down"></i><i class="fa fa-angle-up"></i></a></h5>
+						<ul class="nav-drop-menu">
+							<li><a href="#">Price (low to high)</a>
+							</li>
+							<li><a href="#">Price (hight to low)</a>
+							</li>
+							<li><a href="#">Ranking</a>
+							</li>
+							<li><a href="#">Distance</a>
+							</li>
+							<li><a href="#">Number of Reviews</a>
+							</li>
+						</ul>
+					</div>*@
+					<ul class="booking-list">
+						@for(hotel <- hotels.sortBy(_.getMinRate.doubleValue())){
+							<li data-name="@hotel.getHotelName" data-starrating="@hotel.getStarRating" @if(hotel.getMinRate != null) { data-price="@hotel.getMinRate.doubleValue()" }>
+								<a class="booking-item check-availability" href="@routes.HotelCtrl.checkAvailability(encrypt.encrypt(hotel.getHotelId), searchRequest.getTabHash, false)">
+									<div class="row">
+										<div class="col-md-3">
+											<div class="booking-item-img-wrap">
+												@if(hotel.getImages.size() <= 0) {
+													<img src="/web/images/no-image.jpg" class="img img-responsive" style="width:100%; height: 135px" alt="@hotel.getHotelName" title="@hotel.getHotelName" />
+												} else {
+													<img src="@hotel.getImages.get(0).getUrl" class="img img-responsive" style="max-height: 135px; overflow: hidden"  alt="@hotel.getHotelName" title="@hotel.getHotelName" />
+												}
+												<div class="booking-item-img-num"><i class="fa fa-picture-o"></i>@hotel.getImages.size()</div>
+											</div>
+										</div>
+										<div class="col-md-6">
+											@if(hotel.getStarRating != null && !hotel.getStarRating.isEmpty) {
+												<div class="booking-item-rating">
+													<ul class="icon-group booking-item-rating-stars">
+														@for(star <- 1 to hotel.getStarRating.toInt) {
+															<li><i class="fa fa-star fa-lg"></i></li>
+														}
+														@for(star <- 1 to 5 - hotel.getStarRating.toInt) {
+															<li><i class="fa fa-star-o fa-lg"></i></li>
+														}
+													</ul>
+													<span class="booking-item-rating-number"><b >@hotel.getStarRating</b>of 5</span><small>(689 reviews)</small>
+												</div>
+											}
+											<h5 class="booking-item-title">@hotel.getHotelName</h5>
+											<p class="booking-item-address"><i class="fa fa-map-marker"></i> @hotel.getAddress</p>
+											<div>
+												@if(hotel.getFacilities != null) {
+													@for(facility <- hotel.getFacilities) {
+														<i class="@facility.getCode"></i>
+													}
+												}
+											</div>
+										</div>
+										<div class="col-md-3">
+											@if(hotel.getMinRate != null){ <span class="booking-item-price">@utils.Utilities.moneyFormat(hotel.getMinRate.doubleValue(), hotel.getCurrency)</span> }
+											<div class="clearfix"></div>
+											<span class="btn btn-primary form-control" style="padding-top: 0px;">Book Now</span>
+										</div>
+									</div>
+								</a>
+							</li>
+						}
+					</ul>
+					<nav aria-label="Page navigation">
+						<ul class="pagination">
+							@if(currentPage > 1) {
+								<li><a href="@routes.HotelCtrl.result(currentPage - 1)&fl_tabHash=@searchRequest.getTabHash" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a></li>
+							}
+							@for(index <- 1 to Math.floorDiv(totalSize, perPage)) {
+								<li class="@("active".when(index == currentPage))"><a href="@routes.HotelCtrl.result(index)&fl_tabHash=@searchRequest.getTabHash">@index</a></li>
+							}
+							@if(totalSize/perPage < currentPage) {
+								<li><a href="@routes.HotelCtrl.result(currentPage + 1)&fl_tabHash=@searchRequest.getTabHash" aria-label="Next"><span aria-hidden="true">&raquo;</span></a></li>
+							}
+						</ul>
+					</nav>
+					<div class="gap gap-small"></div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="modal fade panel panel-body row col-md-10 col-md-offset-1" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+		<h3>Modify Search</h3>
+		@("[hotelBookingEngineAlt]")
+	</div>
+}

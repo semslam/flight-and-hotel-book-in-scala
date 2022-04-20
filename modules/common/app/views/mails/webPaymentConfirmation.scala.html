@@ -1,0 +1,28 @@
+@(paymentHistories: PaymentHistories)
+@isSuccessful = @{paymentHistories.getStatus.eq(PaymentStatus.Paid)}
+<table id="templateBody" width="600" border="0" cellspacing="0" cellpadding="0">
+    <tbody>
+        <tr>
+            <td class="bodyContent" valign="top">
+                <table width="100%" border="0" cellspacing="0" cellpadding="20">
+                    <tbody>
+                        <tr>
+                            <td valign="top">
+                                <div>
+                                    @*TODO*@
+                                    @*if(isSuccessful) { <h1 class="h1" style="text-align: center;">Thank you! @paymentHistories.getFlightBookingsList.get(0).getContactFirstname </h1> }*@
+                                    <h2><strong>Payment @if(isSuccessful){ @{" was Successful".when(paymentHistories.getStatus.eq(PaymentStatus.Paid))} } else { Failed }</strong>,</h2>
+                                    <p>Your transaction ID is @paymentHistories.getTransRef</p>
+                                    <p>Total amount paid is @paymentHistories.getCurrency @paymentHistories.getAmountPaid</p>
+                                    @if(isSuccessful) {
+                                        <p>Thanks for your patronage!</p>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </td>
+        </tr>
+    </tbody>
+</table>

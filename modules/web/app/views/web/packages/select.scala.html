@@ -1,0 +1,185 @@
+@import helper._
+@import b3.vertical.fieldConstructor
+@import crypto.Encrypt
+@import controllers.web.routes
+@import views.html.helper.CSRF
+@(packages: Packages, bookingForm: Form[controllers.web.PackageBookingFormDAO])(implicit request: RequestHeader, maybeUser: Option[Users], messages: Messages, encrypt: Encrypt)
+@import java.util.ArrayList; var imgIndex = 0
+@views.html.web.templates.default(title = "Vacation Packages", loggedUser = maybeUser) {
+    <div id="page_content_wrapper" style="padding: 0 50px;" class="hasbg">
+        <div class="row package-detail">
+            <div class="container clear-padding">
+                <ol class="breadcrumb col-md-12">
+                    <li><a href="/" title="Home">Home</a></li>
+                    <li><a href="@routes.PackageCtrl.vacationPackages()" title="Vacation Packages">Vacation Packages</a> </li>
+                </ol>
+                <div class="main-content col-md-8">
+                        <!-- START: HOLIDAY GALLERY -->
+                    <div id="gallery" class="carousel slide" data-ride="carousel">
+                        <ol class="carousel-indicators">
+                            <li data-target="#gallery" data-slide-to="0" class="active"></li>
+                            <li data-target="#gallery" data-slide-to="1"></li>
+                            <li data-target="#gallery" data-slide-to="2"></li>
+                        </ol>
+                        <div class="carousel-inner" role="listbox">
+                            @for(image <- packages.getPackageImages){
+                                <div class="item @if(imgIndex == 0) { active }">
+                                    <img src="@image.getImageUrl" alt="@image.getImageCaption">
+                                </div>
+                                @{imgIndex +=1}
+                            }
+                        </div>
+                        <a class="left carousel-control" href="#gallery" role="button" data-slide="prev">
+                            <span class="fa fa-chevron-left" aria-hidden="true"></span>
+                            <span class="sr-only">Previous</span>
+                        </a>
+                        <a class="right carousel-control" href="#gallery" role="button" data-slide="next">
+                            <span class="fa fa-chevron-right" aria-hidden="true"></span>
+                            <span class="sr-only">Next</span>
+                        </a>
+                    </div>
+                        <!-- END: HOLIDAY GALLRY -->
+                    <div class="package-complete-detail">
+                        <ul class="nav nav-tabs">
+                            <li  class="active"><a data-toggle="tab" href="#overview"><i class="fa fa-suitcase"></i> <span>Detail</span></a></li>
+                            <li><a data-toggle="tab" href="#inclusion"><i class="fa fa-check-square"></i> <span>Inclusion</span></a></li>
+                            <li><a data-toggle="tab" href="#exclusion"><i class="fa fa-check-square"></i> <span>Exclusion</span></a></li>
+                            <li><a data-toggle="tab" href="#itinerary"><i class="fa fa-street-view"></i> <span>Itinerary</span></a></li>
+                            <li><a data-toggle="tab" href="#add-info"><i class="fa fa-info-circle"></i> <span>Policy</span></a></li>
+                        </ul>
+                        <div class="tab-content">
+                            <div id="overview" class="tab-pane fade in active">
+                                <div>@Html(packages.getDescription)</div>
+                            </div>
+                            <div id="inclusion" class="tab-pane fade">
+                                <h4 class="tab-heading">Inclusion</h4>
+                                <p class="inc">
+                                @for(inclusion <- packages.getPackageInclusions) {
+                                    <i class="fa fa-check-circle"></i> @inclusion.getIncludedItem<br>
+                                    }
+                                </p>
+                                <hr />
+                                @if(packages.getIncludeFlight) {
+                                    <h4><span class="fa fa-plane"></span> Flight Information</h4>
+                                }
+
+                            </div>
+                            <div id="exclusion" class="tab-pane fade">
+                                <h4 class="tab-heading">Exclusion</h4>
+                                <p class="inc">
+                                    @for(exclusion <- packages.getPackageExclusions) {
+                                        <i class="fa fa-times-circle-o"></i> @exclusion.getExcludedItem<br>
+                                    }
+                                </p>
+                            </div>
+                            <div id="itinerary" class="tab-pane fade">
+                                <h4 class="tab-heading">Package Itinerary</h4>
+                                @for(packageItinerary <- packages.getPackageItineraries) {
+                                    <div class="daily-schedule">
+                                        <div class="title">
+                                            <p><span>Day @packageItinerary.getDay</span> @packageItinerary.getName</p>
+                                        </div>
+                                        <div class="daily-schedule-body">
+                                            <div class="col-md-4 col-sm-4">
+                                                <img src="@packageItinerary.getImageUrl" alt="@packageItinerary.getName">
+                                            </div>
+                                            <div class="col-md-8 col-sm-8">
+                                                <p>@packageItinerary.getDescription</p>
+                                            </div>
+                                            <div class="clearfix"></div>
+                                            <div class="col-md-12 activity">
+                                                <h4>Included</h4>
+                                                @for(packageItineraryInclude <- packageItinerary.getPackageItineraryIncludes) {
+                                                    <div class="col-md-6 col-sm-6">
+                                                        <p><i class="fa fa-check-square"></i> @packageItineraryInclude.getIncludedItem</p>
+                                                    </div>
+                                                }
+                                                <div class="clearfix"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                            <div id="add-info" class="tab-pane fade">
+                                <h4 class="tab-heading">Additional Information & Package Policies </h4>
+                                @Html(packages.getPolicy)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 package-detail-sidebar">
+                    <div class="sidebar-wrapper clear-padding">
+                        <div class="package-summary sidebar-item">
+                            <h4><i class="fa fa-bookmark"></i> Package Summary</h4>
+                            <div class="package-summary-body">
+                                @if(packages.getPackageThemeId != null) {
+                                    <h5><i class="fa fa-heart"></i>Theme</h5>
+                                    <p>@packages.getPackageThemeId.getName</p>
+                                }
+                                <h5><i class="fa fa-map-marker"></i>Destination City</h5>
+                                <p>@packages.getCountryId.getName</p>
+                            </div>
+                            <div class="package-summary-footer text-center">
+                                <div class="col-md-6 col-sm-6 col-xs-6 price">
+                                    <h5>Starting From</h5>
+                                        <h5>@utils.Utilities.moneyFormat(packages.getAdultUnitPrice)</h5>
+                                </div>
+                                <div class="col-md-6 col-sm-6 col-xs-6 book">
+                                    <a href="#booking-now">BOOK NOW</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="sidebar-booking-box" id="booking-now">
+                            <h3 class="text-center">MAKE A BOOKING</h3>
+                            <div class="booking-box-body" style="min-height: 65em">
+                                @helper.form(CSRF(routes.PackageCtrl.book(encrypt.encrypt(packages.getId.toString)))){
+                                    <input type="hidden" name="packageId" value="@encrypt.encrypt(packages.getId.toString)" />
+                                    <div class="col-md-12 col-sm-12 col-xs-12">
+                                        <label>Start Date</label>
+                                        <div class="input-group margin-bottom-sm">
+                                            <input type="text" id="check_in" name="@bookingForm("startDate").name" value="@bookingForm("startDate").value.orNull" class="form-control futureDate" placeholder="Starting Date">
+                                            <span class="input-group-addon"><i class="fa fa-calendar fa-fw"></i></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12 col-sm-12 col-xs-12">
+                                    @b3.select(bookingForm("duration"), options(List("3 Days or Less","4-5 Days", "1 Week", "10 Days", "2 Weeks", "15+ Days")), 'class -> "form-control", '_label -> Html("""Duration <span class="text-danger">*</span>"""), 'required -> "required")
+                                    </div>
+                                    <div class="col-md-6 col-sm-6 col-xs-6">
+                                    @b3.select(bookingForm("adultCount"), options(List("1","2","3","4","5","6","7","8","9")), '_label -> Html("""Adult <span class="text-danger">*</span>"""))
+                                    </div>
+                                    <div class="col-md-6 col-sm-6 col-xs-6">
+                                    @b3.select(bookingForm("childCount"), options(List("0", "1","2","3","4","5","6","7","8","9")), '_label -> Html("""Child <span class="text-danger">*</span>"""))
+                                    </div>
+                                    <div class="clearfix"></div>
+                                    <h5 class="col-md-12"><strong>Contact Details</strong></h5>
+                                    <div class="f-item col-md-5">
+                                    @b3.select(bookingForm("contactTitle"), options(Titles.options("")), 'class -> "form-control", '_label -> Html("""Title<span class="text-danger">*</span>"""), 'required -> "required")
+                                    </div>
+                                    <div class="f-item col-md-7">
+                                    @b3.text(bookingForm("contactFirstName"), '_label -> Html("""First Name<span class="text-danger">*</span>"""), 'required -> "required")
+                                    </div>
+                                    <div class="f-item col-md-12">
+                                    @b3.text(bookingForm("contactLastName"),'_label -> Html("""Surname<span class="text-danger">*</span>"""), 'required -> "required")
+                                    </div>
+                                    <div class="f-item col-md-6">
+                                    @b3.email(bookingForm("contactEmail"), '_label -> Html("""Email<span class="text-danger">*</span>"""), 'required -> "required")
+                                    </div>
+                                    <div class="f-item col-md-6">
+                                        @b3.text(bookingForm("contactPhone"), '_label -> Html("""Phone<span class="text-danger">*</span>"""), 'required -> "required")
+                                    </div>
+                                    <div class="col-md-12 form-group">
+                                        <label>Comment/Remarks</label>
+                                        <textarea class="form-control" rows="6" placeholder="Remarks/Comments (Optional)"></textarea>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <button class="btn btn-md btn-primary form-control">Submit</button>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}

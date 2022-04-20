@@ -1,0 +1,235 @@
+@import helper._
+@import b3.vertical.fieldConstructor
+@import controllers.web.routes
+@import com._
+@import views.html.bookingEngine._
+@import crypto.Encrypt
+@import flight.dto.entity.FlightSearchResponse
+@import com.alajobi.ota.flights.ProductPurchaseInfo
+@import flight.dto.entity.ItineraryWSResponse
+@import flight.dto.entity.FlightSearchRequest
+@import flight.dto.entity.BookingRequest
+@import com.alajobi.ota.utils.SystemControlSetting
+@(bookingRequest: BookingRequest, searchRequest: FlightSearchRequest, urlAppend: String, itineraryRef: String, fl_tabHash: String)(implicit request: RequestHeader, messages: Messages, loggedsManager: Option[Users], encrypt: Encrypt)
+@import java.text.SimpleDateFormat; val dtFormat = new SimpleDateFormat("yyyy-MM-dd'T'dd:mm:ss"); val itinerary: ItineraryWSResponse = bookingRequest.getItineraryWSResponse; var total = 0.0; var webpayFee = 0.0
+@views.html.web.templates.default(title = "Booking Checkout", scripts, loggedUser = loggedsManager) {
+    <style>
+            body, #wrapper, #page_content_wrapper.fixed, #gallery_lightbox h2, .slider_wrapper .gallery_image_caption h2, #body_loading_screen, h3#reply-title span, .overlay_gallery_wrapper, .pricing_wrapper_border, .pagination a, .pagination span, #captcha-wrap .text-box input, .flex-direction-nav a, .blog_promo_title h6, #supersized li, #gallery_caption .tg_caption, #horizontal_gallery_wrapper .image_caption, #tour_search_form, .tour_search_form {
+                /*background: #F2F2F2;*/
+            }
+            button[name=submitBtn] {
+                background: #006fa2;
+                border-color: #006fa2;
+            }
+            @@media(min-width: 1200px)  {
+            .container {
+                width: 1210px;
+            }
+            }
+    </style>
+    <div style="background-color: #5b63aa; margin:0 0 10px 0;" class="hidden-xs">
+        @("[flightBookingEngineAlt]")
+    </div>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <ol class="breadcrumb">
+                    <li><a href="/" title="Home">Home</a></li>
+                    <li><a href="@routes.FlightCtrl.result(searchRequest.getTripType.name().toLowerCase, searchRequest.getTabHash)" title="Home">Search results</a></li>
+                    <li><a href="@encrypt.decrypt(urlAppend)">@itinerary.getAirline Booking - Traveller(s) details</a></li>
+                    <li><a href="@routes.FlightCtrl.reviewProduct(itineraryRef, fl_tabHash, urlAppend)">Product &amp; Add-On</a> </li>
+                    <li><a href="@routes.FlightCtrl.reviewItinerary(itineraryRef, fl_tabHash, urlAppend)">Review Itinerary Details</a> </li>
+                    <li>Payment Options </li>
+                </ol>
+            </div>
+            <div class="col-md-7">
+                <form method="GET" class="form static-content booking" id="step3" action="@routes.FlightCtrl.bookItinerary(itineraryRef, fl_tabHash)" name="b2cPaymentForm" data-validate="parsley">
+                    <input type="hidden" name="markup_value" value="0.0" />
+                    <input type="hidden" name="predefined_markup_value" value="0.0" />
+                    <input type="hidden" name="itineraryRef" value="@itineraryRef" />
+                    <input type="hidden" name="fl_tabHash" value="@fl_tabHash" />
+                    <div class="row">
+                        <div class="col-md-12 full-width-search">
+                            <h2>Select a Payment Option</h2>
+                            <div class="search-section">
+                                <ul class="nav nav-tabs search-top" role="tablist">
+                                    <li style="padding: 0 0 -6px 0" role="presentation" class="active payment-li" data-ttype="@PaymentCategories.Debit_Card.name()"><a href="#@PaymentCategories.Debit_Card" aria-controls="@PaymentCategories.Debit_Card" role="tab" data-toggle="tab">Pay Online</a></li>
+                                    <li style="padding: 0 0 -6px 0" role="presentation" class="payment-li" data-ttype="@PaymentCategories.CASH_PAYMENT.name()"><a href="#@PaymentCategories.CASH_PAYMENT" aria-controls="@PaymentCategories.CASH_PAYMENT" role="tab" data-toggle="tab">Book on Hold/Bank Transfer</a></li>
+                                </ul>
+                                <div class="tab-content" style="background: #fff; border: 1px solid #CCC;">
+                                    <div role="tabpanel" class="tab-pane" id="@PaymentCategories.CASH_PAYMENT">
+                                        <ul>
+                                            @for(paymentMethod <- PaymentMethods.find.where().eq("payment_category", PaymentCategories.CASH_PAYMENT).findList()) {
+                                            <li class="list-group-item col-md-3">
+                                                <label for="payment_@paymentMethod.getCode">
+                                                    <div class="col-md-2"><input id="payment_@paymentMethod.getCode" data-ttype="@paymentMethod.getCode" class="i-check" type="radio" data-required="true" required="required" name="paymentMethodId" value="@paymentMethod.getId.toString" /></div>
+                                                    <div class="col-md-8">
+                                                        <img src="@paymentMethod.getLogoUrl" style="width: 45px; height: 45px" class="img img-responsive" />
+                                                    </div>
+                                                </label>
+                                            </li>
+                                        }
+                                        </ul>
+                                    </div>
+                                    <div role="tabpanel" class="tab-pane active" id="@PaymentCategories.Debit_Card">
+                                        @for(paymentMethod <- PaymentMethods.find.where().eq("payment_category", PaymentCategories.Debit_Card).findList()) {
+                                            <div class="">
+                                                <label for="payment_@paymentMethod.getId">
+                                                    <div class="col-md-8 col-md-offset-3">
+                                                        <input id="payment_@paymentMethod.getId" class="i-check paystack-option" type="radio" data-ttype="@paymentMethod.getCode" checked="checked" data-required="true" required="required" name="paymentMethodId" value="@paymentMethod.getId.toString" />
+                                                        <img src="@paymentMethod.getLogoUrl" class="img img-responsive" />
+                                                    </div>
+                                                </label>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="clearfix"></div>
+                            <br />
+                            <input type="submit" style="cursor: pointer;" class="btn btn-primary btn-md submitFl_btn gradient-button" value="Complete Booking"/>
+                            <br />
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <aside class="col-md-5 right-sidebar">
+                <article class="hotel-details booking-details">
+                    <div class="price">
+                        <h3>Price Breakdown</h3>
+                        <table class="table table-responsive table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Description</th>
+                                    <th>Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody id="jsTablePriceDisplay">
+                                <tr>
+                                    <th>Flight Cost</th>
+                                    <td>
+                                    @{
+                                        val flFare = bookingRequest.getItineraryWSResponse.getPricingInfoWSResponse.getTotalFare
+                                        total += flFare
+                                        utils.Utilities.moneyFormat(flFare)
+                                    }
+                                    </td>
+                                </tr>
+                                @for(product <- bookingRequest.getProducts) {
+                                    <tr>
+                                        <th>@product.getAddonProductOptions.getName</th>
+                                        <td>
+                                        @{
+                                            val pamt = product.getAmount
+                                            total += pamt
+                                            utils.Utilities.moneyFormat(pamt)
+                                        }
+                                        </td>
+                                    </tr>
+                                }
+                                <tr data-id="webpay" class="item_webpay">
+                                    <th>Payment Service Charge</th>
+                                    <td>
+                                    @{
+                                        webpayFee = (total * 1.5) / 100;
+                                        val maxWebPayFee = SystemControlSetting.getInstance().get(SystemControlSetting.SYSTEM_WEBPAY_FEE).toInt
+                                        if(webpayFee > maxWebPayFee) webpayFee = maxWebPayFee
+                                        total += webpayFee
+                                        utils.Utilities.moneyFormat(webpayFee)
+                                    }
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <th class="pull-right">Total</th>
+                                    <td style="font-weight: 800" id="totalFare" data-total="@total.toInt" data-webpay="@webpayFee.toInt">@utils.Utilities.moneyFormat(total)</th>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </article>
+                <article class="widget">
+                    <h4>Need Help Booking?</h4>
+                    <p>Are you stuck or do not understand the booking flow? Please contact one of our agents on phone numbers below to assist you.</p>
+                    <p class="number">@play.Configuration.root().getString("project.phone1")</p>
+                    <p class="number">@play.Configuration.root().getString("project.phone2")</p>
+                </article>
+                    <!--//Need Help Booking?-->
+            </aside>
+        </div>
+    </div>
+}
+@scripts = {
+    <script>
+            $(function () {
+                var isWebPaymentExist = false;
+                var webpayExtraCharge = parseInt($('#totalFare').data('webpay'));
+                var total = parseInt($('#totalFare').data('total'));
+                // $(".payment-li").click(function() {
+                //     var type = $(this).data('ttype');
+                //     console.log(type === 'Debit_Card');
+                //     if (type === 'Debit_Card') {
+                //         var htmlDisp = '<tr data-id="webpay" class="item_webpay">';
+                //         htmlDisp += '<th><strong>Payment Service Charge</strong></th>';
+                //         htmlDisp += '<td> &#8358; ' + $.number(webpayExtraCharge) + '</td>';
+                //         htmlDisp += '</tr>';
+                //         $(htmlDisp).prependTo("#jsTablePriceDisplay");
+                //         isWebPaymentExist = true;
+                //         $('input[name=paymentMethodId]').attr('checked', false);
+                //         $("#payment_PT").attr('checked', true); //PayStack
+                //         $("#payment_PT").click(); //PayStack
+                //     } else {
+                //         isWebPaymentExist = false;
+                //         $("#jsTablePriceDisplay").find('.item_webpay').remove();
+                //     }
+                //     if (isWebPaymentExist) {
+                //         $("#totalFare").html("&#8358; " + $.number(total));
+                //     } else {
+                //         $("#totalFare").html("&#8358; " + $.number((total - webpayExtraCharge)));
+                //     }
+                // });
+                $('input[name=paymentMethodId]').on('change', function () {
+                    var paymentMethodId = $(this).attr('data-ttype');
+                    var onlinePayIds = ['PT', 'GT'];
+                    //Check if paymentMethod is Online pay
+                    if (onlinePayIds.indexOf(paymentMethodId) > -1 && isWebPaymentExist === false) {
+                        var htmlDisp = '<tr data-id="webpay" class="item_webpay">';
+                        htmlDisp += '<th><strong>Payment Service Charge</strong></th>';
+                        htmlDisp += '<td> &#8358; ' + $.number(webpayExtraCharge) + '</td>';
+                        htmlDisp += '</tr>';
+                        $(htmlDisp).prependTo("#jsTablePriceDisplay");
+                        isWebPaymentExist = true;
+                    } else {
+                        isWebPaymentExist = false;
+                        $("#jsTablePriceDisplay").find('.item_webpay').remove();
+                    }
+                    if (isWebPaymentExist) {
+                        $("#totalFare").html("&#8358; " + $.number(total));
+                    } else {
+                        $("#totalFare").html("&#8358; " + $.number((total - webpayExtraCharge)));
+                    }
+                });
+
+                $('form[name=b2cForm]').find('.search-submit').removeClass('gradient-button');
+                $('.toglekbeng').click(function () {
+                    $("#toglekbeng").toggle();
+                });
+                $('.bkproduct').on('click', function () {
+                    $('#payment-option').hide();
+                    $('#product-option').show();
+                    $('.product_option').html('Product &amp; Add-On');
+                });
+                $('.continue-btn').on('click', function () {
+                    $('#payment-option').show();
+                    $('#product-option').hide();
+                    $('.product_option').html('<a href="#" class="bkproduct">Product &amp; Add-On</a>');
+                    $('.bkproduct').on('click', function () {
+                        $('#payment-option').hide();
+                        $('#product-option').show();
+                        $('.product_option').html('Product &amp; Add-On');
+                    });
+                    $('.payment_option').removeClass("hide");
+                });
+            })
+    </script>
+}

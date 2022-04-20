@@ -1,0 +1,176 @@
+@import crypto.Encrypt
+@import controllers.web.routes
+@(packages: Vector[Packages], count: Int, page: Int, pageLength: Int, apply_filter: Boolean, country_id: Long, theme_id: String)(implicit request: RequestHeader, maybeUser: Option[Users], messages: Messages, encrypt: Encrypt)
+@views.html.web.templates.default(title = "Vacation Packages", loggedUser = maybeUser) {
+    <div style="background-color: #1da1f2; padding: 10px; margin-bottom: 15px;">
+        <div class="container clear-padding">
+            <div role="tabpanel">
+            @("[packageBookingEngine]")
+            </div>
+        </div>
+    </div>
+
+    <div id="page_content_wrapper" style="padding: 0 50px;" class="hasbg">
+
+            <!-- START: LISTING AREA-->
+        <div class="row">
+            <div class="container">
+                <ol class="breadcrumb col-md-12">
+                    <li><a href="/" title="Home">Home</a></li>
+                    <li>Vacation Packages</li>
+                </ol>
+                <div class="clearfix"></div>
+                    <!-- START: FILTER AREA -->
+                <div class="col-md-3 clear-padding">
+                    <div class="filter-head text-center">
+                        <h4>@packages.size Result Found Matching Your Search.</h4>
+                    </div>
+                    <div class="filter-area">
+                        <div class="price-filter filter">
+                            <h5><i class="fa fa-usd"></i> Price</h5>
+                            <p>
+                                <label></label>
+                                <input type="text" id="amount" readonly>
+                            </p>
+                            <div id="price-range"></div>
+                        </div>
+                        <div class="star-filter filter">
+                            <h5><i class="fa fa-calendar"></i> Duration</h5>
+                            <ul>
+                                <li><input type="checkbox"> Upto 3 Days</li>
+                                <li><input type="checkbox"> 5 to 7 Days</li>
+                                <li><input type="checkbox"> 9 to 11 Days</li>
+                                <li><input type="checkbox"> 12 to 14 Days</li>
+                                <li><input type="checkbox"> Above 14 Days</li>
+                                <li><input type="checkbox"> Any</li>
+                            </ul>
+                        </div>
+                        <div class="location-filter filter">
+                            <h5><i class="fa fa-globe"></i> Country</h5>
+                            <ul>
+                                <li><input type="checkbox"> USA</li>
+                                <li><input type="checkbox"> UK</li>
+                                <li><input type="checkbox"> India</li>
+                                <li><input type="checkbox"> Australia</li>
+                                <li><input type="checkbox"> Thialand</li>
+                                <li><input type="checkbox"> All</li>
+                            </ul>
+                        </div>
+                        <div class="filter">
+                            <h5><i class="fa fa-pagelines"></i> Holiday Theme</h5>
+                            <ul>
+                                <li><input type="checkbox"> <i class="fa fa-heart"></i> Honeymoon</li>
+                                <li><input type="checkbox"> <i class="fa fa-users"></i> Group Tours</li>
+                                <li><input type="checkbox"> <i class="fa fa-users"></i> Family Tours</li>
+                                <li><input type="checkbox"> <i class="fa fa-sun-o"></i> Summer Tours</li>
+                                <li><input type="checkbox"> <i class="fa fa-heart"></i> Honeymoon</li>
+                                <li><input type="checkbox"> <i class="fa fa-users"></i> Group Tours</li>
+                                <li><input type="checkbox"> All</li>
+                            </ul>
+                        </div>
+                        <div class="facilities-filter filter">
+                            <h5><i class="fa fa-list"></i> Inclusion</h5>
+                            <ul>
+                                <li><input type="checkbox"> <i class="fa fa-plane"></i> Flight</li>
+                                <li><input type="checkbox"> <i class="fa fa-taxi"></i> Transportation</li>
+                                <li><input type="checkbox"> <i class="fa fa-eye"></i> Sightseeing</li>
+                                <li><input type="checkbox"> <i class="fa fa-cutlery"></i> Meals</li>
+                                <li><input type="checkbox"> <i class="fa fa-glass"></i> Drinks</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                    <!-- END: FILTER AREA -->
+
+                    <!-- START: INDIVIDUAL LISTING AREA -->
+                <div class="col-md-9 hotel-listing">
+                    <div class="switchable col-md-12 clear-padding">
+                    @for(item <- packages) {
+                        <div  class="hotel-list-view">
+                            <div class="wrapper">
+                                <div class="col-md-3 col-sm-6 switch-img clear-padding">
+                                    <img src="@item.getThumbImageUrl" alt="@item.getName">
+                                </div>
+                                <div class="col-md-7 col-sm-7 hotel-info">
+                                    <div>
+                                        <div class="hotel-header">
+                                            <h5>@item.getName
+                                            <span>
+                                                @for(a <- 1 to item.getPackageRating) {
+                                                    <i class="fa fa-star colored"></i>
+                                                }
+                                                @for(a <- 1 to 5 - item.getPackageRating) {
+                                                    <i class="fa fa-star-o colored"></i>
+                                                }
+                                            </span>
+                                            </h5>
+                                            <p><i class="fa fa-map-marker"></i>@item.getName, @item.getCountryId.getName</p>
+                                        </div>
+                                        <div class="hotel-facility">
+                                            <p style="padding-top: 0; padding-bottom: 0">
+                                                @if(item.getIncludeFlight) {
+                                                    <i class="fa fa-plane" data-toggle="tooltip" data-value="Flight" title="Flight Included"></i>
+                                                }
+                                                @if(item.getIncludeHotel) {
+                                                    <i class="fa fa-bed" data-title="Hotel" title="Luxury Hotel"></i>
+                                                }
+                                        </div>
+                                        <div class="hotel-desc" style="max-height: 70px; overflow: hidden;">
+                                            <p class="">@item.getShortDescription...</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="clearfix visible-sm-block"></div>
+                                <div class="col-md-2 rating-price-box text-center clear-padding">
+                                    <div class="rating-box">
+                                        <div class="tripadvisor-rating">
+                                            <span>@item.getPackageRating/5.0</span>
+                                        </div>
+                                        <div class="user-rating">
+                                            @for(a <- 1 to item.getPackageRating) {
+                                                <i class="fa fa-star colored"></i>
+                                            }
+                                            @for(a <- 1 to 5 - item.getPackageRating) {
+                                                <i class="fa fa-star-o colored"></i>
+                                            }
+                                        <span>0 Review</span>
+                                        </div>
+                                    </div>
+                                    <div class="room-book-box">
+                                        <div class="price">
+                                            <h5>@utils.Utilities.moneyFormat(item.getAdultUnitPrice)/Adult</h5>
+                                        </div>
+                                        <div class="book">
+                                            <a href="@routes.PackageCtrl.select(encrypt.encrypt(item.getId.toString))">BOOK</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="clearfix visible-sm-block"></div>
+                    }
+                    </div>
+                    <div class="clearfix"></div>
+                    <div style="margin: 10px 0">@views.html.tags.pagination(page, pageLength, count, page => routes.PackageCtrl.vacationPackages(page, apply_filter, country_id, theme_id))</div>
+                        <!-- START: PAGINATION -->
+                        @*<div class="bottom-pagination">
+                        <nav class="pull-right">
+                        <ul class="pagination pagination-lg">
+                        <li><a href="#" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a></li>
+                        <li class="active"><a href="#">1 <span class="sr-only">(current)</span></a></li>
+                        <li><a href="#">2 <span class="sr-only">(current)</span></a></li>
+                        <li><a href="#">3 <span class="sr-only">(current)</span></a></li>
+                        <li><a href="#">4 <span class="sr-only">(current)</span></a></li>
+                        <li><a href="#">5 <span class="sr-only">(current)</span></a></li>
+                        <li><a href="#">6 <span class="sr-only">(current)</span></a></li>
+                        <li><a href="#" aria-label="Previous"><span aria-hidden="true">&#187;</span></a></li>
+                        </ul>
+                        </nav>
+                        </div>*@
+                        <!-- END: PAGINATION -->
+                </div>
+            </div>
+        </div>
+            <!-- END: LISTING AREA -->
+    </div>
+}

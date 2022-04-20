@@ -1,0 +1,32 @@
+@import views.html.admin.tags.myDataTable
+@import crypto.Encrypt
+@import controllers.admin.cms.routes
+@import views.html.admin.templates._
+@(cmsLinks: List[CmsLinks])(implicit request: RequestHeader, messages: Messages, manager: PrivateUsers, encrypt: Encrypt)
+@default(title = "CMS Links", tab = "cms") {
+    <div class="panel">
+        <header class="panel-heading">
+            <h2 class="panel-name">Packages</h2>
+            <br />
+            <a href="@routes.LinkCtrl.create()" class="btn btn-default"><i class="fa fa-plus"></i> Create New Link</a><br />
+        </header>
+        <div class="panel-body">
+        @myDataTable(Seq("#", "Name", "Created at", "Updated at", "Action")) {
+            @if(cmsLinks.nonEmpty) {
+                @for(item <- cmsLinks) {
+                    <tr>
+                        <td>@item.getId</td>
+                        <td>@item.getName</td>
+                        <td>@item.getCreatedAt.format("yyyy-MM-dd HH:mm")</td>
+                        <td>@item.getUpdatedAt.format("yyyy-MM-dd HH:mm")</td>
+                        <td>
+                            <span><a href="@routes.LinkCtrl.create(encrypt.encrypt(item.getId.toString))" class="btn btn-xs btn-primary"><i class="fa fa-pencil"></i> Edit</a></span>
+                            <span><a href="@routes.LinkCtrl.delete(encrypt.encrypt(item.getId.toString))" class="btn btn-xs btn-danger"><i class="fa fa-times"></i> Delete</a></span>
+                        </td>
+                    </tr>
+                }
+            }
+        }
+        </div>
+    </div>
+}

@@ -1,0 +1,44 @@
+
+################################################################################################
+# B2B
+
+b2b.and=and
+b2b.or=or
+b2b.only=only
+
+b2b.topbar.index=Index
+b2b.topbar.myaccount=My Profile
+b2b.topbar.hello=Hello {0}! : {1}
+
+b2b.index.title=Authorization example
+b2b.index.intro=You are now logged as a manager of this administration web page.<br>\
+Each manager has one or more roles, and each role indicates a specific area or hierarchical level.<br>\
+You can restrict sections to those managers who match with a set of roles (using logic OR or AND, you can choose).<br>\
+The <span class="text-warning">master</span> role has always full access to everywhere.
+b2b.index.example=For example:
+b2b.index.example.social=the manager works for the ''social'' area.
+b2b.index.example.sales_high=the manager has a ''high'' access and works for the ''sales'' area.
+b2b.index.example.master=full access to every point of the B2B Webpage.
+b2b.index.auth.status=In this case, you are logged as {0} and your roles are: {1}
+b2b.index.table.section=Section
+b2b.index.table.authobject=Authorization object
+b2b.index.table.roles=Roles needed
+b2b.index.table.allowed=Are you allowed?
+b2b.index.table.go=Go there and check yourself
+
+b2b.myaccount.title=My Profile
+
+b2b.denied.title=Access denied!
+b2b.denied.text=You have no privileges to be here.
+
+b2b.auth.manager.notexists=There is no manager with this email
+
+
+b2b.mail.forgotpwd.subject=Reset your Travelden password
+b2b.mail.forgotpwd.prelink=Someone (hopefully you) has requested a password reset for your Travelden account. Follow the link below to set a new password:
+b2b.mail.forgotpwd.postlink=Note that this link will expire in 24 hours. If you don''t wish to reset your password, disregard this email and no action will be taken.
+flight.mail.booking.confirm = {0} Booking Confirmation ({1})
+flight.mail.booking.failed = {0} Booking Failed
+b2b.mail.sign=Team Travelden
+b2b.mail.account.activated = Agent Account Approved
+b2b.mail.account.review = "{0} Agent Portal Sign Up"

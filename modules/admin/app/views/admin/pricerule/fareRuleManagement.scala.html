@@ -1,0 +1,75 @@
+@import views.html.admin.tags.myDataTable
+@import controllers.admin.pricerule.routes
+@import crypto.Encrypt
+@(flightsFareRules: List[FlightsFareRules])(implicit request: RequestHeader, manager: PrivateUsers, messages: Messages, encrypt: Encrypt)
+@views.html.admin.templates.default(title = "Flight Fare Rules", tab = "bookingSettings") {
+    <div class="panel">
+        <header class="panel-heading">
+            <h2 class="panel-name">Flight Fare Rules</h2>
+            <br />
+            <a href="@routes.FlightPriceRuleCtrl.createFareRuleManagement()" class="btn btn-default btn-md">Create New Fare Rule</a>
+        </header>
+        <div class="panel-body">
+            @tags.alertFromRequest(request, "success")
+            @tags.alertFromRequest(request, "error")
+            @myDataTable(Seq("#", "Name", "", "Cabin", "Trip Type", "B2C", "B2B", "Destination", "Updated",  "Action"), "asc") {
+                @if(flightsFareRules.nonEmpty) {
+                    @for(item <- flightsFareRules) {
+                        <tr>
+                            <td>@item.getId</td>
+                            <td>@item.getName</td>
+                            @if(item.getAirlineCommissionableId != null) {
+                                <td>@item.getAirlineCommissionableId.getAirlineCode</td>
+                            } else {
+                                <td>N/A</td>
+                            }
+                            <td>
+                                <div style="padding: 0px;">
+                                    @for(str <- item.getCabinClasses.split(":::")) {
+                                        @(str + ", ")
+                                    }
+                                </div>
+                            </td>
+                            <td>
+                                <ol style="list-style: none;padding: 0px;">
+                                    @for(str <- item.getTripTypes.split(":::")) {
+                                        <li>@str</li>
+                                    }
+                                </ol>
+                            </td>
+                            <td>
+                                <ol style="list-style: none;padding: 0px;">
+                                    <li><p><strong>SITI</strong> @item.getB2cFlightFareRule.getSitiFareDirection @item.getB2cFlightFareRule.getSitiDispenseValue / @item.getB2cFlightFareRule.getSitiValueType.name() / @item.getB2cFlightFareRule.getSitiFareOption.name()</p></li>
+                                    <li><p><strong>SOTI</strong> @item.getB2cFlightFareRule.getSotiFareDirection @item.getB2cFlightFareRule.getSotiDispenseValue / @item.getB2cFlightFareRule.getSotiValueType.name() / @item.getB2cFlightFareRule.getSotiFareOption.name()</p></li>
+                                    <li><p><strong>SOTO</strong> @item.getB2cFlightFareRule.getSotoFareDirection @item.getB2cFlightFareRule.getSotoDispenseValue / @item.getB2cFlightFareRule.getSotoValueType.name() / @item.getB2cFlightFareRule.getSotoFareOption.name()</p></li>
+                                </ol>
+                            </td>
+                            <td>
+                                <ol style="list-style: none;padding: 0px;">
+                                    <li><p><strong>SITI</strong> @item.getB2bFlightFareRule.getSitiFareDirection @item.getB2bFlightFareRule.getSitiDispenseValue / @item.getB2bFlightFareRule.getSitiValueType.name() / @item.getB2bFlightFareRule.getSitiFareOption.name()</p></li>
+                                    <li><p><strong>SOTI</strong> @item.getB2bFlightFareRule.getSotiFareDirection @item.getB2bFlightFareRule.getSotiDispenseValue / @item.getB2bFlightFareRule.getSotiValueType.name() / @item.getB2bFlightFareRule.getSotiFareOption.name()</p></li>
+                                    <li><p><strong>SOTO</strong> @item.getB2bFlightFareRule.getSotoFareDirection @item.getB2bFlightFareRule.getSotoDispenseValue / @item.getB2bFlightFareRule.getSotoValueType.name() / @item.getB2bFlightFareRule.getSotoFareOption.name()</p></li>
+                                </ol>
+                            </td>
+                            <td>
+                                @for(airCode <- item.getFareRuleAirports) {
+                                    <p>@airCode.getAirportCode</p>
+                                    <div class="clearfix"></div>
+                                }
+                            </td>
+                            <td>@item.getUpdatedAt.format("yy-MMM-dd HH:mm")</td>
+                            <td>
+                            @if(item.getAirlineCommissionableId != null) {
+                                <span><a href="@routes.FlightPriceRuleCtrl.createFareRuleManagement(encrypt.encrypt(item.getId.toString))" class="btn btn-xs btn-primary"><i class="fa fa-pencil"></i></a></span>
+                            } else {
+                                <span><a href="@routes.FlightPriceRuleCtrl.createNonCommissionFareRule(encrypt.encrypt(item.getId.toString))" class="btn btn-xs btn-primary"><i class="fa fa-pencil"></i></a></span>
+                            }
+                            <span><a href="@routes.FlightPriceRuleCtrl.deleteFareRule(encrypt.encrypt(item.getId.toString))" class="btn btn-xs btn-danger confirm-delete"><i class="fa fa-times"></i></a></span>
+                            </td>
+                        </tr>
+                    }
+                }
+            }
+        </div>
+    </div>
+}

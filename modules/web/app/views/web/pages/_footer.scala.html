@@ -1,0 +1,83 @@
+@import controllers.web.routes
+@import com.alajobi.ota.utils.SystemControlSetting
+@(systemControlSetting: SystemControlSetting, footerJs: String = "")(implicit message: Messages, request: RequestHeader)
+    <script src="@routes.Assets.js("respond.js")"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+    <script type="text/javascript" src="@routes.Assets.commonJs("bootstrap.min.js")"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
+    <script src="@routes.Assets.js("owl.carousel.min.js")"></script>
+    <script src="@routes.Assets.js("bootstrap-select.min.js")"></script>
+    <script src="@routes.Assets.js("wow.min.js")"></script>
+    <script src="@routes.Assets.js("supersized.3.1.3.min.js")"></script>
+    <script src="@routes.Assets.js("js.js")"></script>
+    <script type="text/javascript" src="@routes.Assets.commonJs("angular.js")"></script>
+    @*
+    * Insert Other JS Here
+    *@
+    <script type="text/javascript" src="@routes.Assets.commonJs("loading-bar.js")"></script>
+    <script type="text/javascript" src="@routes.Assets.commonJs("angular-lazy-img.min.js")"></script>
+    <script type="text/javascript" src="@routes.Assets.commonLib("iziToast/js/iziToast.min.js")"></script>
+    <script type="text/javascript" src="@routes.Assets.commonLib("daterange/moment.min.js")"></script>
+    <script type="text/javascript" src="@routes.Assets.commonLib("parsley/parsley.min.js")"></script>
+    <script type="text/javascript" src="@routes.Assets.commonJs("owl.carousel.min.js")"></script>
+    <script type="text/javascript" src="@routes.Assets.commonJs("jquery.number.min.js")"></script>
+    <script type="text/javascript" src="@routes.Assets.commonJs("nprogress.js")"></script>
+    <script type="text/javascript" src="@routes.Assets.commonJs("typed.min.js")"></script>
+
+
+    <!-- LOAD WEB JQUERY -->
+    <script type="text/javascript" src="@routes.Assets.js("bootstrap-select.min.js")"></script>
+
+    <script type="text/javascript" src="@routes.Assets.commonLib("autocomplete/jquery.autocomplete.js")"></script>
+    <script type="text/javascript" src="@routes.Assets.commonMyJs("jsGlobal.js")"></script>
+    <script type="text/javascript" src="@routes.Assets.commonMyJs("jsFunctions.js")"></script>
+    <script type="text/javascript" src="@routes.Assets.commonMyJs("jsAngularApp.js")"></script>
+    <script type="text/javascript" src="@routes.Assets.commonMyJs("jsServices.js")"></script>
+    <script type="text/javascript" src="@routes.Assets.commonMyJs("jsControllers.js")"></script>
+    <script type="text/javascript" src="@routes.Assets.commonMyJs("jsDirectives.js")"></script>
+    <script type="text/javascript" src="@routes.Assets.myJs("jsFlight.js")"></script>
+    <script type="text/javascript" src="@routes.Assets.myJs("jsHotel.js")"></script>
+    <script type="text/javascript" src="@routes.Assets.commonMyJs("jsBookingEngineForm.js")"></script>
+    <script type="text/javascript" src="@routes.Assets.myJs("jsAuthReg.js")"></script>
+    @Html(footerJs)
+    <script type="text/javascript" src="@routes.Assets.commonJs("script.js")"></script>
+    @Html(systemControlSetting.get(SystemControlSetting.CMS_HTML_FOOTER_META_TAG))
+    <script>
+            jQuery(function() {
+                var modalSize = '';
+                $('.close').click();
+                $('body').on('click', '.ajax', function (e) {
+                    modalSize = $(this).data('modal-size');
+                    modalSize = (modalSize === null || modalSize === 'undefined') ? '' : $(this).data('modal-size');
+                    e.preventDefault();
+                    var title = $(this).attr('title'); // "Member Information"; //$(this).attr('name');
+                    var remote = $(this).attr('href');
+                    if (remote === "") {
+                        alert("Invalid url");
+                    } else {
+                        Layout.alert(title, remote, {});
+                    }
+                });
+                Layout = {};
+                Layout.alert = function (title, content, options) {
+                    $modalTitle = $('<b>').text(title);
+                    $modalDismiss = $('<span class="close btn btn-danger" data-dismiss="modal">').html();
+                    $modal = $('<div class="modal fade modal_close">');
+                    $modalHeader = $('<div class="modal-header">').append($modalTitle).append($modalDismiss);
+                    $modalBody = $('<div class="modal-body">')     //loading message
+                            .append("<p class='text-primary text-center'><span class='fa fa-spinner fa-spin'></span> loading...</p>");
+                    //.append(content);
+                    $footerBtn1 = $('<button type="button" class="" data-dismiss="modal">Close</button>');
+                    //  $footerBtn2 = $('<button type="button" class="btn btn-primary">Save changes</button>');
+                    $modalFooter = $(' <div class="modal-footer">').append($footerBtn1); //.append($footerBtn2);
+                    $modalContent = $('<div class="modal-content">').append($modalHeader).append($modalBody).append($modalFooter);
+                    $modalDialog = $('<div class="modal-dialog '+modalSize+'">').append($modalContent);
+                    $one = $modal.append($modalDialog);
+                    // alert($one.html());
+                    $modal.append($modalDialog).modal({
+                        remote: content
+                    }).width(options.width); return;
+                };
+            });
+    </script>
+</html>

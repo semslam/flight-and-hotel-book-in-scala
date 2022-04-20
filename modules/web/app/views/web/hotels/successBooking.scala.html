@@ -1,0 +1,100 @@
+@import crypto.Encrypt
+@import views.html.web.templates._
+@(hotelBooking: HotelBookings)(implicit request: RequestHeader, maybeUser: Option[Users], messages: Messages, encrypt: Encrypt)
+@import controllers.web.routes
+@default(title = "Booking Successful", script, Html(""), maybeUser) {
+   <div class="gap gap-small"></div>
+    <div class="container">
+        <div class="spacer25">
+            <h2     class="text-info text-center">Thank you for your booking</h2>
+            <div class="panel">
+                <div class="panel-body row">
+                    <div class="col-md-8 col-xs-12 col-lg-8 col-sm-8 col-md-offset-2 text-center">
+                        <h4 class="text-success"><strong>Your booking has been successfully completed.</strong></h4>
+                        <h4 class="text-success">Your booking reference is <strong>@hotelBooking.getBookings.getTransactionRef</strong></h4>
+                    </div>
+                    <div class="clearfix"></div><hr />
+                    <div class="col-md-8 col-xs-12 col-lg-8 col-sm-8 col-md-offset-2 text-center">
+                        <h4 class="text-primary">Booking Information</h4>
+                        <table class="table table-responsive">
+                            <thead>
+                                <tr>
+                                    <th>Hotel Name</th>
+                                    <th>City</th>
+                                    <th>Check-In</th>
+                                    <th>Durations</th>
+                                    <th>No. of Rooms</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>@hotelBooking.getHotelName</td>
+                                    <td>
+                                        @defining(HotelDestinations.find.where().eq("supplier", hotelBooking.getBookings.getSupplier).where().eq("code", hotelBooking.getCityCode).findUnique()) { hotelDestination =>
+                                            @if(hotelDestination != null) {
+                                                @hotelDestination.getName, @hotelDestination.getCountry.getName
+                                            } else {
+                                                @hotelBooking.getCityCode
+                                            }
+                                        }
+                                    </td>
+                                    <td>@hotelBooking.getCheckIn.format("yyyy-MM-dd")</td>
+                                    <td>@hotelBooking.getNoOfNights Night(s)</td>
+                                    <td>@hotelBooking.getRooms.size() Room(s)</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="7">
+                                        <h5 class="text-info"><strong>Room(s) Reservation Detail</strong></h5>
+                                        <table class="table table-responsive">
+                                            <thead>
+                                                <tr>
+                                                    <td>#</td>
+                                                    <td>Room Name</td>
+                                                    <td>Room Code</td>
+                                                    <td>No of Adult</td>
+                                                    <td>No of Child</td>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @for((bookingRoom, index) <- hotelBooking.getRooms.zipWithIndex) {
+                                                    <tr>
+                                                        <td>Room @bookingRoom.getRoomIndex</td>
+                                                        <td>@bookingRoom.getRoomName</td>
+                                                        <td>@bookingRoom.getRoomCode</td>
+                                                        <td>@bookingRoom.getNoOfAdult</td>
+                                                        <td>@bookingRoom.getNoOfChild</td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="clearfix"></div><hr />
+                    <div class="col-md-8 col-xs-12 col-lg-8 col-sm-8 col-md-offset-2 text-center">
+                        <h4 class="text-primary">Payment information</h4>
+                        <p>This booking is valid until 23:00hrs(Nigerian time), @{new java.util.Date().format("dd, MMM")}. after booking to remain guaranteed. <br /><br />
+                            Please send us proof of payment to our email <span class="text-info">@play.Configuration.root().getString("project.email")</span> or call @play.Configuration.root().getString("project.phone1")</p>
+                        <h4 class="text-primary">Bank Details</h4>
+                        <h4>Account Name: @play.Configuration.root().getString("company.name")</h4>
+                        <table class="table table-striped">
+                            @for(bank <- PaymentMethods.find.where().eq("paymentCategory", PaymentCategories.CASH_PAYMENT).findList()) {
+                                <tr>
+                                    <td><img src="@bank.getLogoUrl" class="img" style="width: 50px" alt="@bank.getName"></td>
+                                    <td><strong>@bank.getName</strong></td>
+                                    <td><strong>@bank.getAccountNo</strong></td>
+                                </tr>
+                            }
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="clearfix"></div>
+        </div>
+    </div>
+}
+@script = {
+
+}

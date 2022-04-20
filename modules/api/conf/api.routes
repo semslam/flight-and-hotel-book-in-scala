@@ -1,0 +1,26 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# ~~~~
+
+# TEST PAGE
+GET           /test                             controllers.api.Application.test
+
+# AUTHENTICATION
+POST          /signin                           controllers.api.Auth.signIn
+POST          /signout                          controllers.api.Auth.signOut
+POST          /signup                           controllers.api.Auth.signUp
+
+# FLIGHT
+GET           /usernames                        controllers.api.Users.usernames
+
+GET           /flight/airports                  controllers.api.FlightApiCtrl.suggestAirport(city: String)
+POST          /flight/search/itineraries        controllers.api.FlightApiCtrl.searchFlight()
+GET           /flight/search/itineraries        controllers.api.FlightApiCtrl.savedSearchFlight(sessionId: String)
+GET           /flight/itinerary/avail           controllers.api.FlightApiCtrl.availability(sessionId: String, refId: String)
+
+
+# ACCOUNT
+GET           /account                          controllers.api.Account.info
+PUT           /account                          controllers.api.Account.update
+PUT           /account/password                 controllers.api.Account.updatePassword
+DELETE        /account                          controllers.api.Account.delete

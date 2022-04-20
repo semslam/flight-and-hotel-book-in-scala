@@ -1,0 +1,35 @@
+@import views.html.admin.tags.myDataTable
+@import crypto.Encrypt
+@import controllers.admin.systems.routes
+
+
+@(paymentMethods: List[PaymentMethods], paymentCategory: PaymentCategories)(implicit request: RequestHeader, messages: Messages, manager: PrivateUsers, encrypt: Encrypt)
+@import views.html.admin.templates._
+@default(title = paymentCategory.name().replaceAllLiterally("_", " ") + "Payment Categories", tab = "systems") {
+    <div class="panel">
+        <header class="panel-heading">
+            <h2 class="panel-name">@paymentCategory.name().replaceAllLiterally("_", " ") Payment Methods</h2><br />
+            <a href="@routes.PaymentCtrl.create(paymentCategory.name())" class="btn btn-primary btn-md">Add New @paymentCategory.name().replaceAllLiterally("_", " ")</a>
+        </header>
+        <div class="panel-body">
+        @myDataTable(Seq("#", "Name", "Acct. No.", "Status", "Is Default", "Created at", "Action")) {
+            @if(paymentMethods.nonEmpty) {
+                @for(item <- paymentMethods) {
+                    <tr>
+                        <td>@item.getId</td>
+                        <td>@item.getName</td>
+                        <td>@item.getAccountNo</td>
+                        <td>@item.getStatus.name()</td>
+                        <td>@item.getIsDefault</td>
+                        <td>@item.getCreatedAt.format("yyyy-MM-dd HH:mm")</td>
+                        <td>
+                            <span><a href="" class="btn btn-xs btn-primary"><i class="fa fa-pencil"></i></a></span>
+                            <span><a href="" class="btn btn-xs btn-danger"><i class="fa fa-times"></i> Disable</a></span>
+                        </td>
+                    </tr>
+                }
+            }
+        }
+        </div>
+    </div>
+}

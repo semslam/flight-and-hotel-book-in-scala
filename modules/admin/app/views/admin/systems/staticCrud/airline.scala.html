@@ -1,0 +1,29 @@
+@import views.html.admin.tags.myDataTable
+@import controllers.admin.systems.routes
+@import crypto.Encrypt
+@(airlines: List[Airlines])(implicit request: RequestHeader, manager: PrivateUsers, messages: Messages, encrypt: Encrypt)
+@views.html.admin.templates.default(title = "Airlines &amp; Airline Blacklisting", tab = "bookingSettings") {
+    <div class="panel">
+        <header class="panel-heading">
+            <h2 class="panel-name">Airlines</h2><br />
+        </header>
+        <div class="panel-body">
+            @tags.alertFromRequest(request, "error")
+            @tags.alertFromRequest(request, "success")
+            @myDataTable(Seq("#", "Logo", "Airline", "Created at", "Updated at",  "Action"), "desc", "airlines") {
+                @if(airlines.nonEmpty) {
+                    @for(item <- airlines) {
+                        <tr>
+                            <td>@item.getId</td>
+                            <td><img src="@item.getAirlineCode" height="40px"></td>
+                            <td>@item.getName (@item.getAirlineCode)</td>
+                            <td>@item.getCreatedAt.format("yyyy-MM-dd HH:mm")</td>
+                            <td>@item.getUpdatedAt.format("yyyy-MM-dd HH:mm")</td>
+                            <td><a href="@routes.StaticDataCRUDCtrl.createAirline(item.getId)">Edit</a></td>
+                        </tr>
+                    }
+                }
+            }
+        </div>
+    </div>
+}

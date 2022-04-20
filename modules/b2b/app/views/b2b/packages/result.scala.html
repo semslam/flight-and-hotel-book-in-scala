@@ -1,0 +1,145 @@
+@import crypto.Encrypt
+@import controllers.b2b.routes
+@(packages: Vector[Packages], count: Int, page: Int, pageLength: Int, apply_filter: Boolean, country_id: Long, theme_id: String)(implicit request: RequestHeader, maybeUser: Users, messages: Messages, encrypt: Encrypt)
+@views.html.b2b.templates.default(title = "Vacation Packages",  tab = "package", scripts = script) {
+    <link rel="stylesheet" href="@routes.Assets.css("stylemisc.css")" type="text/css"/>
+    <div id="page_content_wrapper" style="padding: 0 50px;" class="hasbg">
+            <!-- START: LISTING AREA-->
+        <div class="container">
+            <div clas="row">
+                <ol class="breadcrumb col-md-12">
+                    <li><a href="/" title="Home">Home</a></li>
+                    <li>Vacation Packages</li>
+                </ol>
+                <div class="clearfix"></div>
+                <div class="col-md-3 clear-padding">
+                    <div class="filter-head text-center">
+                        <h4>@packages.size Result Found Matching Your Search.</h4>
+                    </div>
+                    <form class="filter-area" name="filter" action="" method="get">
+                        @if(request.getQueryString("apply_filter").isDefined) {
+                            <div class="filter">
+                                <a type="submit" href="@routes.PackageCtrl.vacationPackages()" class="btn btn-danger form-control">
+                                    Clear Filter</a>
+                            </div>
+                        }
+                        <input type="hidden" name="country_count" value="0">
+                        <input type="hidden" name="theme_count" value="0">
+                        <input type="hidden" name="apply_filter" value="true" />
+                        <div class="location-filter filter">
+                            <h5><i class="fa fa-globe"></i> Country</h5>
+                            <ul>
+                            @for((country, index) <- Countries.find.setMaxRows(10).findList().zipWithIndex) {
+                                <li><input class="country_field filter_input" name="country[@index]" @if(request.getQueryString("country[" + index + "]").nonEmpty) { checked } value="@country.getId" type="checkbox"> @country.getName</li>
+                            }
+                            </ul>
+                        </div>
+                        <div class="filter">
+                            <h5><i class="fa fa-pagelines"></i> Holiday Theme</h5>
+                            <ul>
+                            @for((theme, index) <- PackageTheme.find.setMaxRows(6).findList().zipWithIndex) {
+                                <li><input class="theme_field filter_input" type="checkbox" @if(request.getQueryString("theme[" + index + "]").nonEmpty) { checked } name="theme[@index]" value="@theme.getId">@theme.getName</li>
+                            }
+                            </ul>
+                        </div>
+                    </form>
+                </div>
+                <div class="col-md-9 hotel-listing">
+                    <div class="switchable col-md-12 clear-padding">
+                    @for(item <- packages) {
+                        <div class="hotel-list-view">
+                            <div class="wrapper">
+                                <div class="col-md-3 col-sm-6 switch-img clear-padding">
+                                    <img src="@item.getThumbImageUrl" alt="@item.getName">
+                                </div>
+                                <div class="col-md-7 col-sm-7 hotel-info">
+                                    <div>
+                                        <div class="hotel-header">
+                                            <h5>@item.getName
+                                            <span>
+                                                @for(a <- 1 to item.getPackageRating) {
+                                                    <i class="fa fa-star colored"></i>
+                                                }
+                                                @for(a <- 1 to 5 - item.getPackageRating) {
+                                                    <i class="fa fa-star-o colored"></i>
+                                                }
+                                            </span>
+                                            </h5>
+                                            <p><i class="fa fa-map-marker"></i>
+                                                @item.getName
+                                                , @item.getCountryId.getName</p>
+                                        </div>
+                                        <div class="hotel-facility">
+                                            <p style="padding-top: 0;
+                                                padding-bottom: 0">
+                                                @if(item.getIncludeFlight) {
+                                                    <i class="fa fa-plane" data-toggle="tooltip" data-value="Flight" title="Flight Included"></i>
+                                                }
+                                                @if(item.getIncludeHotel) {
+                                                    <i class="fa fa-bed" data-title="Hotel" title="Luxury Hotel"></i>
+                                                }
+                                        </div>
+                                        <div class="hotel-desc" style="max-height: 70px;
+                                            overflow: hidden;">
+                                            <p class="">@item.getShortDescription...</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="clearfix visible-sm-block"></div>
+                                <div class="col-md-2 rating-price-box text-center clear-padding">
+                                    <div class="rating-box">
+                                        <div class="tripadvisor-rating">
+                                            <span>@item.getPackageRating/5.0</span>
+                                        </div>
+                                        <div class="user-rating">
+                                            @for(a <- 1 to item.getPackageRating) {
+                                                <i class="fa fa-star colored"></i>
+                                            }
+                                            @for(a <- 1 to 5 - item.getPackageRating) {
+                                                <i class="fa fa-star-o colored"></i>
+                                            }
+                                        <span>0 Review</span>
+                                        </div>
+                                    </div>
+                                    <div class="room-book-box">
+                                        <div class="price">
+                                            <h5>@utils.Utilities.moneyFormat(item.getAdultUnitPrice)</h5>
+                                        </div>
+                                        <div class="book">
+                                            <a href="@routes.PackageCtrl.select(encrypt.encrypt(item.getId.toString))">BOOK</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="clearfix visible-sm-block"></div>
+                    }
+                    </div>
+                    <div class="clearfix"></div>
+                    <div style="margin: 10px 0">@views.html.tags.pagination(page, pageLength, count, page => routes.PackageCtrl.vacationPackages(page, apply_filter, country_id, theme_id))</div>
+                    <div class="clearfix"></div>
+                    <br />
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@script = {
+    <script>
+            var country_fieldCount = 0, theme_fieldCount = 0;
+            $('.country_field').on('click', function () {
+                if ($(this).is(":checked")) country_fieldCount += 1; else if (country_fieldCount !== 0) country_fieldCount -= 1;
+                $('input[name=country_count]').attr('value', country_fieldCount);
+            });
+            $('.theme_field').on('click', function () {
+                if ($(this).is(":checked")) theme_fieldCount += 1; else if (theme_fieldCount !== 0) theme_fieldCount -= 1;
+                $('input[name=theme_count]').attr('value', theme_fieldCount);
+            });
+            $(".filter_input").on("click blur", function (e) {
+                setTimeout(function () {
+                    document.filter.submit();
+                }, 2000);
+            })
+    </script>
+}

@@ -1,0 +1,57 @@
+@import crypto.Encrypt
+@import views.html.helper.CSRF
+@()(implicit request: RequestHeader, user: Users, messages: Messages, encrypt: Encrypt)
+@import controllers.web.routes
+@views.html.web.templates.default(title = "Edit Profile", loggedUser = Some(user)) {
+	<div class="row user-profile">
+		<div class="container">
+			<div class="col-md-12 user-name">
+				<h3>Edit Profile</h3>
+			</div>
+			<div class="col-md-2 col-sm-2">
+			@views.html.web.user._sidebar("profile")
+			</div>
+			<div class="col-md-10 col-sm-10">
+				<div class="row">
+					<div class="col-md-10">
+						<div class="">
+							@tags.alertFromRequest(request, "success")
+							@tags.alertFromRequest(request, "error")
+							<h1>@Messages("web.myaccount.title") <a class="btn btn-primary btn-sm pull-right" href="@routes.AuthCtrl.changePassword">@Messages("changepass")</a></h1>
+							@helper.form(CSRF(routes.UserCtrl.postEditProfile)) {
+								<div class="col-md-3">
+									<label>Title</label>
+									<select name="title" class="form-control">
+									@for(title <- Titles.values()) {
+										<option @if(user.getPrefix != null && title.value() == user.getPrefix.name()) { selected="selected" } value="@title.value()">@title.value()</option>
+									}
+									</select>
+								</div>
+								<div class="col-md-3">
+									<label for="firstName">First Name</label>
+									<input class="form-control" name="first_name" value="@user.getFirstName" required />
+								</div>
+								<div class="col-md-3">
+									<label for="lastName">Last Name</label>
+									<input class="form-control" name="last_name" value="@user.getLastName" required />
+								</div>
+								<div class="col-md-3">
+									<label for="email">Email</label>
+									<input class="form-control" name="email" value="@user.getEmail" required />
+								</div>
+								<div class="col-md-3">
+									<label for="phone">Phone</label>
+									<input class="form-control" name="phone" value="@user.getPhone" required />
+								</div>
+								<div class="clearfix gap-small"></div>
+								<div class="col-md-3">
+									<button type="submit" class="btn btn-success btn-md">Submit</button>
+								</div>
+							}
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+}

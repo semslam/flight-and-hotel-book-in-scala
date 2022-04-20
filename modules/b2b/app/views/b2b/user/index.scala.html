@@ -1,0 +1,38 @@
+@import views.html.tags.myDataTable
+@import controllers.b2b.routes
+@import helper._
+@import b3.vertical.fieldConstructor
+@import views.html.bookingEngine._
+@import crypto.Encrypt
+
+
+@(users: List[Users])(implicit loggedManager: Users, requestHeader: RequestHeader, messages: Messages, enc: Encrypt)
+@views.html.b2b.templates.default(title = "Sub-Agent", tab = "user") {
+    <div class="panel" style="margin: 0 5px 0 5px">
+        <div class="panel-heading">
+            <h2><strong>Sub-Agents List</strong></h2>
+            <a href="@routes.UserCtrl.create()" class="btn btn-md btn-default">Create New Agent</a>
+        </div>
+        <div class="panel-body">
+            <div class="row">
+                <div class="col-md-12 col-xs-12 col-lg-12 col-sm-12" style="background: #fff;padding: 10px; border-radius: 5px;">
+                    @tags.alertFromRequest(requestHeader, "error")
+                    @tags.alertFromRequest(requestHeader, "success")
+                    @myDataTable(Seq("#", "Full Name", "Email", "Phone", "Role", "Created On",  "Action")) {
+                    @for(user <- users) {
+                        <tr>
+                            <td>@user.getId</td>
+                            <td>@user.fullName()</td>
+                            <td>@user.getEmail</td>
+                            <td>@user.getPhone</td>
+                            <td>@user.getRole.replaceAllLiterally("_", " ")</td>
+                            <td>@user.getCreatedAt.format("yyyy-MM-dd")</td>
+                            <td><a href="@routes.UserCtrl.create(enc.encrypt(user.getId.toString))" class="btn btn-primary btn-sm">Edit Profile &amp; MarkUp</a> </td>
+                        </tr>
+                    }
+                }
+                </div>
+            </div>
+        </div>
+    </div>
+}

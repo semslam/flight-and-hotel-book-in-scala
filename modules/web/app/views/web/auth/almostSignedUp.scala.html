@@ -1,0 +1,7 @@
+
+@import crypto.Encrypt
+@(user: Users)(implicit messages: Messages, request: RequestHeader, encrypt: Encrypt)
+@default("Almost Signed Up") {
+	<p>@Messages("signup.thanks", user.fullName)</p>
+	<p>@Messages("signup.sent", user.getEmail)</p>
+}

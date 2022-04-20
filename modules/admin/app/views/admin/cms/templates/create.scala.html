@@ -1,0 +1,162 @@
+@import helper._
+@import crypto.Encrypt
+@import cms.DynamicPageHandler
+@import controllers.admin.cms.TemplateDOA
+@import views.html.admin.templates._
+@import controllers.admin.cms.routes
+@(form: Form[TemplateDOA])(implicit request: RequestHeader, messages: Messages, manager: PrivateUsers, encrypt: Encrypt)
+@default(title = "Create Page", tab = "cms", scripts) {
+    <div class="panel">
+        <div class="panel-heading">
+            <span class="panel-name">Create Page</span>
+        </div>
+        <div class="panel-body">
+            @helper.form(action = routes.TemplateCtrl.save, 'class -> "form", 'id -> "templateForm", 'enctype -> "application/x-www-form-urlencoded") {
+                @helper.CSRF.formField
+                @tags.alertFromRequest(request, "error")
+                @form.globalError.map { error =>
+                    @tags.alert(error.message, "error")
+                }
+                <input type="hidden" name="@form("num_body_rows").name" value="@if(form("num_body_rows").value.isEmpty){1}else{@form("num_body_rows").value.get}">
+                <div><!-- Nav tabs -->
+                    <ul class="nav nav-tabs" role="tablist">
+                        <li role="presentation" class="active"><a href="#design" aria-controls="design" role="tab" data-toggle="tab">Design Template <span class="label label-danger">Step 1</span></a></li>
+                        <li role="presentation"><a href="#properties" aria-controls="properties" role="tab" data-toggle="tab">Properties <span class="label label-danger">Step 2</span></a></li>
+                        <li role="presentation"><a href="#preview" aria-controls="preview" role="tab" data-toggle="tab">Page <span class="label label-danger">Step 3</span></a></li>
+                    </ul>
+                    <br />
+                    <!-- Tab panes -->
+                    <div class="tab-content">
+                        <div role="tabpanel" id="design" class="tab-pane active">
+                            <div class="col-md-3 bg-muted">
+                                <div class="form-group">
+                                    @select(form("category_id.id"), options(CmsContentCategories.options(request.getQueryString("cat_id").getOrElse(""))), '_label -> "Theme Category", 'class -> "form-control select_url chosen-select")
+                                </div>
+                                <div class="form-group">
+                                    @helper.select(form("ui_theme"), options(DynamicPageHandler.themeOption()), 'class -> "form-control", 'required -> "required", '_label -> "Theme")
+                                </div>
+                                <div class="form-group">
+                                    @helper.select(form("sidebar_perc_ratio"), options(DynamicPageHandler.sidebarOptions()), 'class -> "form-control", 'required -> "required", '_label -> "Side Bar")
+                                </div>
+                                <div class="form-group sidebar-mgr">
+                                    <a href="#" class="add-sidebar-container"><i class="fa fa-plus"></i> Add Side Bar</a>
+                                </div>
+                                <div class="form-group">
+                                    <label>Header <input type="checkbox" name="@form("header").name" value="Yes" checked="checked"> </label> <br />
+                                    <label>Footer <input type="checkbox" name="@form("footer").name" value="Yes" checked="checked"> </label> <br />
+                                </div>
+                                <div class="form-group">
+                                    @helper.select(form("body_rows1"), options(DynamicPageHandler.bodyOption()), 'class -> "form-control body_rows", 'data_id -> "1", 'required -> "required", '_label -> "Body Rows")
+                                    <label><a href="#" class="btn btn-xs btn-link add-row"><i class="fa fa-plus"></i> Add Body Row</a></label>
+                                </div>
+                                <div class="form-group">
+                                    <button class="btn mg3" name="action" value="save" type="submit">Save</button>
+                                    <button class="btn mg3" name="action" value="save_publish" type="submit">Save, Publish</button>
+                                    <button class="btn btn-danger mg3" type="reset">Cancel</button>
+                                </div>
+                            </div>
+                            <div class="col-md-9">
+                                <div class="form-group">
+                                    <label>Name</label><br />
+                                    <input type="text" name="@form("name").name" value="@form("name").value.getOrElse("")" class="form-control" data-required="true" required="true" />
+                                </div>
+                                <div class="form-group">
+                                    <div id="body_content_prev">
+                                        <div id="header_dom">
+                                            <h1>Header</h1>
+                                        </div>
+                                        <div id="body_dom" class="row">
+                                            <section id="body_html" class="col-md-12">
+                                                <span class="col">
+                                                    <input type="hidden" name="inner_col1" value="1" required="required" />
+                                                </span>
+                                                @for(i <- 1 to 1) {
+                                                    <div class="1__col@i.toString.concat("__100")">
+                                                        <a href="#" class="add-container" data-d_id="@i" data-container="1__col@i.toString.concat("__100")"><i class="fa fa-plus"></i> Add Fragment</a>
+                                                        <input type="hidden" name="1__col@i.toString.concat("__100")" required="required" >
+                                                        <input type="hidden" name="1__hasContainer@i.toString.concat("__100")" />
+                                                        <h1 class="text-center" >Body</h1>
+                                                    </div>
+                                                }
+                                            </section>
+                                            <div class="col-md-3" id="sidebar_dom" style="display: none;">
+                                            <input type="hidden" name="num_of_sidebar"  value="1" />
+                                            @for(i <- 1 to 1) {
+                                                <section style="border-bottom: 1px solid #9AB3CE">
+                                                    <a href="#" class="add-container" data-d_id="@i" data-container="sidebar_content_@i"><i class="fa fa-plus"></i> Add Fragment</a>
+                                                    <input type="hidden" name="sidebar_content_@i" />
+                                                    <input type="hidden" name="sidebar_hasContainer_@i" />
+                                                    <span class="sidebar_content_@i">
+                                                        <h1 class="text-center">Sidebar @i</h1>
+                                                    </span>
+                                                </section>
+                                            }
+                                            </div>
+                                        </div>
+                                        <div id="footer_dom">
+                                            <h1>Footer</h1>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            @tags.alertFromRequest(request, "error")
+                            <div class="clearfix"></div>
+                        </div>
+                        <div role="tabpanel" class="tab-pane" id="properties">
+                            @helper.inputText(form("description"), 'class -> "form-control", '_label -> "Description")
+                        </div>
+                        <div role="tabpanel" class="tab-pane" id="preview">
+                            @helper.inputText(form("slugUrl"), 'required -> "required", 'class -> "form-control", '_label -> "URL Path", 'placeholder -> "/")
+                            @helper.textarea(form("metaKeywords"), 'class -> "form-control", 'rows -> "4", '_label -> "Meta Keywords")
+                            @helper.textarea(form("metaDescription"), 'class -> "form-control", 'rows -> "10", '_label -> "Description")
+                            @helper.textarea(form("inlineCss"), 'class -> "form-control code-editor", 'rows -> "10", '_label -> "CSS")
+                            @helper.textarea(form("inlineJs"), 'class -> "form-control code-editor", 'rows -> "10", '_label -> "Javascript/JQuery")
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+    <div class="modal fade add-container-div" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+        <div class="modal-dialog modal-sm" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-name" id="myModalLabel">Add Fragment</h4>
+                </div>
+                <div class="modal-body">
+                    <p class="text-danger">
+                        You can only add fragments that do not contain the main HTML tags.
+                    </p>
+                    @defining(CmsFragments.find.orderBy("id desc").findList()) { container =>
+                        @if(container.size() != 0) {
+                            <div class="form-group">
+                                <label>Select Fragment Item</label>
+                                <select id="select_container_id" required="required" class="form-control">
+                                @for(item <- container){
+                                    <option data-name="@item.getName" value="@item.getId">@item.getName</option>
+                                }
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="in_container">
+                                    <input type="checkbox" value="checked" name="in_container"> Include Fragment DIV Within the Selected Item?
+                                </label>
+                            </div>
+                        } else {
+                            <h3>No Fragment exists</h3>
+                        }
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="add-btn">Add</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+@scripts = {
+    <script type="text/javascript" src="@controllers.admin.routes.Assets.commonLib("jquery-validate/jquery.validate.min.js")"></script>
+    <script type="text/javascript" src="@controllers.admin.routes.Assets.js("jsCmsConsole.js")"></script>
+}

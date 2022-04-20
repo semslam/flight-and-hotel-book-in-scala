@@ -1,0 +1,47 @@
+@import views.html.bookingEngine._
+@import cms.DynamicPageHandler
+@import controllers.web.routes
+@import views.html.web.pages._
+@import crypto.Encrypt
+@(str: String)(implicit requestHeader: RequestHeader, messages: Messages, encrypt: Encrypt, loggedUser: Option[Users])
+@import com.alajobi.ota.utils.SystemControlSetting; val systemControlSetting = SystemControlSetting.getInstance()
+@if(str != null) {
+    @{
+        var map: Map[String, String] = Map()
+        """\[\\?(deal|promo|package|banner|)\s[A-z]+.[A-z0-9]+\]+""".r.findAllIn(str).foreach{ item =>
+            val newStr = item.replaceAll("\\[", "").replaceAll("\\]", "")
+            val split = newStr.split(" ")
+            val pType = split(0)
+            val attr = split(1)
+            var (key, value) = ("", "")
+            if(attr != null) {
+                val attrs = attr.split("=")
+                key = attrs(0)
+                value = attrs(1)
+            }
+            pType.toLowerCase match {
+                case "deal" => val view = _dealPromo(Deals.find.where().eq("code", value).findUnique(), value).body; map += (s"[$newStr]" -> view)
+                case "banner" => val view = _banner(CmsBanners.find.where().eq("code", value).findUnique(), value).body; map += (s"[$newStr]" -> view)
+                case "package" => val view = _package(Packages.find.where().eq("code", value).findUnique(), value).body; map += (s"[$newStr]" -> view)
+            }
+        }
+        var strCompose = str
+        map.foreach(k => strCompose = strCompose.replaceAllLiterally(k._1, k._2))
+        strCompose = strCompose.replaceAllLiterally("[logo]", s"""<img src="${SystemControlSetting.getInstance().get(SystemControlSetting.CMS_LOGO)}" />""")
+        strCompose = strCompose.replaceAllLiterally("[logo2]", s"""<img src="/common/images/logo2.png" class="logo" style="max-height: 150px" />""")
+                .replaceAllLiterally("[currency]", _currencySwitcher().body)
+                .replaceAllLiterally("[authUser]", _authUser().body)
+                .replaceAllLiterally("[shoppingCart]", _shoppingCart().body)
+                .replaceAllLiterally("[flightBookingEngine]", _B2CflightForm(loggedUser).body)
+                .replaceAllLiterally("[flightBookingEngine]", _B2CflightForm(loggedUser).body)
+                .replaceAllLiterally("[flightBookingEngineAlt]", _B2CflightFormAlt(loggedUser).body)
+                .replaceAllLiterally("[carBookingEngine]", _B2CcarForm(loggedUser).body)
+                .replaceAllLiterally("[carBookingEngineAlt]", _B2CcarFormAlt(loggedUser).body)
+                .replaceAllLiterally("[packageBookingEngine]", _B2CpackageForm(loggedUser).body)
+                .replaceAllLiterally("[visaBookingEngine]", _B2CvisaForm(loggedUser).body)
+                .replaceAllLiterally("[hotelBookingEngine]", _B2ChotelForm().body)
+                .replaceAllLiterally("[hotelBookingEngineAlt]", _B2ChotelFormAlt().body)
+                .replaceAllLiterally("[newsletter]", _newsletterForm().body)
+        Html(strCompose)
+    }
+}

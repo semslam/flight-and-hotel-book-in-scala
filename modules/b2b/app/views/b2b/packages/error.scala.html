@@ -1,0 +1,14 @@
+@import hotel.dto.entity.HotelSearchResponse
+@import crypto.Encrypt
+@(errorMessage: String = "Error occurred. Please try again.")(implicit request: RequestHeader, maybeUser: Users, messages: Messages, encrypt: Encrypt)
+@import controllers.b2b.routes
+@views.html.b2b.templates.default(title = "Error", tab = "package") {
+	<div class="panel container">
+		<div class="pane-heading">
+			<h3 class="text-danger">@errorMessage</h3>
+		</div>
+		<div class="pane-body row">
+			<div class="col-md-7">
+			</div>	</div>
+	</div>
+}

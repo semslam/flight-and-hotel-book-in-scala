@@ -1,0 +1,398 @@
+@import flight.dto.entity.ItineraryWSResponse
+@import flight.dto.entity.FlightSearchResponse
+@import flight.dto.entity.FlightSearchRequest
+@import flight.dto.entity.PricingInfoWSResponse
+@import scala.collection.JavaConverters._
+@import scala.collection.JavaConversions._
+@import java.net.URLEncoder
+@import java.text.SimpleDateFormat
+@import crypto.Encrypt
+@import java.util.Date
+@import org.joda.time.Period
+@import controllers.web.routes
+@(searchResponse: FlightSearchResponse, byAirline: Map[String, List[ItineraryWSResponse]], byDates: Map[String, List[ItineraryWSResponse]])(implicit request: RequestHeader, messages: Messages, encrypt: Encrypt, maybeUser: Option[Users])
+@import com.alajobi.ota.flights.TestMapper; val testMapper = new TestMapper; val dtFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss"); var prvPrice = 0
+@views.html.web.templates.default(title = "Flight Result", script, Html(""), maybeUser) {
+    <style>
+            body, #wrapper, #page_content_wrapper.fixed, #gallery_lightbox h2, .slider_wrapper .gallery_image_caption h2, #body_loading_screen, h3#reply-title span, .overlay_gallery_wrapper, .pricing_wrapper_border, .pagination a, .pagination span, #captcha-wrap .text-box input, .flex-direction-nav a, .blog_promo_title h6, #supersized li, #gallery_caption .tg_caption, #horizontal_gallery_wrapper .image_caption, #tour_search_form, .tour_search_form {
+                /*background: #F2F2F2;*/
+            }
+            @@media(min-width: 1200px)  {
+            .container {
+                width: 1210px;
+            }
+            }
+            button[name=submitBtn] {
+                background: #006fa2;
+                border-color: #006fa2;
+            }
+    </style>
+    <div style="background-color: #5b63aa; margin:0 0 10px 0;" class="hidden-xs">
+        @("[flightBookingEngineAlt]")
+    </div>
+    <div class="container">
+       <div class="row">
+           <div class="col-md-2 clear-padding hidden-xs hidden-sm">
+               <div class="filter-head text-center">
+                   <h4>@searchResponse.getPricedItineraryWSResponses.size Result Found Matching Your Search.</h4>
+               </div>
+               @if(request.getQueryString("q").isDefined && request.getQueryString("q").get == "true") {
+                   <div class="filter">
+                       <a type="button" href="@routes.FlightCtrl.result(searchResponse.getFlightSearchRequest.getTicketLocale.name().toLowerCase, searchResponse.getFlightSearchRequest.getTabHash)" value="1" class="btn btn-md btn-danger form-control"><i class="fa fa-times"></i> Clear Filter</a>
+                   </div>
+               }
+               <div class="filter-area">
+                   <div class="filter">
+                       <h5><i class="fa fa-money"></i> Price</h5>
+                       @for((airlineCode, it) <- testMapper.sort(byAirline.map(a => a._1 -> a._2.asJava).asJava)) {
+                           <p>
+                               <label for="ac@airlineCode">
+                                   <input type="checkbox" class="_filter" id="ac@airlineCode" name="price" value="@it.head.getPricingInfoWSResponse.getTotalFare" />
+                                   @utils.Utilities.numberFormat(prvPrice) - @utils.Utilities.numberFormat(it.head.getPricingInfoWSResponse.getTotalFare) @it.head.getPricingInfoWSResponse.getCurrencyCode
+                               </label>
+                               @{ prvPrice = it.head.getPricingInfoWSResponse.getTotalFare.toInt }
+                           </p>
+                       }
+                   </div>
+                   <div class="filter">
+                       <h5><i class="fa fa-plane"></i> Airline</h5>
+                       <ul>
+                           @for((airlineCode, it) <- testMapper.sort(byAirline.map(a => a._1 -> a._2.asJava).asJava)) {
+                               <li><label for="ch@airlineCode"><input class="_filter" type="checkbox" id="ch@airlineCode" name="airline" value="@airlineCode" /> @it.head.getAirItineraryWSResponse.getOriginDestinationWSResponses.head.getMarketingAirline</label></li>
+                           }
+                       </ul>
+                   </div>
+                   <div class="filter">
+                       <button type="button" name="applyFilter" value="1" class="btn btn-md btn-primary form-control">Apply Filter</button>
+                   </div>
+               </div>
+           </div>
+           <div class="col-md-8 col-xs-12">
+               @if(searchResponse.getFlightSearchRequest.isFlexibleDate) {
+                   <div class="col-md-12 col-xs-12 col-lg-12 col-sm-12">
+                       <div class="" style="background: #fff;">
+                           <table class="col-sm-12 table table-bordered table-responsive" id="table-container" style="background: #FFF">
+                               <thead class="cf">
+                                   <tr>
+                                       <th>&nbsp;</th>
+                                       @for((arrivalDate, items) <- byDates) {
+                                           <th>
+                                               <span></span>
+                                               <p></p>
+                                           </th>
+                                       }
+                                   </tr>
+                               </thead>
+                               <tbody>
+                               @for((departureDate, departureItin) <- byDates){
+                                   <tr>
+                                       <td><span>Depart</span><p>@departureDate</p></td>
+                                       @for(dpDestItinerary <- departureItin){
+                                           <td class="popp @if(departureDate.equals(dpDestItinerary.getAirItineraryWSResponse.getOriginDestinationWSResponses.get(0).getDepartureDateTime.split("T")(0))) { popp }">
+                                               <a style="cursor: pointer;" data-target="#modal@dpDestItinerary.getCacheIndex" data-toggle="modal">@utils.Utilities.moneyFormat(dpDestItinerary.getPricingInfoWSResponse.getTotalFare)</a>
+                                               <div class="modal fade" id="modal@dpDestItinerary.getCacheIndex" role="dialog" aria-labelledby="my@dpDestItinerary.getCacheIndex" tabindex="-1" style="display: none" >
+                                                   <div class="modal-dialog modal-lg" role="document">
+                                                       <div class="modal-content">
+                                                           <div class="modal-header">
+                                                               <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                                               <h4 class="modal-title" id="myModalLabel">Itinerary Details</h4>
+                                                           </div>
+                                                           <div class="modal-body">
+                                                               <table class="table table-responsive table-bordered">
+                                                                   <thead>
+                                                                       <tr>
+                                                                           <th>Airline</th>
+                                                                           <th>Departing Airport</th>
+                                                                           <th>Arriving Airport</th>
+                                                                           <th>Departing Date</th>
+                                                                           <th>Arriving Date</th>
+                                                                           <th>Cabin</th>
+                                                                           <th>Stop</th>
+                                                                       </tr>
+                                                                   </thead>
+                                                                   <tbody>
+                                                                   @for(itinerary <- dpDestItinerary.getAirItineraryWSResponse.getOriginDestinationWSResponses) {
+                                                                       <tr>
+                                                                           <td>
+                                                                               <img lazy-img="@itinerary.getAirlineLogoUrl" src="@routes.Assets.commonImg("spinner.gif")" style="height: 55px;" alt="">
+                                                                               <small>@itinerary.getMarketingAirline</small>
+                                                                           </td>
+                                                                           <td>@if(itinerary.getOriginAirportTbl != null) { @itinerary.getOriginAirportTbl.getAirportName } else { @itinerary.getOriginAirportCode }</td>
+                                                                           <td>@if(itinerary.getDestinationAirportTbl != null) { @itinerary.getDestinationAirportTbl.getAirportName } else { @itinerary.getDestinationAirportCode }</td>
+                                                                           <td>@dtFormat.parse(itinerary.getDepartureDateTime).format("EEE, dd MMM yy HH:mm")</td>
+                                                                           <td>@dtFormat.parse(itinerary.getArrivalDateTime).format("EEE, dd MMM yy HH:mm")</td>
+                                                                           <td>@itinerary.getCabin</td>
+                                                                           <td>@itinerary.getNumberOfStops Stop@("s".when(itinerary.getNumberOfStops > 1))</td>
+                                                                       </tr>
+                                                                   }
+                                                                   </tbody>
+                                                               </table>
+                                                           </div>
+                                                           <div class="modal-footer">
+                                                               <p><strong>Total</strong></p>
+                                                               <h4><strong>@utils.Utilities.moneyFormat(dpDestItinerary.getPricingInfoWSResponse.getTotalFare)</strong></h4>
+
+                                                               <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                                                               <a href="@controllers.web.routes.FlightCtrl.detail(dpDestItinerary.getCacheIndex.toString, searchResponse.getFlightSearchRequest.getTabHash)" type="button" class="btn btn-primary">Book</a>
+                                                           </div>
+                                                       </div>
+                                                   </div>
+                                               </div>
+                                           </td>
+                                       }
+                                   </tr>
+                               }
+                               </tbody>
+                           </table>
+                       </div>
+                   </div>
+               }
+
+               <div class="flight-listing results">
+                    @for((airlineCode, flightItem) <- testMapper.sort(byAirline.map(a => a._1 -> a._2.asJava).asJava)) {
+                   <div class="flight-list-view" id="@airlineCode" data-amountairline="@flightItem.head.getPricingInfoWSResponse.getTotalFare.toInt" data-airlinecode="@flightItem.head.getAirlineCode" data-stop="@flightItem.head.getAirItineraryWSResponse.getOriginDestinationWSResponses.head.getNumberOfStops"  data-cabin="@flightItem.head.getAirItineraryWSResponse.getOriginDestinationWSResponses.head.getCabin" data-amt="@flightItem.head.getPricingInfoWSResponse.getTotalFare">
+                   @for((itineraryWSResponse, index) <- flightItem.zipWithIndex) {
+                       <div class="row @if(byAirline(airlineCode).size > 1 && index != 0) { @airlineCode }" data-airlinecode="@itineraryWSResponse.getAirlineCode" data-stop="@itineraryWSResponse.getAirItineraryWSResponse.getOriginDestinationWSResponses.head.getNumberOfStops"  data-cabin="@itineraryWSResponse.getAirItineraryWSResponse.getOriginDestinationWSResponses.head.getCabin" data-amt="@itineraryWSResponse.getPricingInfoWSResponse.getTotalFare" @if(byAirline(airlineCode).size > 1 && index != 0) { style="display: none; margin: 10px 0 10px 0" }>
+                           <div class="col-md-10" style="border-right: 1px solid #e6e6e6">
+                           @for((flightLeg, index) <- itineraryWSResponse.getAirItineraryWSResponse.getOriginDestinationWSResponses.zipWithIndex) {
+                               <div class="row take-off">
+                                   <div class="col-md-2 airline-logo text-center">
+                                       <img src="@flightLeg.getAirlineLogoUrl" alt="@flightLeg.getOperatingAirline" />
+                                       <small>@flightLeg.getMarketingAirline</small>
+                                   </div>
+                                   <div class="col-md-6 col-sm-6 col-xs-8 row clear-padding flight-desc row">
+                                       <div class="col-md-6">
+                                           <h5><b>Departure</b></h5>
+                                           <h6>@dtFormat.parse(flightLeg.getDepartureDateTime).format("HH:mm")</h6>
+                                           <small>@defining(Airports.getAirport(flightLeg.getOriginAirportCode)) { airport => @if(airport != null) { @airport.getAirportName } } (@flightLeg.getOriginAirportCode)</small>
+                                       </div>
+                                       <div class="col-md-6">
+                                           <h5><b>Arriving</b></h5>
+                                           <h6>@dtFormat.parse(flightLeg.getArrivalDateTime).format("HH:mm")</h6>
+                                           <small>@if(flightLeg.getDestinationAirportTbl != null) { @flightLeg.getDestinationAirportTbl.getAirportName } (@flightLeg.getDestinationAirportCode)</small>
+                                       </div>
+                                   </div>
+                                   <div class="col-md-2 col-sm-6 col-xs-4 clear-padding flight-desc text-center">
+                                       <div class="duration">
+                                           <h6><i class="fa fa-clock-o"></i> @flightLeg.getDuration</h6>
+                                           @if(flightLeg.getNumberOfStops > 0) {
+                                               <small class="text-danger" style="font-size: 85%">@*flightLeg.getLayOver Layover*@</small>
+                                           }
+                                           <h5>@flightLeg.getNumberOfStops stop@(("s").when(flightLeg.getNumberOfStops > 1))</h5>
+                                       </div>
+                                   </div>
+                                   <div class="col-md-2 col-sm-6 col-xs-4 clear-padding flight-desc text-center">
+                                       <div class="cabin">
+                                           <h6><i class="fa fa-briefcase"></i> @flightLeg.getCabin</h6>
+                                       </div>
+                                   </div>
+                               </div>
+                           }
+                           </div>
+                           <div class="col-md-2 flight-book text-center clear-padding">
+                               <div class="price">
+                                   <h4>@itineraryWSResponse.getPricingInfoWSResponse.getCurrencyCode @utils.Utilities.numberFormat(itineraryWSResponse.getPricingInfoWSResponse.getTotalFare)</h4>
+                               </div>
+                               <div class="book">
+                                   <a class="button" href="@controllers.web.routes.FlightCtrl.detail(itineraryWSResponse.getCacheIndex.toString, searchResponse.getFlightSearchRequest.getTabHash)"><span class="label">Select</span></a>
+                               </div>
+                               <a style="cursor: pointer" data-target="@{airlineCode}@{index}" class="view-details trip-details">Flight Details</a>
+                           </div>
+                           @if(byAirline(airlineCode).size > 1 && index == 0) {
+                               <div class="col-md-12 more-result-pattern">
+                                   <a style="color: #FFF; padding: 3px;" data-airlinecode="@airlineCode" data-airline="@itineraryWSResponse.getAirline" class="label label-circle more-result more-result-div trip-more" href="#" data-count="@(byAirline(airlineCode).size-1)">Display <span class="resultToggleTxt">@(byAirline(airlineCode).size-1) More</span> Result@("s".when(byAirline(airlineCode).size > 1)) @*for @itineraryWSResponse.getAirline*@</a>
+                               </div>
+                           }
+                           <div class="clearfix"></div>
+                               <!-- Flight Details Drop Down Menu. Give more information about a flight -->
+                           <div style="display: none" class="search-result-wrapper @{airlineCode}@{index}">
+                               <div class="" style="background: #f9f9f9; padding-bottom: 10px;">
+                                   <ul class="nav nav-tabs" role="tablist">
+                                       <li role="presentation" class="active"><a href="#itinerary@airlineCode@itineraryWSResponse.getCacheIndex" aria-controls="itinerary@airlineCode@itineraryWSResponse.getCacheIndex" role="tab" data-toggle="tab">Itinerary</a></li>
+                                       <li role="presentation"><a href="#price@airlineCode@itineraryWSResponse.getCacheIndex" aria-controls="price@airlineCode@itineraryWSResponse.getCacheIndex" role="tab" data-toggle="tab">Price Description</a></li>
+                                       <li role="presentation"><a href="#baggage@airlineCode@itineraryWSResponse.getCacheIndex" aria-controls="baggage@airlineCode@itineraryWSResponse.getCacheIndex" role="tab" data-toggle="tab">Baggage Information</a></li>
+                                   </ul>
+                                   <div class="tab-content">
+                                       <div role="tabpanel" class="tab-pane active row" id="itinerary@airlineCode@itineraryWSResponse.getCacheIndex">
+                                            @for(item <- itineraryWSResponse.getAirItineraryWSResponse.getOriginDestinationWSResponses) {
+                                           <div class="col-md-9" style="font-size: 12px;">
+                                               <b>@if(item.getOriginAirportTbl != null){ @item.getOriginAirportTbl.getAirportName } @item.getOriginAirport</b>
+                                               <span>to</span>
+                                               <b>@if(item.getDestinationAirportTbl != null) { @item.getDestinationAirportTbl.getAirportName } @item.getDestinationAirport</b>
+                                           </div>
+                                           <div class="col-md-3 text-right"><b>Duration:</b> @item.getDuration</div>
+                                           <div class="clearfix"></div>
+                                           <div class="col-md-12">
+                                               <section class="row">
+                                               @for(flightSegment <- item.getFlightSegmentWSResponses) {
+                                                   <div class="col-md-12 row">
+                                                       <div class="col-md-2 col-xs-4 text-center">
+                                                           <p style="font-size: 12px;">@flightSegment.getMarketingAirline</p>
+                                                           <img style="height: 50px; margin: 0 auto;" data-original="@flightSegment.getAirlineLogoUrl" src="/common/images/spinner.gif" lazy-img="@flightSegment.getAirlineLogoUrl" alt="@flightSegment.getMarketingAirlineCode" class="img img-circle flight-ico-img"/>
+                                                           <div class="clearfix"></div>
+                                                           <small>Flight No: <strong>@flightSegment.getFlightNumber</strong></small>
+                                                       </div>
+                                                       <div class="col-md-4 col-xs-4" style="font-size: 12px;">
+                                                           <strong>@defining(models.Airports.getAirport(flightSegment.getDepartureAirportCode)) { airport => @if(airport != null) { @airport.getAirportName } else { @flightSegment.getDepartureAirportCode } }</strong>
+                                                           <div class="clearfix"></div>
+                                                           <small>@dtFormat.parse(flightSegment.getDepartureDateTime).format("EEE dd-MMM-yyyy")</small>
+                                                           <p>@dtFormat.parse(flightSegment.getDepartureDateTime).format(" h:mm a")</p>
+                                                       </div>
+                                                       <div class="col-md-4 col-xs-4"  style="font-size: 12px;">
+                                                           <strong>@defining(models.Airports.getAirport(flightSegment.getArrivalAirportCode)) { airport => @if(airport != null) { @airport.getAirportName } else { @flightSegment.getDepartureAirportCode } }</strong>
+                                                           <div class="clearfix"></div>
+                                                           <small>@dtFormat.parse(flightSegment.getArrivalDateTime).format("EEE dd-MMM-yyyy")</small>
+                                                           <p>@dtFormat.parse(flightSegment.getArrivalDateTime).format(" h:mm a")</p>
+                                                       </div>
+                                                       <div class="text-center col-md-2">
+                                                           <small>
+                                                           @if(flightSegment.getStopQuantity <= 0) {
+                                                               Non Stop
+                                                           } else {
+                                                               @flightSegment.getStopQuantity Stop@if(flightSegment.getStopQuantity >1){s}
+                                                           }
+                                                           </small>
+
+                                                           <div class="clearfix"></div>
+                                                           <small class="text-primary">@flightSegment.getResBookDesigCode Class</small>
+                                                           <div class="clearfix"></div>
+                                                           <small class="text-muted">@flightSegment.getCabin</small>
+                                                       </div>
+                                                   </div>
+                                                   <div class="clearfix"></div>
+                                               }
+                                               </section>
+                                           </div>
+                                       }
+                                       </div>
+                                        <div role="tabpanel" class="tab-pane row" id="price@airlineCode@itineraryWSResponse.getCacheIndex">
+                                            <div class="col-md-7">
+                                                <h2>Fare Rules</h2>
+                                                <ul class="list-group">
+                                                    <li class="list-group-item">
+                                                        <p>On some airlines, changes are not permitted on a ticket in case of no-show and the ticket(s) have no value and cannot be refunded</p>
+                                                    </li>
+                                                    <li class="list-group-item"><p>Penalty Applies</p></li>
+                                                    <li class="list-group-item"><p>Please ensure that you have a valid visa before your international travel. Travelden will not be held liable by airport authorities if you have not fulfilled your visa requirements.</p></li>
+                                                    <li class="list-group-item"><p>Tickets must not exceed 14 days, this simply means all tickets booked may be less than 14 days but must not be more than 14 days.</p></li>
+                                                    <li class="list-group-item"><p>If you or anyone accompanying you has a serious health issue, please call us before booking.</p></li>
+                                                    <li class="list-group-item"><p>In the case of cancellation, amount paid for insurance will be non-refundable. This is applicable if insurance is booked along with a ticket.</p></li>
+                                                    <li class="list-group-item"><p>Refunds will be processed within 6 – 8 weeks</p></li>
+                                                    <li class="list-group-item"><p>A maximum of one infant is allowed to travel with one adult.</p></li>
+                                                </ul>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <h2>Price Description</h2>
+                                                <table class="table table-responsive">
+                                                    <tr>
+                                                        <th>Base Fare</th>
+                                                        <th>@utils.Utilities.moneyFormat(itineraryWSResponse.getPricingInfoWSResponse.getBaseFare.getAmount)</th>
+                                                    </tr>
+                                                    <tr>
+                                                        <th>Taxes</th>
+                                                        <th>@{
+                                                            var total = 0.0
+                                                            itineraryWSResponse.getPricingInfoWSResponse.getTotalTax.foreach (tax => total = total + tax.getAmount)
+                                                            utils.Utilities.moneyFormat(total)
+                                                        }</th>
+                                                    </tr>
+                                                    <tr>
+                                                        <th>Total Fare</th>
+                                                        <th>@utils.Utilities.moneyFormat(itineraryWSResponse.getPricingInfoWSResponse.getTotalFare)</th>
+                                                    </tr>
+                                                </table>
+                                            </div>
+                                        </div>
+                                        <div role="tabpanel" class="tab-pane row" id="baggage@airlineCode@itineraryWSResponse.getCacheIndex">
+                                            <div class="col-md-12">
+                                                <h2>Baggage Information</h2>
+                                                <div class="table table-bordered table-responsive" id="allowance_521" style="display: block;">
+                                                    <table cellpadding="0" cellspacing="0">
+                                                        <thead>
+                                                            <tr class="super-header">
+                                                                <th colspan="4">Free allowance</th>
+                                                                <th colspan="2">Excess calculation</th>
+                                                            </tr>
+                                                            <tr>
+                                                                <th>Business Class</th>
+                                                                <th>Economy Class</th>
+                                                                <th>Infant</th>
+                                                                <th>Factor</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <tr>
+                                                                <td>3 pieces max 32kg per piece</td>
+                                                                <td>2 pieces max 23kg per piece</td>
+                                                                <td>10 kg </td>
+                                                                <td>per additional piece up to 32kg J / 23kg Y</td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                    <span class="notes"><p>Business / Economy - any bag the sum of three dimensions up to 203cm (80inches) and/or the weight 30kg (66LBS) or fraction there of. Any bag over 203cm(80inches) not permitted.</p></span>
+                                                    <div class="clearfix"></div>
+                                                    <br />
+                                                    <h3><strong>Checked in free baggage allowance</strong></h3>
+                                                    <p>You are responsible for your personal baggage when you fly, therefore we recommend all passengers of Travelden read this section containing information on what you can and cannot take on board.
+
+                                                         Travelden Checked Baggage Policy
+
+                                                        Free allowance	Excess calculation
+                                                        Concept	Business Class	Economy Class	Infant	Rate	Factor
+                                                        Piece	3 pieces max 32kg per piece	3 pieces max 23kg per piece	10 kg	USD 90	per additional piece up to 32kg J / 23kg Y
+                                                        Business / Economy - any bag the sum of three dimensions up to 203cm (80inches) and/or the weight 30kg (66LBS) or fraction there of. Any bag over 203cm(80inches) not permitted.
+
+                                                        Checked in baggage allowance guide
+                                                        Checked in free baggage allowance
+                                                        Checked in baggage includes all those items which are weighted and carried in the aircraft and are not accessible to passengers during flight. It must consist of suitcases or containers that are sufficiently rigid and resistant to the stress caused by normal handling so as to ensure safe transport without special requirements.
+
+                                                        There is no checked in baggage allowance for infants, only hand baggage will be accepted. Free baggage allowance detailed information is published in Travelden Checked Baggage Policy document.
+
+                                                        To comply with Health & Safety requirements, Travelden Limited has instituted a maximum weight for single items of checked baggage. Travelden will not accept baggage that exceeds 30kg (66lbs) in weight, per any single piece of baggage. This policy relates only to single items of baggage and does not affect your overall baggage allowance reflected on your ticket, which remains unchanged.
+                                                    </p>
+                                                    <img alt="Excess baggage like guitars" src="https://www.arikair.com/sites/default/files/excess_0.jpg" style="border-style:solid; border-width:10px; height:367px; width:700px; margin-top: 10px;">
+                                                    <div class="clearfix"></div>
+                                                    <br />
+                                                    <h3>Excess baggage</h3>
+                                                    <p>You will be required to pay an extra charge for carriage of baggage in excess of the free baggage allowance (as stipulated in our conditions and limitations). These rates are published in Travelden Checked Baggage Policy document. Excess baggage charges are collected in the local currency. Carriage of excess baggage is subject to available space on your flight. The total number of bags allowed for any passenger is up to 10 pieces per passenger.</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                   </div>
+                               </div>
+                           </div>
+                               <!-- Flight Details Drop Down Menu. Give more information about a flight -->
+                       </div>
+                   }
+                   </div>
+               }
+               </div>
+           </div>
+           <div class="col-md-2 hidden-xs">
+               @("[banner code=FLS001]")
+               @("[banner code=FLS002]")
+               @("[banner code=FLS003]")
+               @("[banner code=FLS004]")
+           </div>
+       </div>
+   </div>
+    <div class="clearfix"></div>
+    <br /><br />
+}
+
+@script = {
+    <script>
+            $(function() {
+                $('.toglekbeng').click(function() {
+                    $("#toglekbeng").toggle();
+                });
+            });
+            $('.search-section').css({
+                'margin-top': '15px',
+                'margin-bottom': '10px'
+            });
+            $('.search-button').css({
+                'margin-top': '40px'
+            })
+    </script>
+}

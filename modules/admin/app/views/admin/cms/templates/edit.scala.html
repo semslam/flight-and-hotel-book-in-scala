@@ -1,0 +1,179 @@
+@import helper._
+@import crypto.Encrypt
+@import cms.DynamicPageHandler
+@import controllers.admin.cms.TemplateDOA
+@import views.html.admin.templates._
+@import controllers.admin.cms.routes
+@import scala.collection.JavaConverters._
+@(form: Form[TemplateDOA], cmsTemplates: CmsTemplates, cmsPage: CmsPages)(implicit request: RequestHeader, messages: Messages, manager: PrivateUsers, encrypt: Encrypt)
+@import models.CmsTemplateAttr; val templateAttr = cmsTemplates.getCmsTemplateAttrList.asScala.toList
+@default(title = "Edit Page Contents", tab = "cms", scripts) {
+    <div class="panel">
+        <div class="panel-heading">
+            <span class="panel-name">Edit Page Contents</span>
+        </div>
+        <div class="panel-body">
+            @helper.form(action = routes.TemplateCtrl.save, 'class -> "form", 'id -> "templateForm", 'enctype -> "application/x-www-form-urlencoded") {
+                <input name="@form("id").name" value="@form("id").value.get" type="hidden" />
+                @helper.CSRF.formField
+                @tags.alertFromRequest(request, "error")
+                @form.globalError.map { error =>
+                    @tags.alert(error.message, "error")
+                }
+                <input type="hidden" name="num_body_rows" value="@templateAttr.find(a => a.getAttr == "num_body_rows").get.getValue">
+                <div><!-- Nav tabs -->
+                    <ul class="nav nav-tabs" role="tablist">
+                        <li role="presentation" class="active"><a href="#design" aria-controls="design" role="tab" data-toggle="tab">Design Template <span class="label label-danger">Step 1</span></a></li>
+                        <li role="presentation"><a href="#properties" aria-controls="properties" role="tab" data-toggle="tab">Properties <span class="label label-danger">Step 2</span></a></li>
+                        <li role="presentation"><a href="#preview" aria-controls="preview" role="tab" data-toggle="tab">Page <span class="label label-danger">Step 3</span></a></li>
+                    </ul>
+                    <br />
+                    <!-- Tab panes -->
+                    <div class="tab-content">
+                        <div role="tabpanel" id="design" class="tab-pane active">
+                            <div class="col-md-3 bg-muted">
+                                <div class="form-group">
+                                    @select(form("categoryId"), options(CmsContentCategories.options(form("categoryId").value.getOrElse(""))), '_label -> "Theme Category", 'class -> "form-control select_url chosen-select")
+                                </div>
+                                <div class="form-group">
+                                    @helper.select(form("ui_theme"), options(DynamicPageHandler.themeOption(templateAttr.find(a => a.getAttr == "ui_theme").get.getValue)), 'class -> "form-control", 'required -> "required", '_label -> "Theme")
+                                </div>
+                                <div class="form-group">
+                                    @helper.select(form("sidebar_perc_ratio"), options(DynamicPageHandler.sidebarOptions(templateAttr.find(a => a.getAttr == "sidebar_perc_ratio").get.getValue)), 'class -> "form-control", 'required -> "required", '_label -> "Side Bar")
+                                </div>
+                                <div class="form-group sidebar-mgr">
+                                    <a href="#" class="add-sidebar-container"><i class="fa fa-plus"></i> Add Side Bar</a>
+                                </div>
+                                <div class="form-group">
+                                    <label>Header <input type="checkbox" name="@form("header").name" value="Yes" checked="checked"> </label> <br />
+                                    <label>Footer <input type="checkbox" name="@form("footer").name" value="Yes" checked="checked"> </label> <br />
+                                </div>
+                                <div class="form-group">
+                                @for(innerCol <- 1 to templateAttr.find(_.getAttr == "num_body_rows").get.getValue.toInt) {
+                                    @helper.select(form(s"body_rows$innerCol"), options(DynamicPageHandler.bodyOption()), 'class -> "form-control body_rows", 'data_id -> innerCol, 'required -> "required", '_label -> Html(s"""<label for="body_rows$innerCol"><a class="text-danger delete-row" data-row="$innerCol"><i class="fa fa-minus-circle"></i></a> Body Rows ${innerCol}</label>"""))
+                                }
+                                    <label><a href="#" class="btn btn-xs btn-link add-row"><i class="fa fa-plus"></i> Add Body Row</a></label>
+                                </div>
+                                <div class="form-group">
+                                    <button class="btn mg3" name="action" value="save" type="submit">Save</button>
+                                    <button class="btn mg3" name="action" value="save_publish" type="submit">Save, Publish</button>
+                                    <button class="btn btn-danger mg3" type="reset">Cancel</button>
+                                </div>
+                            </div>
+                            <div class="col-md-9">
+                                <div class="form-group">
+                                    <label>Name</label><br />
+                                    <input type="text" name="@form("name").name" value="@form("name").value.getOrElse("")" class="form-control" data-required="true" required="true" />
+                                </div>
+                                <div class="form-group">
+                                    <div id="body_content_prev">
+                                        <div id="header_dom">
+                                            <h1>Header</h1>
+                                        </div>
+                                        <div id="body_dom" class="row">
+                                            <section id="body_html" class="col-md-12">
+                                            @for(innerCol <- 1 to templateAttr.find(_.getAttr == "num_body_rows").get.getValue.toInt) {
+                                                <span class="col"><input type="hidden" name="inner_col@innerCol" value="@templateAttr.find(_.getAttr == s"inner_col$innerCol").get.getValue" required="required" /></span>
+                                                @for(i <- 1 to templateAttr.find(_.getAttr == s"inner_col$innerCol").get.getValue.toInt) {
+                                                    @defining(templateAttr.find(_.getAttr == s"body_rows$innerCol").get.getValue) { bodyRow =>
+                                                        @defining(CmsFragments.find.byId(java.lang.Long.parseLong(templateAttr.find(_.getAttr == bodyRow).get.getValue))) { fragment =>
+                                                            <div class="@bodyRow">
+                                                                <a href="@routes.FragmentCtrl.create(encrypt.encrypt(fragment.getId.toString))" target="_blank" data-d_id="@i" data-container="@bodyRow"><i class="fa fa-plus"></i> Edit Fragment</a>
+                                                                <input type="hidden" name="1__col@i.toString.concat("__100")" value="@templateAttr.find(_.getAttr == s"1__col${i}__100").get.getValue" >
+                                                                <input type="hidden" name="1__hasContainer@i.toString.concat("__100")" />
+                                                                <h4>[@fragment.getName]</h4>
+                                                                <p>Lorem ipsum dolor sit amet, probo habeo delectus qui no, volumus perpetua vix ex, errem tempor commodo pri in. Mei te scripta disputando. Dolorum placerat ne vis, pro et aliquip corpora, porro audiam nec ex. Dicat accusam ius et. Ut dolorem fastidii nec.</p>
+                                                            </div>
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            </section>
+                                            <input type="hidden" name="num_of_sidebar"  value="@templateAttr.find(_.getAttr == "num_of_sidebar").get.getValue" />
+                                            @if(templateAttr.find(_.getAttr == "num_of_sidebar").get.getValue.toInt > 0){
+                                                <div class="col-md-3" id="sidebar_dom">
+                                                @for(i <- templateAttr.find(_.getAttr == "num_of_sidebar").get.getValue.toInt to 1) {
+                                                    @if(templateAttr.find(_.getAttr == s"sidebar_content_$i") != null && !templateAttr.find(_.getAttr == s"sidebar_content_$i").get.getValue.isEmpty) {
+                                                        @defining(CmsFragments.find.byId(java.lang.Long.parseLong(templateAttr.find(_.getAttr == s"sidebar_content_$i").get.getValue))) { fragment =>
+                                                            <section style="border-bottom: 1px solid #9AB3CE">
+                                                                <h3>@fragment.getName</h3>
+                                                                <a href="@routes.FragmentCtrl.create(encrypt.encrypt(fragment.getId.toString))" target="_blank" data-d_id="@i" data-container="sidebar_content_@i"><i class="fa fa-plus"></i> Edit Fragment</a>
+                                                                <input type="hidden" name="sidebar_content_@i" value="@templateAttr" />
+                                                                <input type="hidden" name="sidebar_hasContainer_@i" value="" />
+                                                                <span class="sidebar_content_@i">
+                                                                    <h1 class="text-center">Sidebar @i</h1>
+                                                                </span>
+                                                            </section>
+                                                        }
+                                                    }
+                                                }
+                                                </div>
+                                            }
+                                        </div>
+                                        <div id="footer_dom">
+                                            <h1>Footer</h1>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            @tags.alertFromRequest(request, "error")
+                            <div class="clearfix"></div>
+                        </div>
+                        <div role="tabpanel" class="tab-pane" id="properties">
+                            @helper.inputText(form("description"), 'class -> "form-control", '_label -> "Description")
+                        </div>
+                        <div role="tabpanel" class="tab-pane" id="preview">
+                            @helper.inputText(form("slugUrl"), 'required -> "required", 'class -> "form-control", '_label -> "URL Path", 'placeholder -> "/")
+                            @helper.textarea(form("metaKeywords"), 'class -> "form-control", 'rows -> "4", '_label -> "Meta Keywords")
+                            @helper.textarea(form("metaDescription"), 'class -> "form-control", 'rows -> "10", '_label -> "Description")
+                            @helper.textarea(form("inlineCss"), 'class -> "form-control code-editor", 'rows -> "10", '_label -> "CSS")
+                            @helper.textarea(form("inlineJs"), 'class -> "form-control code-editor", 'rows -> "10", '_label -> "Javascript/JQuery")
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+    <div class="modal fade add-container-div" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+        <div class="modal-dialog modal-sm" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-name" id="myModalLabel">Add Container</h4>
+                </div>
+                <div class="modal-body">
+                    <p class="text-danger">
+                        You can only add fragments that do not contain the main HTML tags.
+                    </p>
+                    @defining(CmsFragments.find.orderBy("id desc").findList()) { container =>
+                        @if(container.size() != 0) {
+                            <div class="form-group">
+                                <label>Select Container Item</label>
+                                <select id="select_container_id" required="required" class="form-control">
+                                @for(item <- container){
+                                    <option data-name="@item.getName" value="@item.getId">@item.getName</option>
+                                }
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="in_container">
+                                    <input type="checkbox" value="checked" name="in_container"> Include Container DIV Within the Selected Item?
+                                </label>
+                            </div>
+                        } else {
+                            <h3>No container exists</h3>
+                        }
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="add-btn">Add</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+@scripts = {
+    <script type="text/javascript" src="@controllers.admin.routes.Assets.commonLib("jquery-validate/jquery.validate.min.js")"></script>
+    <script type="text/javascript" src="@controllers.admin.routes.Assets.js("jsCmsConsole.js")"></script>
+}

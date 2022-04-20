@@ -1,0 +1,28 @@
+# COMMON Routes
+# This file defines COMMON application routes (Higher priority routes first)
+# ~~~~
+
+# These are common routes that you may want all services to respond to.
+GET         /status                                               controllers.common.Application.status
+GET         /get-link                                             controllers.common.Application.link(id: Long ?= 0)
+
+# API Controllers
+GET         /api/suggest/airport                                  controllers.common.ApiController.suggestAirport(key: String)
+GET         /api/suggest/hotel                                    controllers.common.ApiController.suggestCity(key: String)
+
+# Flight Services API
+GET         /flight/search/$dataType<(xhr|doc)>                   controllers.common.FlightCtrl.search(dataType: String)
+
+# Hotel Service API
+GET         /hotel/search                                         controllers.common.HotelCtrl.search
+
+
+POST        /payment-confirm-status/:paymentCode/:transRef        controllers.common.PaymentCtrl.confirm(paymentCode: String, transRef: String)
+
+GET         /common/*file                                         controllers.common.Assets.commonPublic(path="/public/lib/common", file: Asset)
+GET         /common/css/*file                                     controllers.common.Assets.commonCss(path="/public/lib/common/css", file: Asset)
+GET         /common/js/*file                                      controllers.common.Assets.commonJs(path="/public/lib/common/js", file: Asset)
+GET         /common/my_js/*file                                   controllers.common.Assets.commonMyJs(path="/public/lib/common/my_js", file: Asset)
+GET         /common/plugins/*file                                 controllers.common.Assets.commonLib(path="/public/lib/common/plugins", file: Asset)
+GET         /common/fonts/*file                                   controllers.common.Assets.commonFont(path="/public/lib/common/fonts", file: Asset)
+GET         /common/images/*file                                  controllers.common.Assets.commonImg(path="/public/lib/common/images", file: Asset)

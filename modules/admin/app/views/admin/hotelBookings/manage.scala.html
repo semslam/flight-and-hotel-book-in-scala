@@ -1,0 +1,401 @@
+@import controllers.admin.management.routes
+@import b3.vertical.fieldConstructor
+@import views.html.admin.tags.myDataTable
+@import crypto.Encrypt
+@import hotel.dto.entity.HotelSearchResponse
+@import java.util.function.ToDoubleFunction
+@(hotelBooking: HotelBookings, queryHotelResponse: HotelSearchResponse)(implicit loggedManager: PrivateUsers, messages: Messages, requestHeader: RequestHeader, encrypt: Encrypt)
+@import java._; val hotelOpt = queryHotelResponse.getHotels.headOption
+@views.html.admin.templates.default(title = "Booking Manager", tab = "queue") {
+    <div class="panel" style="border-radius: 0px">
+        <div class="panel-heading">
+            <h3>Hotel Queues</h3>
+            @tags.alertFromRequest(requestHeader, "error")
+            @tags.alertFromRequest(requestHeader, "success")
+        </div>
+        <div class="panel-body">
+            <div class="row">
+                <div class="col-md-9">
+                    <table class="table table-responsive">
+                        <thead>
+                            <tr>
+                                <td>Supplier</td>
+                                <td>TD Ref.</td>
+                                <td>Supplier Ref.</td>
+                                <td>Check-In</td>
+                                <td>Check-Out</td>
+                                <td>Duration</td>
+                                <td>No.Of Rooms</td>
+                                <td>Booking Date</td>
+                                <td>Booking Status</td>
+                                <td>Sales Cat.</td>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>@hotelBooking.getBookings.getSupplier.getName.toUpperCase</td>
+                                <td><strong>@hotelBooking.getBookings.getTransactionRef</strong></td>
+                                <td><strong>@hotelBooking.getSupplierVoucherReference</strong></td>
+                                <td>@hotelBooking.getCheckIn.format("yyyy-MM-dd")</td>
+                                <td>@hotelBooking.getCheckOut.format("yyyy-MM-dd")</td>
+                                <td>@hotelBooking.getNoOfNights</td>
+                                <td>@hotelBooking.getRooms.size()</td>
+                                <td>@hotelBooking.getCreatedAt.format("yyyy-MM-dd HH:ss")</td>
+                                <td>@hotelBooking.getBookings.getStatus.name()</td>
+                                <td>@hotelBooking.getBookings.getSalesCategory.name()</td>
+                            </tr>
+                            <tr>
+                                <td colspan="10">
+                                    <table class="table table-responsive" width="100%">
+                                        <thead>
+                                            <tr>
+                                                <th>Contact Title</th>
+                                                <th>Contact First Name</th>
+                                                <th>Contact Last Name</th>
+                                                <th>Contact Phone</th>
+                                                <th>Contact Email</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <td>@hotelBooking.getBookings.getContactTitle</td>
+                                            <td>@hotelBooking.getBookings.getContactFirstname</td>
+                                            <td>@hotelBooking.getBookings.getContactSurname</td>
+                                            <td>@hotelBooking.getBookings.getContactPhone</td>
+                                            <td>@hotelBooking.getBookings.getContactEmail</td>
+                                        </tbody>
+                                    </table>
+                                </td>
+
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="col-md-3 pull-right">
+                    <span><a class="btn btn-md btn-primary" href="@routes.HotelBookingCtrl.queryBooking(encrypt.encrypt(hotelBooking.getId.toString))">Query/Re-Price</a> </span>
+                    <span><a class="btn btn-md btn-danger cancelbooking confirm-action" id="cancel_pnr" onclick="document.getElementById('cancel_pnr').innerHTML = 'Loading...Cancelling booking on GDS'" data-confirm="Are you sure you want to cancel this booking on @hotelBooking.getBookings.getSupplier.getName " href="@routes.HotelBookingCtrl.cancelBooking(encrypt.encrypt(hotelBooking.getId.toString))" data-href="">Cancel</a> </span>
+                    <span></span>
+                </div>
+                <div class="clearfix"></div><hr />
+                <div class="col-md-12">
+                    <h3><strong>Pricing Detail</strong></h3>
+                    <table class="table table-responsive">
+                        <thead>
+                            <tr>
+                                <th>Supplier Selling Price</th>
+                                <th>Price Per Night</th>
+                                <th>Markup/Commission</th>
+                                <th>Selling Exchange Rate</th>
+                                <th>Total Payable</th>
+                                <th>Payment Method</th>
+                                <th>Payment Status</th>
+                                <th>Payment Authorised</th>
+                                @if(hotelBooking.getBookings.getStatus.equals(BookingStatus.CANCELLED)) {
+                                    <th>Is Cancel Free?</th>
+                                    <th>Cancellation Date</th>
+                                    <th>Cancellation Fee</th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>@hotelBooking.getSupplierSaleCurrency @hotelBooking.getSupplierTotalPrice</td>
+                                <td>@(hotelBooking.getSupplierTotalPrice / hotelBooking.getNoOfNights)</td>
+                                <td>@hotelBooking.getSupplierSaleCurrency @hotelBooking.getBookings.getMarkupCommissionTotalAmount</td>
+                                <td>@hotelBooking.getSupplierSaleCurrency to @hotelBooking.getBookings.getPaymentHistoryId.getCurrency / @hotelBooking.getExchangeRate</td>
+                                <td>@hotelBooking.getBookings.getPaymentHistoryId.getCurrency @hotelBooking.getBookings.getPaymentHistoryId.getTotalAmount</td>
+                                <td>@hotelBooking.getBookings.getPaymentHistoryId.getPaymentMethodId.getName</td>
+                                <td>@hotelBooking.getBookings.getPaymentHistoryId.getStatus.name()</td>
+                                <td>
+                                    @if(hotelBooking.getBookings.getPaymentConfirmAuthUser == null) {
+                                        Pending Auth.
+                                    } else {
+                                        @hotelBooking.getBookings.getPaymentConfirmAuthUser.fullName()
+                                    }
+                                </td>
+                                @if(hotelBooking.getBookings.getStatus.equals(BookingStatus.CANCELLED)) {
+                                    <td>@hotelBooking.getFreeCancellation</td>
+                                    <td>@hotelBooking.getCancellationDate.format("yyyy-MM-dd HH:mm")</td>
+                                    <td>@hotelBooking.getCancellationFeeCurrency @hotelBooking.getCancellationFee</td>
+                                }
+                                </tr>
+                            <tr>
+                                <td colspan="10">
+                                    <h4><strong>Booking Conditions &amp; Policies</strong></h4>
+                                    <table class="table table-responsive">
+                                        <thead>
+                                            <tr>
+                                                <th>Policy Type</th>
+                                                <th>Check-In Date</th>
+                                                <th>From</th>
+                                                <th>To</th>
+                                                <th>Fee</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @if(hotelBooking.getHotelBookingCancellations.size() > 0) {
+                                                @for(policy <- hotelBooking.getHotelBookingCancellations) {
+                                                    <tr>
+                                                        <td>@policy.getPolicyType</td>
+                                                        <td>@hotelBooking.getCheckIn.format("yyyy-MM-dd")</td>
+                                                        <td>@policy.getFromDate.format("yyyy-MM-dd HH:mm")</td>
+                                                        <td>@policy.getToDate.format("yyyy-MM-dd HH:mm")</td>
+                                                        <td>@policy.getCurrency @policy.getFees</td>
+                                                    </tr>
+                                                }
+                                            } else {
+                                                <tr>
+                                                    <td colspan="5">No record exists. <a href="@routes.HotelBookingCtrl.queryBooking(encrypt.encrypt(hotelBooking.getId.toString))">Query Booking</a> for cancellation details</td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <h4><strong>Pricing Breakdown &amp; Payment Summary</strong></h4>
+                    <table class="table table-responsive">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Description</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for(cart <- hotelBooking.getBookings.getPaymentHistoryId.getCartItemsList) {
+                                <tr>
+                                    <th>@cart.getItemName</th>
+                                    <td><p>@cart.getPayDesc</p></td>
+                                    <td>NGN @cart.getAmount</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <div class="clearfix"></div><hr />
+                <div class="col-md-12">
+                    <h3><strong>Booking Query Action Logs</strong></h3>
+                    <table class="table table-responsive">
+                        <thead>
+                            <th>Action Type</th>
+                            <th>Action Status</th>
+                            <th>Action Remark</th>
+                            <th>Action User</th>
+                        </thead>
+                        <tbody>
+                        @for(bookingLog <- hotelBooking.getBookings.getBookingsActionLogs) {
+                            <tr>
+                                <td>@bookingLog.getActionType</td>
+                                <td>@bookingLog.getActionStatus</td>
+                                <td>@bookingLog.getRemarks</td>
+                                <td>@bookingLog.getAuthOperatorId.fullName()</td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+                <div class="clearfix"></div><hr />
+                <div class="col-md-12">
+                    <h3><strong>Hotel PNR &amp; Room(s)</strong></h3>
+                    <table class="table table-responsive">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Description</th>
+                                <th>Supp. Rate</th>
+                                <th>Markup/Commission</th>
+                                <th>Room Code</th>
+                                <th># of Adult(s)</th>
+                                <th># of Child(ren)</th>
+                                <th>Meal Code</th>
+                                <th>Breakfast</th>
+                                <th>Room Rate Code</th>
+                                <th>Passenger(s)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for((room, index) <- hotelBooking.getRooms.zipWithIndex) {
+                                <tr>
+                                    <td>@room.getRoomIndex</td>
+                                    <td>@room.getRoomName</td>
+                                    <td>@room.getSupplierCurrency @room.getSupplierRate</td>
+                                    <td>@room.getMarkupCommissionPrice</td>
+                                    <td>@room.getRoomCode</td>
+                                    <td>@room.getNoOfAdult</td>
+                                    <td>@room.getNoOfChild</td>
+                                    <td>@room.getMealCode</td>
+                                    <td>@room.getMealDescription</td>
+                                    <td>@room.getRoomRateCode</td>
+                                    <td width="100%">
+                                        <table class="table table-striped" width="100%">
+                                            <thead>
+                                                <th>Title</th>
+                                                <th>Type</th>
+                                                <th>First Name</th>
+                                                <th>Middle Name</th>
+                                                <th>Last Name</th>
+                                                <th>Age</th>
+                                            </thead>
+                                            <tbody>
+                                                @for(passenger <- room.getTravellers) {
+                                                    <tr>
+                                                        <td>@passenger.getNamePrefix</td>
+                                                        <td>@passenger.getPassengerCat</td>
+                                                        <td>@passenger.getFirstName</td>
+                                                        <td>@passenger.getMiddleName</td>
+                                                        <td>@passenger.getLastName</td>
+                                                        <td>
+                                                        @if(passenger.getAge == null || passenger.getAge <= 0) {
+                                                            N/A
+                                                        } else {
+                                                            @passenger.getAge
+                                                        }
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <div class="clearfix"></div><hr />
+                <div class="col-md-7">
+                    <h3><strong>Messages & Comment Log</strong></h3>
+                    <div class="">
+                        <div style="max-height: 250px; overflow: scroll">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <td>Author</td>
+                                        <td>Message</td>
+                                        <td>Created</td>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @for(comment <- hotelBooking.getBookings.getBookingMsgLogs) {
+                                    <tr>
+                                        <td width="15%">(@comment.getActionType) @if(comment.getAuthUserId != null) { @comment.getAuthUserId.fullName()}</td>
+                                        <td width="70%">@Html(comment.getMsg)</td>
+                                        <td width="15%">@comment.getCreatedAt.format("yyyy-MMM-dd HH:mm")</td>
+                                    </tr>
+                                }
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="form-group">
+                            <form method="post" action="@routes.HotelBookingCtrl.comment(hotelBooking.getBookings.getId)" enctype="application/x-www-form-urlencoded">
+                                @helper.CSRF.formField
+                                <textarea name="comment" id="editable" data-height="100" rows="3" class="form-control" placeholder="your comment here..."></textarea>
+                                <button type="submit" class="btn btn-md btn-primary form-control">Comment</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                @if(hotelOpt.nonEmpty && hotelOpt.isDefined) {
+                    @defining(hotelOpt.get) { hotel =>
+                        <div class="col-md-5">
+                    <h3><strong>Hotel Details</strong></h3>
+                    <div id="carousel-example-generic" class="carousel slide" data-ride="carousel">
+                            <!-- Wrapper for slides -->
+                        <div class="carousel-inner" role="listbox">
+                            @for((img, index) <- hotel.getImages.zipWithIndex) {
+                                <div class="item @("active".when(index == 0))">
+                                    <img src="@img.getUrl" alt="@hotel" class="img" style="max-height: 250px">
+                                    <div class="carousel-caption">@img.getImgType</div>
+                                </div>
+                            }
+                        </div>
+                            <!-- Controls -->
+                        <a class="left carousel-control" href="#carousel-example-generic" role="button" data-slide="prev">
+                            <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+                            <span class="sr-only">Previous</span>
+                        </a>
+                        <a class="right carousel-control" href="#carousel-example-generic" role="button" data-slide="next">
+                            <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+                            <span class="sr-only">Next</span>
+                        </a>
+                    </div>
+                    <h4><strong>@hotel.getHotelName</strong></h4>
+                    <p>@hotel.getStarRating star(s) Hotel</p>
+                    <table class="table table-responsive">
+                        <tr>
+                            <th><strong>Hotel Code</strong></th>
+                            <td>@hotel.getHotelId</td>
+                            <th><strong>City Code</strong></th>
+                            <td>@hotel.getCityCode</td>
+                            <th><strong>Country</strong></th>
+                            <th>@hotel.getCountryCode</th>
+                        </tr>
+                        <tr>
+                            <td colspan="6">@hotel.getAddress, @hotel.getEmail, @hotel.getPhone</td>
+                        </tr>
+                    </table>
+                    <h4><strong>Hotel Description</strong></h4>
+                    <div style="max-height: 250px; overflow: scroll">
+                        @for(desc <- hotel.getFacilityReports) {
+                            <h5><b>@desc.getReportType</b></h5>
+                            <p>@desc.getDescription</p>
+                        }
+                    </div>
+                </div>
+                    }
+                }
+                <div class="clearfix"></div><hr />
+                <div class="col-md-12">
+                    @b3.formCSRF(routes.HotelBookingCtrl.bookingInvoice(encrypt.encrypt(hotelBooking.getBookings.getId.toString)), 'enctype -> "application/x-www-form-urlencoded") {
+                        <div class="col-md-12">Payment Details</div>
+                        <div class="clearfix"></div>
+                        <div class="col-md-2 form-group">
+                            <label for="itineraryRef">Booking Ref.</label>
+                            <p class="text-danger"><strong>@hotelBooking.getBookings.getTransactionRef</strong></p>
+                        </div>
+                        <div class="col-md-2 form-group">
+                            <label for="itineraryRef">Payment Status</label>
+                            <select name="paymentStatus" required="required" class="form-control">
+                                <option value="">Select Payment Status</option>
+                                @for(status <- PaymentStatus.values()) {
+                                    <option @if(status.eq(hotelBooking.getBookings.getPaymentHistoryId.getStatus)) { selected="selected" } value="@status.name()">@status.name()</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-2 form-group">
+                            <label for="itineraryRef">Booking/Ticket Status</label>
+                            <select name="ticketStatus" class="form-control">
+                                <option>Select Ticket Status</option>
+                                @for(status <- BookingStatus.values()) {
+                                    <option @if(status.eq(hotelBooking.getBookings.getStatus)) { selected="selected" } value="@status.name()">@status.name()</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-3 form-group">
+                            <label for="itineraryRef">Payment URL</label>
+                            <p class="text-primary">@routes.FlightBookingCtrl.payOnline(hotelBooking.getBookings.getTransactionRef).absoluteURL().replaceAll("backoffice.", "")</p>
+                        </div>
+                        <div class="col-md-3 form-group">
+                            <label for="itineraryRef">Booking Enquiry URL</label>
+                            <p class="text-primary">@routes.FlightBookingCtrl.enquiry(hotelBooking.getBookings.getTransactionRef).absoluteURL().replaceAll("backoffice.", "")</p>
+                        </div>
+                        <div class="col-md-6 form-group form-inline">
+                            <span>
+                                <label>Recipient Email</label>
+                                <input type="email" name="ticketRecipientEmail" value="@hotelBooking.getBookings.getContactEmail" class="form-control" />
+                            </span>
+                            <span><button type="submit" name="action" value="sendTicketEmail" class="btn btn-md btn-primary">Send Ticket</button></span>
+                            <span><button type="submit" name="action" value="sendBookingConfirmation" class="btn btn-md btn-primary">Send Booking Confirmation</button></span>
+                        </div>
+                        <div class="col-md-6 form-group form-inline">
+                            <span><button type="submit" name="action" value="save" class="btn btn-md btn-success">Save Changes</button></span>
+                            @*<span><button type="submit" name="action" value="paymentReminder" class="btn btn-md">Send Payment Reminder</button></span>*@
+                            <span><button type="submit" name="action" value="archieveBooking" class="btn btn-md btn-info confirm-delete" data-confirm="Are you sure you want to archive booking?"><i class="fa fa-save"></i> Archive Booking</button></span> <small></small>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+    </div>
+}

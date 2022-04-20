@@ -1,0 +1,25 @@
+@import helper._
+@import views.html.admin.tags.myDataTable
+@import crypto.Encrypt
+@import views.html.helper.CSRF
+@import b3.vertical.fieldConstructor
+@import controllers.admin.systems._
+@(form: Form[Country])(implicit request: RequestHeader, messages: Messages, manager: PrivateUsers)
+@import views.html.admin.templates._
+@default(title = "Create/Edit Country", tab = "systems") {
+    <div class="panel">
+        <header class="panel-heading">
+            <h2 class="panel-name">Create/Edit Country</h2>
+        </header>
+        <div class="panel-body">
+        @b3.formCSRF(routes.StaticDataCRUDCtrl.saveCountry) {
+            <input type="hidden" value="@form("id").value.orNull" name="id" />
+            @b3.text(form("name"), '_label -> "Country Name")
+            @b3.text(form("isoCode2"), '_label -> "2 Alpha ISO Code", 'placeholder -> "2 alpha airline code")
+            @b3.text(form("isoCode3"), '_label -> "3 Alpha ISO Code", 'placeholder -> "3 alpha airline code")
+            <br />
+            <button type="submit" name="submit" class="btn form-control btn-primary">Submit</button>
+        }
+        </div>
+    </div>
+}

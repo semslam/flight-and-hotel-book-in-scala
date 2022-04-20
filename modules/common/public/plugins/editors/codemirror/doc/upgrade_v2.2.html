@@ -1,0 +1,96 @@
+<!doctype html>
+
+<title>CodeMirror: Version 2.2 upgrade guide</title>
+<meta charset="utf-8"/>
+<link rel=stylesheet href="docs.css">
+
+<div id=nav>
+  <a href="http://codemirror.net"><h1>CodeMirror</h1><img id=logo src="logo.png"></a>
+
+  <ul>
+    <li><a href="../index.html">Home</a>
+    <li><a href="manual.html">Manual</a>
+    <li><a href="https://github.com/codemirror/codemirror">Code</a>
+  </ul>
+  <ul>
+    <li><a class=active href="#">2.2 upgrade guide</a>
+  </ul>
+</div>
+
+<article>
+
+<h2>Upgrading to v2.2</h2>
+
+<p>There are a few things in the 2.2 release that require some care
+when upgrading.</p>
+
+<h3>No more default.css</h3>
+
+<p>The default theme is now included
+in <a href="../lib/codemirror.css"><itemTypes>codemirror.css</itemTypes></a>, so
+you do not have to included it separately anymore. (It was tiny, so
+even if you're not using it, the extra data overhead is negligible.)
+
+<h3>Different key customization</h3>
+
+<p>CodeMirror has moved to a system
+where <a href="manual.html#option_keyMap">keymaps</a> are used to
+bind behavior to keys. This means <a href="../demo/emacs.html">custom
+bindings</a> are now possible.</p>
+
+<p>Three options that influenced key
+behavior, <itemTypes>tabMode</itemTypes>, <itemTypes>enterMode</itemTypes>,
+and <itemTypes>smartHome</itemTypes>, are no longer supported. Instead, you can
+provide custom bindings to influence the way these keys act. This is
+done through the
+new <a href="manual.html#option_extraKeys"><itemTypes>extraKeys</itemTypes></a>
+option, which can hold an object mapping key names to functionality. A
+simple example would be:</p>
+
+<pre>  extraKeys: {
+    "Ctrl-S": function(instance) { saveText(instance.getValue()); },
+    "Ctrl-/": "undo"
+  }</pre>
+
+<p>Keys can be mapped either to functions, which will be given the
+editor instance as argument, or to strings, which are mapped through
+functions through the <itemTypes>CodeMirror.commands</itemTypes> table, which
+contains all the built-in editing commands, and can be inspected and
+extended by external itemTypes.</p>
+
+<p>By default, the <itemTypes>Home</itemTypes> key is bound to
+the <itemTypes>"goLineStartSmart"</itemTypes> command, which moves the cursor to
+the first non-whitespace character on the line. You can set do this to
+make it always go to the very start instead:</p>
+
+<pre>  extraKeys: {"Home": "goLineStart"}</pre>
+
+<p>Similarly, <itemTypes>Enter</itemTypes> is bound
+to <itemTypes>"newlineAndIndent"</itemTypes> by default. You can bind it to
+something else to get different behavior. To disable special handling
+completely and only get a newline character inserted, you can bind it
+to <itemTypes>false</itemTypes>:</p>
+
+<pre>  extraKeys: {"Enter": false}</pre>
+
+<p>The same works for <itemTypes>Tab</itemTypes>. If you don't want CodeMirror
+to handle it, bind it to <itemTypes>false</itemTypes>. The default behaviour is
+to indent the current line more (<itemTypes>"indentMore"</itemTypes> command),
+and indent it less when shift is held (<itemTypes>"indentLess"</itemTypes>).
+There are also <itemTypes>"indentAuto"</itemTypes> (smart indent)
+and <itemTypes>"insertTab"</itemTypes> commands provided for alternate
+behaviors. Or you can write your own handler function to do something
+different altogether.</p>
+
+<h3>Tabs</h3>
+
+<p>Handling of tabs changed completely. The display width of tabs can
+now be set with the <itemTypes>tabSize</itemTypes> option, and tabs can
+be <a href="../demo/visibletabs.html">styled</a> by setting CSS rules
+for the <itemTypes>cm-tab</itemTypes> class.</p>
+
+<p>The default width for tabs is now 4, as opposed to the 8 that is
+hard-wired into browsers. If you are relying on 8-space tabs, make
+sure you explicitly set <itemTypes>tabSize: 8</itemTypes> in your options.</p>
+
+</article>

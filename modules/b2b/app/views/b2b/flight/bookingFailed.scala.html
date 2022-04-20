@@ -1,0 +1,25 @@
+@import controllers.b2b.routes
+@import crypto.Encrypt
+@import views.html.bookingEngine._
+@(flightBookings: FlightBookings)(implicit loggedManager: Users, requestHeader: RequestHeader, messages: Messages, encrypt: Encrypt)
+@views.html.b2b.templates.default(title = "Flight Search Result", tab = "flight", script) {
+    <div class="panel">
+        <div class="panel-body">
+            <div class="row">
+                <div class="col-md-8">
+                    @tags.alertFromRequest(requestHeader, "error")
+                    @tags.alertFromRequest(requestHeader, "success")
+                    <h2 class="text-danger">Booking Failed. Please try a different itinerary or date</h2>
+                    @_B2BflightForm()
+                </div>
+                <div class="col-md-3"></div>
+            </div>
+        </div>
+
+    </div>
+}
+@script = {
+    <script type="text/javascript" src="@routes.Assets.myJs("jsDashboard.js")"></script>
+    <script src="@routes.Assets.myJs("jsB2bFlight.js")"></script>
+    <script src="@routes.Assets.myJs("jsB2bHotel.js")"></script>
+}

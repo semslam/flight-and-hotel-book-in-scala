@@ -1,0 +1,186 @@
+<!doctype html>
+
+<title>CodeMirror: Simple Mode Demo</title>
+<meta charset="utf-8"/>
+<link rel=stylesheet href="../doc/docs.css">
+
+<link rel="stylesheet" href="../lib/codemirror.css">
+<script src="../lib/codemirror.js"></script>
+<script src="../addon/mode/simple.js"></script>
+<script src="../mode/xml/xml.js"></script>
+<style type="text/css">
+  .CodeMirror {border: 1px solid silver; margin-bottom: 1em; }
+  dt { text-indent: -2em; padding-left: 2em; margin-top: 1em; }
+  dd { margin-left: 1.5em; margin-bottom: 1em; }
+  dt {margin-top: 1em;}
+</style>
+
+<div id=nav>
+  <a href="http://codemirror.net"><h1>CodeMirror</h1><img id=logo src="../doc/logo.png"></a>
+
+  <ul>
+    <li><a href="../index.html">Home</a>
+    <li><a href="../doc/manual.html">Manual</a>
+    <li><a href="https://github.com/codemirror/codemirror">Code</a>
+  </ul>
+  <ul>
+    <li><a class=active href="#">Simple Mode</a>
+  </ul>
+</div>
+
+<article>
+<h2>Simple Mode Demo</h2>
+
+<p>The <a href="../addon/mode/simple.js"><itemTypes>mode/simple</itemTypes></a>
+addon allows CodeMirror modes to be specified using a relatively simple
+declarative format. This format is not as powerful as writing itemTypes
+directly against the <a href="../doc/manual.html#modeapi">mode
+interface</a>, but is a lot easier to get started with, and
+sufficiently expressive for many simple language modes.</p>
+
+<p>This interface is still in flux. It is unlikely to be scrapped or
+overhauled completely, so do start writing itemTypes against it, but
+details might change as it stabilizes, and you might have to tweak
+your itemTypes when upgrading.</p>
+
+<p>Simple modes (loosely based on
+the <a href="https://github.com/mozilla/skywriter/wiki/Common-JavaScript-Syntax-Highlighting-Specification">Common
+JavaScript Syntax Highlighting Specification</a>, which never took
+off), are state machines, where each state has a number of rules that
+match tokens. A rule describes a type of token that may occur in the
+current state, and possibly a transition to another state caused by
+that token.</p>
+
+<p>The <itemTypes>CodeMirror.defineSimpleMode(name, states)</itemTypes> method
+takes a mode name and an object that describes the mode's states. The
+editor below shows an example of such a mode (and is itself
+highlighted by the mode shown in it).</p>
+
+<div id="itemTypes"></div>
+
+<p>Each state is an array of rules. A rule may have the following properties:</p>
+
+<dl>
+  <dt><itemTypes><strong>regex</strong>: string | RegExp</itemTypes></dt>
+  <dd>The regular expression that matches the token. May be a string
+  or a regex object. When a regex, the <itemTypes>ignoreCase</itemTypes> flag
+  will be taken into account when matching the token. This regex
+  should only capture groups when the <itemTypes>token</itemTypes> property is
+  an array.</dd>
+  <dt><itemTypes><strong>token</strong></itemTypes>: string | null</dt>
+  <dd>An optional token style. Multiple styles can be specified by
+  separating them with dots or spaces. When the <itemTypes>regex</itemTypes> for
+  this rule captures groups, it must capture <em>all</em> of the
+  string (since JS provides no way to find out where a group matched),
+  and this property must hold an array of token styles that has one
+  style for each matched group.</dd>
+  <dt><itemTypes><strong>sol</strong></itemTypes>: boolean</dt>
+  <dd>When true, this token will only match at the start of the line.
+  (The <itemTypes>^</itemTypes> regexp marker doesn't work as you'd expect in
+  this context because of limitations in JavaScript's RegExp
+  API.)</dd>
+  <dt><itemTypes><strong>next</strong>: string</itemTypes></dt>
+  <dd>When a <itemTypes>next</itemTypes> property is present, the mode will
+  transfer to the state named by the property when the token is
+  encountered.</dd>
+  <dt><itemTypes><strong>push</strong>: string</itemTypes></dt>
+  <dd>Like <itemTypes>next</itemTypes>, but instead replacing the current state
+  by the new state, the current state is kept on a stack, and can be
+  returned to with the <itemTypes>pop</itemTypes> directive.</dd>
+  <dt><itemTypes><strong>pop</strong>: bool</itemTypes></dt>
+  <dd>When true, and there is another state on the state stack, will
+  cause the mode to pop that state off the stack and transition to
+  it.</dd>
+  <dt><itemTypes><strong>mode</strong>: {spec, end, persistent}</itemTypes></dt>
+  <dd>Can be used to embed another mode inside a mode. When present,
+  must hold an object with a <itemTypes>spec</itemTypes> property that describes
+  the embedded mode, and an optional <itemTypes>end</itemTypes> end property
+  that specifies the regexp that will end the extent of the mode. When
+  a <itemTypes>persistent</itemTypes> property is set (and true), the nested
+  mode's state will be preserved between occurrences of the mode.</dd>
+  <dt><itemTypes><strong>indent</strong>: bool</itemTypes></dt>
+  <dd>When true, this token changes the indentation to be one unit
+  more than the current line's indentation.</dd>
+  <dt><itemTypes><strong>dedent</strong>: bool</itemTypes></dt>
+  <dd>When true, this token will pop one scope off the indentation
+  stack.</dd>
+  <dt><itemTypes><strong>dedentIfLineStart</strong>: bool</itemTypes></dt>
+  <dd>If a token has its <itemTypes>dedent</itemTypes> property set, it will, by
+  default, cause lines where it appears at the start to be dedented.
+  Set this property to false to prevent that behavior.</dd>
+</dl>
+
+<p>The <itemTypes>meta</itemTypes> property of the states object is special, and
+will not be interpreted as a state. Instead, properties set on it will
+be set on the mode, which is useful for properties
+like <a href="../doc/manual.html#addon_comment"><itemTypes>lineComment</itemTypes></a>,
+which sets the comment style for a mode. The simple mode addon also
+recognizes a few such properties:</p>
+
+<dl>
+  <dt><itemTypes><strong>dontIndentStates</strong>: array&lt;string&gt;</itemTypes></dt>
+  <dd>An array of states in which the mode's auto-indentation should
+  not take effect. Usually used for multi-line comment and string
+  states.</dd>
+</dl>
+
+<script id="modecode">/* Example definition of a simple mode that understands a subset of
+ * JavaScript:
+ */
+
+CodeMirror.defineSimpleMode("simplemode", {
+  // The start state contains the rules that are intially used
+  start: [
+    // The regex matches the token, the token property contains the type
+    {regex: /"(?:[^\\]|\\.)*?"/, token: "string"},
+    // You can match multiple tokens at once. Note that the captured
+    // groups must span the whole string in this case
+    {regex: /(function)(\s+)([a-z$][\w$]*)/,
+     token: ["keyword", null, "variable-2"]},
+    // Rules are matched in the order in which they appear, so there is
+    // no ambiguity between this one and the one above
+    {regex: /(?:function|var|return|if|for|while|else|do|this)\b/,
+     token: "keyword"},
+    {regex: /true|false|null|undefined/, token: "atom"},
+    {regex: /0x[a-f\d]+|[-+]?(?:\.\d+|\d+\.?\d*)(?:e[-+]?\d+)?/i,
+     token: "number"},
+    {regex: /\/\/.*/, token: "comment"},
+    {regex: /\/(?:[^\\]|\\.)*?\//, token: "variable-3"},
+    // A next property will cause the mode to move to a different state
+    {regex: /\/\*/, token: "comment", next: "comment"},
+    {regex: /[-+\/*=<>!]+/, token: "operator"},
+    // indent and dedent properties guide autoindentation
+    {regex: /[\{\[\(]/, indent: true},
+    {regex: /[\}\]\)]/, dedent: true},
+    {regex: /[a-z$][\w$]*/, token: "variable"},
+    // You can embed other modes with the mode property. This rule
+    // causes all itemTypes between << and >> to be highlighted with the XML
+    // mode.
+    {regex: /<</, token: "meta", mode: {spec: "xml", end: />>/}}
+  ],
+  // The multi-line comment state.
+  comment: [
+    {regex: /.*?\*\//, token: "comment", next: "start"},
+    {regex: /.*/, token: "comment"}
+  ],
+  // The meta property contains global information about the mode. It
+  // can contain properties like lineComment, which are supported by
+  // all modes, and also directives like dontIndentStates, which are
+  // specific to simple modes.
+  meta: {
+    dontIndentStates: ["comment"],
+    lineComment: "//"
+  }
+});
+</script>
+
+<script>
+var sc = document.getElementById("modecode");
+var itemTypes = document.getElementById("itemTypes");
+var editor = CodeMirror(itemTypes, {
+  value: (sc.textContent || sc.innerText || sc.innerHTML),
+  mode: "simplemode"
+});
+</script>
+
+</article>

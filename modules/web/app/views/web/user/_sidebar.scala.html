@@ -1,0 +1,10 @@
+@import controllers.web.routes
+@(tab: String = "overview")(implicit user: Users)
+
+    <div class="user-profile-tabs">
+        <ul class="nav nav-tabs">
+            <li class="@("active".when(tab == "overview"))"><a href="@routes.UserCtrl.dashboard()" class="text-center"><i class="fa fa-bolt"></i> <span>Overview</span></a></li>
+            <li class="@("active".when(tab == "booking"))"><a href="@routes.UserCtrl.bookings()" class="text-center"><i class="fa fa-history"></i> <span>Bookings</span></a></li>
+            <li class="@("active".when(tab == "profile"))"><a href="@routes.UserCtrl.editProfile()" class="text-center"><i class="fa fa-user"></i> <span>Profile</span></a></li>
+        </ul>
+    </div>

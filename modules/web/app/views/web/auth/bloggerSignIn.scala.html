@@ -1,0 +1,191 @@
+@import crypto.Encrypt
+@(signInForm: Form[(String, String, Boolean)])(implicit request: RequestHeader, messages: Messages, encrypt: Encrypt)
+@import b3.vertical.fieldConstructor
+@import controllers.web.routes
+@views.html.web.templates.default("Blogger's Pride | Sign In", scripts = script, styles = style) {
+	<div id="particles-js">
+        <div class="py-5" style="position: absolute">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-2">
+                    </div>
+                    <div class="col-md-5">
+                        <div class="panel">
+                            <div style="padding: 0px 15px;" class="panel-heading panel-primary">
+                                <h3><strong>Sign In</strong></h3>
+                                <p>Start enjoying great package offers</p>
+                            </div>
+                            <div class="panel-body">
+                                <div class="form-control col-md-12 signin-error label label-danger"></div>
+                                <div class="form-control col-md-12 signin-success label label-success"></div>
+                                @b3.formCSRF(routes.AuthCtrl.authenticate, 'id -> "login_form") {
+                                    @b3.text(signInForm("email"), '_hiddenLabel -> Messages("field.email"), 'placeholder -> "your@email.com", 'autofocus -> true)
+                                    @b3.password(signInForm("password"), '_hiddenLabel -> Messages("field.password"), 'placeholder -> Messages("field.password"))
+                                    @b3.checkbox(signInForm("rememberMe"), '_text -> Messages("signin.rememberme"), 'checked -> true)
+                                    @b3.submit('class -> "btn btn-primary", 'id -> "submitLogin") {
+                                        @Messages("signin")
+                                    }
+                                    <p>@Messages("signin.forgot.question") <a data-modal-size="modal-sm" href="#" title="Forget Password">@Messages("signin.forgot")</a></p>
+                                }
+                                <script src="@routes.Assets.myJs("jsAuthReg.js")"></script>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+	</div>
+}
+@script = {
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <script type="text/javascript">
+            particlesJS("particles-js", {
+                "particles": {
+                    "number": {
+                        "value": 80,
+                        "density": {
+                            "enable": true,
+                            "value_area": 800
+                        }
+                    },
+                    "color": {
+                        "value": "#ffffff"
+                    },
+                    "shape": {
+                        "type": "circle",
+                        "stroke": {
+                            "width": 0,
+                            "color": "#000000"
+                        },
+                        "polygon": {
+                            "nb_sides": 5
+                        },
+
+                    },
+                    "opacity": {
+                        "value": 0.5,
+                        "random": false,
+                        "anim": {
+                            "enable": false,
+                            "speed": 1,
+                            "opacity_min": 0.1,
+                            "sync": false
+                        }
+                    },
+                    "size": {
+                        "value": 2,
+                        "random": true,
+                        "anim": {
+                            "enable": false,
+                            "speed": 40,
+                            "size_min": 0.1,
+                            "sync": false
+                        }
+                    },
+                    "line_linked": {
+                        "enable": true,
+                        "distance": 150,
+                        "color": "#ffffff",
+                        "opacity": 0.4,
+                        "width": 1
+                    },
+                    "move": {
+                        "enable": true,
+                        "speed": 6,
+                        "direction": "none",
+                        "random": false,
+                        "straight": false,
+                        "out_mode": "out",
+                        "bounce": false,
+                        "attract": {
+                            "enable": false,
+                            "rotateX": 600,
+                            "rotateY": 1200
+                        }
+                    }
+                },
+                "interactivity": {
+                    "detect_on": "canvas",
+                    "events": {
+                        "onhover": {
+                            "enable": true,
+                            "mode": "repulse"
+                        },
+                        "onclick": {
+                            "enable": true,
+                            "mode": "push"
+                        },
+                        "resize": true
+                    },
+                    "modes": {
+                        "grab": {
+                            "distance": 400,
+                            "line_linked": {
+                                "opacity": 1
+                            }
+                        },
+                        "bubble": {
+                            "distance": 400,
+                            "size": 40,
+                            "duration": 2,
+                            "opacity": 8,
+                            "speed": 3
+                        },
+                        "repulse": {
+                            "distance": 200,
+                            "duration": 0.4
+                        },
+                        "push": {
+                            "particles_nb": 4
+                        },
+                        "remove": {
+                            "particles_nb": 2
+                        }
+                    }
+                },
+                "retina_detect": true
+            });
+    </script>
+}
+
+@style = {
+    <style>
+            .align-self-center {
+                align-self: center !important; }
+            .pt-5,
+            .py-5 {
+                padding-top: 4.5rem !important; }
+
+            .pr-5,
+            .px-5 {
+                padding-right: 4.5rem !important; }
+
+            .pb-5,
+            .py-5 {
+                padding-bottom: 4.5rem !important; }
+            .lead {
+                font-size: 1.3rem;
+                font-weight: 300; }
+            .display-3 {
+                font-size: 4.5rem;
+                font-weight: 300;
+                line-height: 1.2; }
+            #particles-js {
+                width: 100%;
+                height: 450px;
+                background-color: #b61924;
+                background-image: url("https://s3-us-west-2.amazonaws.com/travelden/header.jpg");
+                background-repeat: no-repeat;
+                background-size: cover;
+                background-position: 50% 50%;
+            }
+            canvas {
+                display: block;
+                vertical-align: bottom;
+            }
+    </style>
+}

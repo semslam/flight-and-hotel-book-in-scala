@@ -1,0 +1,137 @@
+@import controllers.common.routes
+@import crypto.Encrypt
+@()(implicit request: RequestHeader, messages: Messages, encrypt: Encrypt, loggedManager: Users)
+@import java.util._; val numOfTrips: Int = if(request.getQueryString("trip_type").isDefined && request.getQueryString("trip_type").get.eq(TripType.MULTI_CITY.name())) { request.getQueryString("num_of_destination").get.toInt } else { 3 }
+<style>
+        div#load_screen {
+            background: #fff;
+            opacity: 0.97;
+            position: fixed;
+            z-index: 1000;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 1600px;
+        }
+        div #load_screen > div#b2b_loading {
+            color: #333;
+            width:  300px;
+            height: 300px;
+            text-align: center;
+            margin: 250px auto;
+        }
+</style>
+<div id="load_screen" style="display: none">
+    <div id="b2b_loading"><img src="/common/images/loading.gif"><br><h3>Loading...please wait.</h3></div>
+</div>
+<form method="get" action="" enctype="application/x-www-form-urlencoded" class="form row" role="form" name="b2bForm" data-validate="parsley" id="b2b_flight_bkEngine" ng-cloak>
+    <input type="hidden" name="num_of_destination" value="@request.getQueryString("num_of_destination").getOrElse("1")"/>
+    <input type="hidden" name="sale_category" value="B2B">
+    <input type="hidden" name="uuid" value="@loggedManager.getId">
+    @*<input type="hidden" name="trip_type" value="RETURN"/>*@
+    <div class="col-md-12 col-lg-12 col-xs-12 form-group row">
+        <div class="col-md-7">
+        @for(tripType <- Array(TripType.ONE_WAY, TripType.RETURN, TripType.MULTI_CITY)) {
+            <span class="radio-inline">
+                <label for="@tripType.name()" class="block mt15 option option-warning">
+                    <input type="radio" id="@tripType.name()" @if(request.getQueryString("trip_type").isEmpty) { @("checked".when(tripType.name().equals(TripType.RETURN.name()))) } else { @("checked".when(tripType.name().equals(request.getQueryString("trip_type").get))) } name="trip_type" value="@tripType.name()" /> @tripType.name().replaceAllLiterally("_", " ")
+                </label>
+            </span>
+        }
+        </div>
+        <div class="col-md-5">
+            <label for="international" class="block mt15 option option-warning">
+                <input type="hidden" name="region" id="international" class="i-radio" value="international"/>
+                @*International*@
+            </label>
+            @*<label for="local" class="block mt15 option option-warning"><input type="radio" name="region" id="local" class="i-radio" value="local"/> Domestic</label>*@
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-6 col-xs-6 col-sm-6 iconic-input form-group">
+        <label for="dp_airport1">Departure Airport</label>
+        <input class="form-control search_airport_from" id="dp_airport1" value="@request.getQueryString("departure_airport_1").getOrElse("")" name="departure_airport_1" data-section="1" autoselect="true" data-error-message="Departure airport is required" data-required="true" autocomplete="off" aria-autocomplete="none" placeholder="Departure Airport" />
+        <input type="hidden" name="departure_airport_code_1" value="@request.getQueryString("departure_airport_code_1").getOrElse("")" />
+    </div>
+    <div class="col-md-6 col-lg-6 col-xs-6 col-sm-6 iconic-input form-group">
+        <label for="ar_airport1">Arrival Airport</label>
+        <input class="form-control search_airport_to" id="ar_airport1" value="@request.getQueryString("arrival_airport_1").getOrElse("")" name="arrival_airport_1" data-section="1" autocomplete="off" autoselect="true" data-error-message="Arrival airport is required" data-required="true" aria-autocomplete="none" placeholder="Arrival Airport" />
+        <input type="hidden" name="arrival_airport_code_1" value="@request.getQueryString("arrival_country_code_1").getOrElse("")"  />
+    </div>
+    <div class="clearfix"></div>
+    <div id="div_dt_from" class="col-md-6 col-lg-6 col-xs-6 col-sm-6 iconic-input form-group">
+        <label for="dp_date1">Departure Date</label>
+        <input class="form-control departure_date" id="dp_date1" data-type="dateIso" data-required="true" name="departure_date_1" data-error-message="Incorrect Date Specified" value="@request.getQueryString("departure_date_1").getOrElse("")"  type="text">
+    </div>
+    <div id="div_dt_to" @if(request.getQueryString("trip_type").isDefined && request.getQueryString("trip_type").get.eq(TripType.ONE_WAY.name())) { style="display: none" } class="col-md-6 col-lg-6 col-xs-6 col-sm-6 iconic-input form-group">
+        <label for="ar_date1">Arrival Date</label>
+        <input class="form-control arrival_date" id="ar_date1" data-required="true" data-error-message="Incorrect Date Specified" name="arrival_date_1" value="@request.getQueryString("arrival_date_1").getOrElse("")"  type="text">
+    </div>
+    <div class="clearfix"></div>
+    <div style="display: @if(request.getQueryString("trip_type").isDefined && request.getQueryString("trip_type").get.eq(TripType.MULTI_CITY.name())) { block } else { none }" class="multi_city_div">
+    <div class="more_multi_city_div"></div>
+    <div class="clearfix"></div>
+    <div class="col-md-12 col-xs-12">
+        <button type="button" class="add_more_multi_city btn btn-primary btn-md btn-rounded btn-circle"><i class="fa fa-plus"></i> Add Segment</button>
+        <button type="button" class="delete_multi btn btn-danger btn-md btn-rounded btn-circle"><i class="fa fa-times"></i> Remove Segment</button>
+    </div>
+    <div class="clearfix"></div>
+    </div>
+    <div class="col-md-3 col-lg-3 col-xs-4 col-sm-3 form-group">
+        <label>Adults <small>12+ Years</small></label>
+        <div class="form-group">
+            <select name="num_of_adult" class="form-control"> <!--ng-model="numOfAdt" -->
+                @for(i <- 1 to 9){
+                    <option value="@i">@i</option>
+                }
+            </select>
+        </div>
+    </div>
+    <div class="col-md-3 col-lg-3 col-xs-4 col-sm-3 form-group">
+        <label>Children <small>2-11 Years</small></label>
+        <div class="form-group">
+            <select name="num_of_children" class="form-control">
+            @for(i <- 0 to 9){
+                <option value="@i">@i</option>
+            }
+            </select>
+        </div>
+    </div>
+    <div class="col-md-3 col-lg-3 col-xs-4 col-sm-3 form-group">
+        <label>Infants <small>Below 2</small></label>
+        <div class="form-group">
+            <select name="num_of_infant" class="form-control"> <!--ng-model="numOfInf"-->
+                @for(i <- 0 to 9){
+                    <option value="@i">@i</option>
+                }
+            </select>
+        </div>
+        @*<input type="number" class="form-control" value="@request.getQueryString("num_of_infant").getOrElse("0")" min="0" max="5" name="num_of_infant" />*@
+    </div>
+    <div class="col-md-3 col-lg-3 col-xs-6 col-sm-3 form-group">
+        <label for="cabin_pref">Preferred Cabin</label>
+        <select class="form-control" data-required="true" name="cabin_class">
+            <option value="@CabinClass.ECONOMY.name()">@CabinClass.ECONOMY.name()</option>
+            <option value="@CabinClass.PREMIUM.name()">@CabinClass.PREMIUM.name()</option>
+            <option value="@CabinClass.BUSINESS.name()">@CabinClass.BUSINESS.name()</option>
+            <option value="@CabinClass.FIRST.name()">@CabinClass.FIRST.name()</option>
+        </select>
+    </div>
+    <div class="clearfix"></div>
+    <div class="col-md-3 col-lg-3 col-sm-3 col-xs-4">
+        <label for="pref_airline">Preferred Airline</label>
+        <select name="airline_id" id="pref_airline" class="form-control">
+            <option value="">Any Airline</option>
+            @for(airline <- AirlineCommissionable.find.all()) {
+                <option value="@airline.getAirlineId.getAirlineCode">@airline.getAirlineId.getName</option>
+            }
+        </select>
+    </div>
+    <div class="col-md-3 col-xs-4">
+        <input type="checkbox" id="flexible_date" style="margin-top: 40px;" @if(request.getQueryString("flexible_date").isDefined) { checked="checked" } name="flexible_date" value="1"> &nbsp; <label for="flexible_date">+/- 3 Days</label>
+    </div>
+    <div class="col-md-6 col-xs-4">
+        <label>&nbsp;</label>
+        <button type="submit" class="btn btn-lg btn-primary">Search Flight</button>
+    </div>
+
+</form>

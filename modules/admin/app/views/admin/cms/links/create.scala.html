@@ -1,0 +1,166 @@
+@import helper._
+@import crypto.Encrypt
+@import controllers.admin.cms.routes
+@import views.html.admin.templates._
+@import b3.vertical.fieldConstructor
+@import controllers.admin.cms.LinkDAO
+@(form: Form[LinkDAO])(implicit request: RequestHeader, messages: Messages, manager: PrivateUsers, encrypt: Encrypt)
+@default(title = "URL Link Creator", tab = "cms", scripts = script) {
+    <div class="panel">
+        <div class="panel-heading">
+            <h2 class="panel-name">URL Link Creator</h2>
+        </div>
+        <div class="panel-body">
+            @tags.alertFromRequest(request, "error")
+            @form.globalError.map { error =>
+                        @tags.alert(error.message, "error")
+                    }
+            <ul class="nav nav-tabs" role="tablist">
+                <li role="presentation" class="active"><a href="#home" aria-controls="home" role="tab" data-toggle="tab">Flight URL Builder</a></li>
+                <li role="presentation"><a href="#profile" aria-controls="profile" role="tab" data-toggle="tab">Package URL Builder</a></li>
+                <li role="presentation"><a href="#messages" aria-controls="messages" role="tab" data-toggle="tab">Plain/External URL</a></li>
+                @*<li role="presentation"><a href="#settings" aria-controls="settings" role="tab" data-toggle="tab">Settings</a></li>*@
+            </ul>
+            <div class="tab-content">
+                <div role="tabpanel" class="tab-pane active" id="home">
+                    @b3.formCSRF(routes.LinkCtrl.save) {
+                    @if(form("id").value.nonEmpty) {
+                        <input type="hidden" value="@form("id").value.get" name="@form("id").name" />
+                    }
+                    <input type="hidden" name="inc_count" value="1">
+                    <input name="@form("serviceType").name" type="hidden" value="@Services.FLIGHT">
+                    <div class="col-md-12"><h5>Build Segments</h5></div>
+                    <div id="inclusionDIV" class="col-md-12">
+                        @helper.repeat(form("segments"), min = 1) { segment =>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    @helper.inputText(segment("departureAirport"), 'class -> "form-control", '_label -> "Departing Airport Code", 'placeholder -> "Airport Airport Code. Max. 3 Characters")
+                                </div>
+                                <div class="col-md-4">
+                                @helper.inputText(segment("arrivingAirport"), 'class -> "form-control", '_label -> "Arriving Airport Code", 'placeholder -> "Arriving Airport Code. Max. 3 Characters")
+                                </div>
+                                <div class="col-md-2">
+                                @helper.inputText(segment("departureDate"), 'class -> "form-control departure_date", 'placeholder -> "Departing Date", '_label -> "Departing Date")
+                                </div>
+                                <div class="col-md-2">
+                                @helper.checkbox(segment("relativeCurrentDate"), 'placeholder -> "Stay Ahead of Date (Overrides Dates)", '_label -> "Relative Date")
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <div class="col-md-12">
+                        <span><a class="btn btn-primary btn-xs add-inclusion" href=""><span class="fa fa-plus"></span></a></span>
+                        <span><a class="btn btn-danger btn-xs del-inclusion" href=""><span class="fa fa-minus"></span></a></span>
+                    </div>
+                    <div class="col-md-2">
+                        @helper.inputText(form("adtUnit"), 'class -> "form-control", '_label -> "Adult Unit")
+                    </div>
+                    <div class="col-md-2">
+                        @helper.inputText(form("chdUnit"), 'class -> "form-control", '_label -> "Child Unit")
+                    </div>
+                    <div class="col-md-2">
+                        @helper.inputText(form("infUnit"), 'class -> "form-control", '_label -> "Infant Count")
+                    </div>
+                    <div class="col-md-2">
+                        @helper.select(form("airline"),  options(Airlines.options(form("airline").value.getOrElse(""))), 'class -> "form-control chosen-select", '_label -> "Airline Code (Optional)")
+                    </div>
+                    <div class="col-md-2">
+                        @helper.inputText(form("name"), 'class -> "form-control", '_label -> "Name")
+                    </div>
+                    <div class="col-md-12">
+                        <button type="submit" class="btn btn-lg btn-primary">Save</button>
+                    </div>
+                }
+                </div>
+                <div role="tabpanel" class="tab-pane" id="profile">
+                    @b3.formCSRF(routes.LinkCtrl.save) {
+                        @if(form("id").value.nonEmpty) {
+                            <input type="hidden" value="@form("id").value.get" name="@form("id").name" />
+                        }
+                        <input name="@form("serviceType").name" type="hidden" value="CONTENT_CATEGORY">
+                        @helper.inputText(form("name"), 'class -> "form-control", '_label -> "Name")
+                        @helper.select(form("categoryId"), options(CmsContentCategories.options("")), 'class -> "form-control", '_label -> "Content Source")
+                        <button type="submit" class="btn btn-md btn-primary pull-right">Save</button>
+                    }
+                </div>
+                <div role="tabpanel" class="tab-pane" id="messages">
+                    @b3.formCSRF(routes.LinkCtrl.save) {
+                        @if(form("id").value.nonEmpty) {
+                            <input type="hidden" value="@form("id").value.get" name="@form("id").name" />
+                        }
+                        <input name="@form("serviceType").name" type="hidden" value="URL">
+                        @helper.inputText(form("name"), 'class -> "form-control", '_label -> "Name")
+                        @helper.inputText(form("href"), 'class -> "form-control", '_label -> "URL/External Link")
+                        <button type="submit" class="btn btn-md btn-primary pull-right">Save</button>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@script = {
+    <script>
+            $(function () {
+                $('.del-inclusion').on('click', function () {
+                    var fIndex = parseInt($("input[name=inc_count]").val());
+                    $('.inc_' + fIndex).remove();
+                    fIndex = (fIndex <= 1) ? 1 : fIndex - 1;
+                    $("input[name=inc_count]").val(fIndex);
+                });
+
+                $('.add-inclusion').on('click', function () {
+                    var fIndex = parseInt($("input[name=inc_count]").val()) + 1;
+                    $("input[name=inc_count]").val(fIndex);
+                    var html = '<div class="row">' +
+                            '<div class="col-md-4">' +
+                            '<dl class=" " id="segments_'+fIndex+'_departureAirport_field">' +
+                            '<dt><label for="segments_'+fIndex+'_departureAirport">Departing Airport Code</label></dt>' +
+                            '<dd>' +
+                            '<input type="text" id="segments_'+fIndex+'_departureAirport" name="segments['+fIndex+'].departureAirport" value="" class="form-control" placeholder="Airport Airport Code. Max. 3 Characters">' +
+                            '</dd>' +
+                            '</dl>' +
+                            '</div>' +
+                            '<div class="col-md-4">' +
+                            '<dl class=" " id="segments_'+fIndex+'_arrivingAirport_field">' +
+                            '<dt><label for="segments_'+fIndex+'_arrivingAirport">Arriving Airport Code</label></dt>' +
+                            '<dd>' +
+                            '<input type="text" id="segments_'+fIndex+'_arrivingAirport" name="segments['+fIndex+'].arrivingAirport" value="" class="form-control" placeholder="Arriving Airport Code. Max. 3 Characters">' +
+                            '</dd>' +
+                            '</dl>' +
+                            '</div>' +
+                            '<div class="col-md-2">' +
+                            '<dl class=" " id="segments_'+fIndex+'_departureDate_field">' +
+                            '<dt><label for="segments_'+fIndex+'_departureDate">Departing Date</label></dt>' +
+                            '<dd>' +
+                            '<input type="text" id="segments_'+fIndex+'_departureDate" name="segments['+fIndex+'].departureDate" class="form-control departure_date hasDatepicker" placeholder="Departing Date">' +
+                            '</dd>' +
+                            '</dl>' +
+                            '</div>' +
+                            '<div class="col-md-2">' +
+                            '<dl class=" " id="segments_'+fIndex+'_relativeCurrentDate_field">' +
+                            '<dt><label for="segments_'+fIndex+'_relativeCurrentDate">Relative Date</label></dt>' +
+                            '<dd>' +
+                            '<input type="checkbox" id="segments_'+fIndex+'_relativeCurrentDate" name="segments['+fIndex+'].relativeCurrentDate" value="true" placeholder="Stay Ahead of Date (Overrides Dates)">' +
+                            '<span></span>' +
+                            '</dd>' +
+                            '</dl>' +
+                            '</div>' +
+                            '</div>';
+                    $(html).appendTo("#inclusionDIV");
+                    $('.departure_date').datepicker({
+                        minDate: new Date(),
+                        changeMonth: true,
+                        changeYear: true,
+                        dateFormat: 'yy-mm-dd'
+                    });
+                });
+                $('.departure_date').datepicker({
+                    minDate: new Date(),
+                    changeMonth: true,
+                    changeYear: true,
+                    dateFormat: 'yy-mm-dd'
+                });
+            });
+    </script>
+}

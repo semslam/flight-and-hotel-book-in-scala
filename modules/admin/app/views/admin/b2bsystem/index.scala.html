@@ -1,0 +1,90 @@
+@import crypto.Encrypt
+@(users: List[Users])(implicit request: RequestHeader, messages: Messages, manager: PrivateUsers, encrypt: Encrypt)
+@import controllers.admin.routes
+@import views.html.admin.templates._
+@import views.html.admin.tags.myDataTable
+@default(title = "Agents Account List", tab = "user") {
+    <div class="panel">
+        <header class="panel-heading">
+            <h2 class="panel-name">Agents Record</h2><br />
+        </header>
+        <div class="panel-body">
+        @myDataTable(Seq("#", "Full Name", "Comp. Name", "Country", "Email", "Phone", "Role", "Status", "Phone", "Registered On", "Action")) {
+            @tags.alertFromRequest(request, "success")
+            @tags.alertFromRequest(request, "danger")
+            @for(user <- users) {
+                <tr>
+                    <td>@user.getId</td>
+                    <td>@user.getPrefix @user.getFirstName @user.getLastName</td>
+                    <td>@user.getAgentCorporateDetailId.getCompanyName</td>
+                    <td>@user.getAgentCorporateDetailId.getCountryId.getName</td>
+                    <td>@user.getEmail</td>
+                    <td>@user.getPhone</td>
+                    <td>@user.getRole</td>
+                    <td>@if(user.getStatus.eq(Status.Active)) {
+                        <span class="btn btn-xs btn-success btn-link">Verified</span>
+                    } else {
+                        <span class="btn btn-xs btn-danger btn-link">Unverified</span>
+                    }</td>
+                    <td>@user.getPhone</td>
+                    <td>@user.getCreatedAt.format("dd-MM-yyyy")</td>
+                    <td>
+                        <div class="btn-group" role="group" aria-label="...">
+                            <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-primary btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span class="caret"></span> Action</button>
+                                <ul class="dropdown-menu">
+                                        <li>
+                                            @if(user.getStatus.eq(Status.Active)) {
+                                                <a href="@controllers.admin.management.routes.B2BSystemCtrl.blockCustomer(encrypt.encrypt(user.getId.toString), models.Status.Inactive.name())" class="popAlert" data-message="Are you sure you want to block @user.getFirstName @user.getLastName?">Delete Account</a>
+                                            } else {
+                                                <a class="btn btn-default btn-xs" href="@controllers.admin.management.routes.B2BSystemCtrl.moderateAgent(encrypt.encrypt(user.getId.toString))">Approve Account</a>
+                                            }
+                                        </li>
+                                        <li><a href="@controllers.admin.management.routes.B2BSystemCtrl.detail(encrypt.encrypt(user.getId.toString))" class="ajax"><span class="fa fa-info-o"></span> Profile</a></li>
+                                        @*<li><a href="#" onclick="javascript: toggle('user@user.getId');">Sales</a></li>*@
+                                </ul>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            }
+        }
+        </div>
+    </div>
+    <tr id="" style="display: none">
+        <td colspan="11">
+            @*myDataTable(Seq("", "TD Ref.", "PNR", "Dest.", "Contact Detail", "Email", "Phone", "Carrier", "Cabin", "Status", "Payment History", "Amount", "Booking Date", "Tk. Officer"), "desc", s"user${user.getId}") {
+            @Bookings.find.where().eq("userId", user).findList().foreach { item =>
+            <tr>
+            <td>@item.getId</td>
+            <td><small><a target="_blank" class="text-primary text-bold @if(item.getAuthOperatorId == null) { work-on-ticket }" href="@controllers.admin.management.routes.FlightBookingCtrl.itinerary(encrypt.encrypt(item.getId.toString))">@item.getTransactionRef</a></small></td>
+            <td><small>@item.getFlightBookings.getPnrRef</small></td>
+            <td>
+            @for(dd <- item.getFlightBookings.getOriginDestinationsList) {
+            <small>@dd.getDepartureAirportCode to @dd.getArrivalAirportCode</small>
+            <br />
+            }
+            </td>
+            <td><small>@item.getContactTitle @item.getContactFirstname @item.getContactSurname </small></td>
+            <td><small>@item.getContactEmail</small></td>
+            <td><small>@item.getContactPhone</small></td>
+            <td><small>@item.getFlightBookings.getAirlineCode</small></td>
+            <td><small>@item.getFlightBookings.getCabinClass</small></td>
+            <td><small>@item.getStatus.name()</small></td>
+            <td><small>@item.getPaymentHistoryId.getStatus.name()</small></td>
+            <td><small>@item.getPaymentHistoryId.getTotalAmount</small></td>
+            <td><small>@item.getCreatedAt.format("yy-MM-dd HH:mm")</small></td>
+            @{
+            try {
+            Html(s"""<td><small>${item.getAuthOperatorId.getFirstName}</small></td>""")
+            } catch {
+            case e: Throwable => Html(s"""<td><small>-</small></td>""")
+            }
+            }
+            </tr>
+            }
+            }*@
+        </td>
+    </tr>
+
+}

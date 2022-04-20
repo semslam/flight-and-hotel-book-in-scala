@@ -1,0 +1,26 @@
+@import views.html.admin.tags.auth._
+@import views.html.admin.tags.myDataTable
+@import crypto.Encrypt
+@(queues: List[AuditLog])(implicit loggedManager: PrivateUsers, messages: Messages, requestHeader: RequestHeader)
+@views.html.admin.templates.default(title = "Audit Trail", tab = "systems") {
+    <div class="panel" style="border-radius: 0px">
+        <div class="panel-heading">
+            <h3>System Audit Trails</h3>
+        </div>
+        <div class="panel panel-body">
+        @myDataTable(Seq("", "User", "Event Type", "Description", "Date")) {
+            @if(queues.nonEmpty) {
+                @for(item <- queues) {
+                    <tr>
+                        <td>@item.getId</td>
+                        <td><small>@item.getPrivateUserId.fullName() (@item.getPrivateUserId.getStaffRef)</small></td>
+                        <td><small>@item.getEventType</small></td>
+                        <td><small>@item.getDescription</small></td>
+                        <td><small>@item.getCreatedAt.format("yyyy-MM-dd h:mm a")</small></td>
+                    </tr>
+                }
+            }
+        }
+        </div>
+    </div>
+}

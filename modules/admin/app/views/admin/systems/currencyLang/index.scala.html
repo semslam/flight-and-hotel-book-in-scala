@@ -1,0 +1,64 @@
+@import helper._
+@import views.html.admin.tags.myDataTable
+@import crypto.Encrypt
+@import views.html.helper.CSRF
+@import b3.vertical.fieldConstructor
+@import controllers.admin.systems.routes
+
+
+@*(formFields: List[Currencies], form: Form[(Option[Long], String, String, String, String, Boolean)])(implicit request: RequestHeader, messages: Messages, manager: PrivateUsers, encrypt: Encrypt)
+@import views.html.admin.templates._
+@default(title = "Form Fields", tab = "systems") {
+    <div class="panel">
+        <header class="panel-heading">
+            <h2 class="panel-name">Currencies</h2>
+            <br />
+        </header>
+        <div class="panel-body">
+            @tags.alertFromRequest(request, "success")
+            @tags.alertFromRequest(request, "error")
+            @form.globalError.map { error =>
+                @tags.alert(error.message, "error")
+            }
+            <div class="col-md-9">
+            @myDataTable(Seq("#", "Country", "Name", "Code", "Html Symbol", "Is Default", "Created at", "Action")) {
+                @if(formFields.nonEmpty) {
+                    @for(item <- formFields) {
+                        <tr>
+                            <td>@item.id</td>
+                            <td>@item.countryId.name</td>
+                            <td>@item.name</td>
+                            <td>@item.code</td>
+                            <td>@item.htmlSymbol</td>
+                            <td>@item.isDefault</td>
+                            <td>@item.createdAt.format("yyyy-MM-dd HH:mm")</td>
+                            <td>
+                                <span><a href="@routes.CurrencyLangCtrl.currencies(encrypt.encrypt(item.id.toString))" class="btn btn-xs btn-primary"><i class="fa fa-pencil"></i></a></span>
+                                <span><a href="@routes.CurrencyLangCtrl.disableCurrency(encrypt.encrypt(item.id.toString))" class="btn btn-xs btn-danger"><i class="fa fa-times"></i>
+                                    Disable</a>
+                                </span>
+                            </td>
+                        </tr>
+                    }
+                }
+            }
+            </div>
+            <div class="col-md-3">
+                <h3>Save Currency</h3>
+                @tags.alertFromRequest(request, "error")
+                @form.globalError.map { error =>
+                    @tags.alert(error.message, "error")
+                }
+                @b3.formCSRF(routes.CurrencyLangCtrl.saveCurrency, 'enctype -> "application/x-www-form-urlencoded") {
+                    <input name="@form("id").name" type="hidden" value="@if(form("id").value.nonEmpty){ @form("id").value.get }" />
+                    @b3.select(form("countryId"), options(Countries.options()), '_label -> "Select Country")
+                    @b3.text(form("name"), '_label -> "Name", 'placeholder -> "Currency Short Name")
+                    @b3.text(form("itemTypes"), '_label -> "Currency Code", 'placeholder -> "3digits itemTypes")
+                    @b3.text(form("htmlSymbol"), '_label -> "Html Symbol")
+                    @b3.checkbox(form("isDefault"), '_label -> "Use as default?", 'checked -> true)
+                    @b3.submit('class -> "btn btn-primary btn-md") { Submit }
+                }
+            </div>
+        </div>
+    </div>
+}*@

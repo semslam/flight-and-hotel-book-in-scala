@@ -1,0 +1,16 @@
+@(banner: CmsBanners, code: String)(implicit requestHeader: RequestHeader)
+@if(banner != null) {
+    <a @if(banner.getCmsLink != null){ href="@controllers.common.routes.Application.link(banner.getCmsLink.getId)" } target="_blank">
+        @if(requestHeader.cookies.get("currency").nonEmpty) {
+        @if(requestHeader.cookies.get("currency").get.value.equalsIgnoreCase("usd")){
+            @Html(banner.getHtmlCodeAlternate)
+        } else {
+            @Html(banner.getHtmlCode)
+        }
+    } else {
+        @Html(banner.getHtmlCode)
+    }
+    </a>
+} else {
+	<p class="text-danger">Banner <strong><i>@code</i></strong> Not Found</p>
+}

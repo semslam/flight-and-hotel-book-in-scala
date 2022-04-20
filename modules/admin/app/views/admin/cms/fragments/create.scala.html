@@ -1,0 +1,49 @@
+@import helper._
+@import crypto.Encrypt
+@import controllers.admin.cms.routes
+@import views.html.admin.templates._
+@import b3.vertical.fieldConstructor
+@import controllers.admin.cms.FragmentWidgets
+
+
+@import controllers.admin.cms.Fragment
+@(form: Form[Fragment])(implicit request: RequestHeader, messages: Messages, manager: PrivateUsers, encrypt: Encrypt)
+@default(title = "Create/Edit Fragment", tab = "cms") {
+    <div class="panel">
+        <div class="panel-heading">
+            <span class="panel-name">Create/Edit Fragment</span>
+        </div>
+        <div class="panel-body">
+            <div class="col-md-3">
+            @views.html.admin.cms._categoryList()
+            </div>
+            <div class="col-md-9 row">
+                <div class="col-md-8">
+                    @tags.alertFromRequest(request, "error")
+                    @form.globalError.map { error =>
+                        @tags.alert(error.message, "error")
+                    }
+                    @b3.formCSRF(routes.FragmentCtrl.save) {
+                        @if(form("id").value.nonEmpty) {
+                            <input type="hidden" value="@encrypt.encrypt(form("id").value.get)" name="@form("id").name" />
+                        }
+                        @helper.select(form("categoryId"), options(CmsContentCategories.options(encrypt.decrypt(request.getQueryString("categoryId").getOrElse("")))), 'class -> "form-control", '_label -> "Fragment Category")
+                        @helper.inputText(form("name"), 'class -> "form-control", '_label -> "Fragment Name")
+                        @helper.inputText(form("headTitle"), 'class -> "form-control", '_label -> "Header Title", 'placeholder -> "Header")
+                        @helper.textarea(form("htmlCode"), 'rows -> "10", 'class -> "editable",  '_label -> Html(s"""File upload not allowed. Click <a target="_blank" href="${routes.MediaCtrl.index}">Here</a> to upload files"""))
+                        @helper.select(form("isPublish"), Seq("Yes" -> "Yes", "No" -> "No"), 'class -> "form-control", '_label -> "Publish Fragment")
+                        <button type="submit" name="submit" class="btn btn-primary">Save</button>
+                        <span><a href="@routes.FragmentCtrl.index" class="btn btn-default">Cancel</a></span>
+                    }
+                </div>
+                <div style="min-height: 450px ; overflow-y: scroll ;" class="col-md-4 pull-right">
+                    <h4><strong>Template Snippet</strong></h4>
+                    <p class="text-muted">Copy &amp; Paste Snippet to HTML Fragment</p><hr />
+                    @for(item <- FragmentWidgets.widgets) {
+                        <p> @item._2 <itemTypes>@item._1</itemTypes> </p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}

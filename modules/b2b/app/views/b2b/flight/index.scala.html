@@ -1,0 +1,19 @@
+
+@import crypto.Encrypt
+@()(implicit loggedManager: Users, requestHeader: RequestHeader, messages: Messages, encrypt: Encrypt)
+@import controllers.b2b.routes
+@import helper._
+@import b3.vertical.fieldConstructor
+@import views.html.bookingEngine._
+@views.html.b2b.templates.default(title = "Search for Flight", tab = "flight", scripts) {
+    <h2>Search for Cheap Flight</h2>
+    <div class="row">
+        <div class="col-md-7 col-xs-12 col-lg-7 col-sm-12" style="background: #fff;padding: 10px; border-radius: 5px;">
+            @_B2BflightForm()
+        </div>
+        <div class="col-md-2 col-xs-12 col-lg-2 col-sm-12" style="padding: 10px;"></div>
+    </div>
+}
+@scripts = {
+    <script src="@routes.Assets.myJs("jsB2bFlight.js")"></script>
+}

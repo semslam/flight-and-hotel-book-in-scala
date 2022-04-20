@@ -1,0 +1,20 @@
+
+@(paymentHistory: PaymentHistories, fullName: String, custEmail: String)(implicit loggedManager: Users, requestHeader: RequestHeader, messages: Messages)
+@import controllers.b2b.routes
+@import helper._
+@import b3.vertical.fieldConstructor
+@import views.html.bookingEngine._
+@import views.html.paymentapi._
+@views.html.b2b.templates.default(title = "Flight Payment", tab = "flight") {
+    @tags.alertFromRequest(requestHeader, "error")
+    @tags.alertFromRequest(requestHeader, "success")
+    @if(paymentHistory.getPaymentMethodId.getCode.equalsIgnoreCase("gt")) {
+        @gtpay(paymentHistory, fullName, custEmail)
+    }
+    @if(paymentHistory.getPaymentMethodId.getCode.equalsIgnoreCase("gp")) {
+        @globalPay(paymentHistory, fullName, custEmail)
+    }
+    @if(paymentHistory.getPaymentMethodId.getCode.equalsIgnoreCase("qt")) {
+        @quickteller(paymentHistory, fullName, custEmail)
+    }
+}

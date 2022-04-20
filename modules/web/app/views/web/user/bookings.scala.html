@@ -1,0 +1,69 @@
+@import crypto._
+@import views.html.tags.myDataTable
+@import controllers.web.routes
+@(bookings: List[Bookings])(implicit messages: Messages, user: Users, requestHeader: RequestHeader, encrypt: Encrypt)
+@views.html.web.templates.default("Dashboard") {
+    <div class="row user-profile">
+        <div class="container">
+            <div class="col-md-12 user-name">
+                <h3>Bookings</h3>
+            </div>
+            <div class="col-md-2 col-sm-2">
+                @views.html.web.user._sidebar("booking")
+            </div>
+            <div class="col-md-10 col-sm-10">
+                <div>
+                    <ul class="nav nav-tabs" role="tablist">
+                        <li role="presentation" class="active"><a href="#home" aria-controls="home" role="tab" data-toggle="tab">Flight Bookings</a></li>
+                        <li role="presentation"><a href="#profile" aria-controls="profile" role="tab" data-toggle="tab">Hotel Bookings</a></li>
+                    </ul>
+                    <div class="tab-content">
+                        <div role="tabpanel" class="tab-pane active" id="home">
+                        @myDataTable(Seq("", "Reference ID", "PNR", "Airline", "Class", "From-To", "Lead Passenger", "Amount", "Payment Status", "Ticket Status", "Booking Date"), "desc", "fl_table") {
+                            @for(item <- bookings.filter(_.getFlightBookings != null)) {
+                                <tr>
+                                    <td>@item.getId</td>
+                                    <td><small><a class="text-primary text-bold" href="@routes.UserCtrl.flightDetail(encrypt.encrypt(item.getId.toString))">@item.getTransactionRef</a></small></td>
+                                    <td><small>@item.getFlightBookings.getPnrRef</small></td>
+                                    <td><small>@item.getFlightBookings.getAirlineCode</small></td>
+                                    <td><small>@item.getFlightBookings.getCabinClass</small></td>
+                                    <td>
+                                    @for(dd <- item.getFlightBookings.getOriginDestinationsList) {
+                                        <small>@dd.getDepartureAirportCode to @dd.getArrivalAirportCode</small> <br />
+                                    }
+                                    </td>
+                                    <td><small>@item.getContactTitle @item.getContactSurname @item.getContactFirstname</small></td>
+                                    <td><small>@item.getPaymentHistoryId.getTotalAmount</small></td>
+                                    <td><small>@item.getPaymentHistoryId.getStatus.name()</small></td>
+                                    <td><small>@item.getStatus.name()</small></td>
+                                    <td><small>@item.getCreatedAt.format("yyyy-MM-dd HH:mm")</small></td>
+                                </tr>
+                            }
+                        }
+                        </div>
+                        <div role="tabpanel" class="tab-pane" id="profile">
+                        @myDataTable(Seq("", "Reference ID", "Status", "Hotel Name", "City Code",  "Rooms", "Check-In", "Duration", "Amount", "Payment Status", "Booked Date"), "desc", "ht_table") {
+                            @for(item <- bookings.filter(_.getHotelBookings != null)) {
+                                <tr>
+                                    <td>@item.getId</td>
+                                    <td><small><a class="text-primary text-bold" href="">@item.getTransactionRef</a></small></td>
+                                    <td><small>@item.getStatus.name()</small></td>
+                                    <td><small>@item.getHotelBookings.getHotelName</small></td>
+                                    <td><small>@item.getHotelBookings.getCityCode</small></td>
+                                    <td><small>@item.getHotelBookings.getRooms.size()</small></td>
+                                    <td>@item.getHotelBookings.getCheckIn.format("yyyy-MM-dd")</td>
+                                    <td>@item.getHotelBookings.getNoOfNights</td>
+                                    <td><small>@item.getPaymentHistoryId.getTotalAmount</small></td>
+                                    <td><small>@item.getPaymentHistoryId.getStatus.name()</small></td>
+                                    <td><small>@item.getCreatedAt.format("yyyy-MM-dd HH:mm")</small></td>
+                                </tr>
+                            }
+                        }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="gap"></div>
+}

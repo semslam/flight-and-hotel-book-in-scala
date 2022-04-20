@@ -1,0 +1,15 @@
+
+
+@()(implicit loggedManager: PrivateUsers, messages: Messages)
+
+@import controllers.admin.routes
+
+@views.html.admin.templates.default(title = "Social Area", tab = "social") {
+	
+	<img class="pull-right" src="@routes.Assets.commonImg("play.svg")" width="250" style="margin-top: 10px; margin-bottom: 20px"></img>
+	
+	<h1 class="text-primary">Social Area</h1>
+	
+	<h3>This is the Social Area. Only managers with <strong>'social'</strong> role can be here.</h3>
+
+}

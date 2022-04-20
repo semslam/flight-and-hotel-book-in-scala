@@ -1,0 +1,89 @@
+@(packageBookings: PackageBookings)
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+        <title>Package Booking Confirmation</title>
+        <style type="text/css">
+
+        /* Table */
+        .aqua_table {
+        margin: 20px 0;
+        }
+        .aqua_table th {
+        border: 1px solid #e2e2e2;
+        background: #4c4d4f url('http://jadorecakesonline.com/images/grad_menu.png') top left repeat-x;
+        text-align: center;
+        padding: 8px 14px;
+        font-size: 14px;
+        text-align: left;
+        font-weight: 600;
+        }
+        .aqua_table td {
+        padding: 8px 14px;
+        border: #e2e2e2 1px solid;
+
+        -webkit-transition: all 0.3s linear;
+        -moz-transition: all 0.3s linear;
+        -ms-transition: all 0.3s linear;
+        -o-transition: all 0.3s linear;
+        transition: all 0.3s linear;
+        }
+        table {
+        border-collapse: collapse;
+        }
+        table, td, th {
+        border-bottom: 1px solid black;
+        }
+        </style>
+    </head>
+    <body>
+        <div align="" style="max-width:100%">
+
+
+            <p>Hello Team,</p>
+            <br />
+            <p>New Package Booking on the Website</p>
+
+            <br />
+            <p>Detail of the customer are below</p>
+            <table width="60%" border="0">
+                <tbody>
+                    <tr>
+                        <th>Package</th>
+                        <td>@packageBookings.getPackageId.getName / @packageBookings.getPackageId.getCountryId.getName @if(packageBookings.getPackageId.getPackageThemeId != null) { / @packageBookings.getPackageId.getPackageThemeId.getName }</td>
+                    </tr>
+                    <tr>
+                        <th>Check-In Date/Duration</th>
+                        <td>@packageBookings.getCheckIn.format("yyyy-MM-dd") - @packageBookings.getDuration</td>
+                    </tr>
+                    <tr>
+                        <th>Passenger Details</th>
+                        <td>@packageBookings.getNoOfAdult Adult(s), @packageBookings.getNoOfChild Child(ren)</td>
+                    </tr>
+                    <tr>
+                        <th>Contact Name</th>
+                        <th>@packageBookings.getBookings.getContactTitle @packageBookings.getBookings.getContactFirstname @packageBookings.getBookings.getContactSurname</th>
+                    </tr>
+                    <tr>
+                        <th>Contact Phone</th>
+                        <th>@packageBookings.getBookings.getContactPhone</th>
+                    </tr>
+                    <tr>
+                        <th>Contact Email</th>
+                        <th>@packageBookings.getBookings.getContactEmail</th>
+                    </tr>
+                </tbody>
+            </table>
+            <div></div>
+            <div style="">
+                <div class="row">
+                    <div class="sixteen columns clearfix">
+                        <br/>
+                        <div align="right"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

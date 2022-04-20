@@ -1,0 +1,23 @@
+@import crypto.Encrypt
+@()(implicit request: RequestHeader, maybeUser: Option[Users], messages: Messages, encrypt: Encrypt)
+
+@import controllers.web.routes
+
+@views.html.web.templates.default(title = "Home", loggedUser = maybeUser) {
+	
+	<div class="pull-right">
+		<img src="@routes.Assets.commonImg("play.svg")" width="250" style="margin-top: 10px; margin-bottom: 20px"></img>
+		<p class="text-right">Conf file: @play.api.Play.current.configuration.getString("this.file")</p>
+	</div>
+
+	<h1 class="text-primary">@Messages("web.index.title")</h1>
+	
+	<p class="lead">
+		@Messages("web.index.intro")<br>
+		@maybeUser.map { user =>
+			@Html(Messages("web.index.intro.logged", user.fullName, routes.UserCtrl.myAccount, routes.AuthCtrl.signOut))
+		}.getOrElse {
+			@Html(Messages("web.index.intro.notlogged", routes.AuthCtrl.signIn, routes.AuthCtrl.startSignUp, routes.AuthCtrl.forgotPassword))
+		}
+	</p>
+}

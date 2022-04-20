@@ -1,0 +1,18 @@
+@import crypto.Encrypt
+@(user: Users)(implicit request: RequestHeader, messages: Messages, encrypt: Encrypt)
+@default("Signed Up", loggedUser = Some(user)) {
+    <div class="row">
+        <div class="col-md-7 col-lg-7 col-xs-12 col-sm-12 form-auth">
+            <div class="panel-heading">
+                <h2>Sign Up Successful</h2><hr />
+            </div>
+            <div class="panel-body">
+                <h3><strong>@Messages("signup.thanks", user.fullName)</strong></h3>
+                <p>@Messages("signup.ready")</p>
+                <a href="@controllers.web.routes.ApplicationCtrl.index">@Messages("go.index")</a>
+            </div>
+        </div>
+        <div class="col-md-5 col-lg-5 col-xs-12 col-sm-12 hidden">
+        </div>
+    </div>
+}

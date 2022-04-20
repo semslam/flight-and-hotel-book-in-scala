@@ -1,0 +1,8 @@
+@import cms.DynamicPageHandler
+@import views.html.bookingEngine._
+@import org.apache.commons.lang3.StringUtils._
+@import controllers.admin.routes
+@import crypto.Encrypt
+@import com.alajobi.ota.utils.SystemControlSetting
+@(page: CmsPages, tempMgr: DynamicPageHandler)(implicit messages: Messages, request: RequestHeader, encrypt: Encrypt)
+<H2>PREVIEW PAGE</H2>

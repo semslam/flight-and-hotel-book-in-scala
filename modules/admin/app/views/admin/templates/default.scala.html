@@ -1,0 +1,272 @@
+@(title: String, tab: String = "", scripts: Html = Html(""), styles: Html = Html(""), modals: Html = Html(""))(content: Html)(implicit loggedManager: PrivateUsers, messages: Messages)
+@import views.html.admin.tags.auth._
+@import controllers.admin.routes
+@navbarContent = {
+	<!-- Collect the nav links, forms, and other content for toggling -->
+	<div class="collapse navbar-collapse pull-left" id="navbar-collapse">
+		<ul class="nav navbar-nav">
+			<li class="dropdown @("active".when(tab == "user"))">
+				<a href="#" class="dropdown-toggle" data-toggle="dropdown">Accounts <span class="caret"></span></a>
+				<ul class="dropdown-menu" role="menu">
+					<li class="dropdown-submenu"><a href="#">Staff Account </a>
+						<ul class="dropdown-menu">
+							<li><a href="@routes.UserCtrl.createPrivate()">Create User Account</a></li>
+							<li><a href="@routes.UserCtrl.privateUsers()">Manager Accounts</a></li>
+						</ul>
+					</li>
+					<li><a href="@routes.UserCtrl.customers()">B2C Direct</a></li>
+					<li><a href="@controllers.admin.management.routes.B2BSystemCtrl.index">B2B Agent</a></li>
+				</ul>
+			</li>
+			<li class="dropdown @("active".when(tab == "queue"))">
+				<a href="#" class="dropdown-toggle" data-toggle="dropdown">Flights <span class="caret"></span></a>
+				<ul class="dropdown-menu" role="menu">
+					<li><a href="@controllers.admin.management.routes.FlightBookingCtrl.index()">All Queues</a></li>
+					<!-- <li><a href="@controllers.admin.management.routes.FlightBookingCtrl.index()">Assigner</a></li> -->
+					<li class="dropdown-submenu">
+						<a href="#">Queues</a>
+						<ul class="dropdown-menu" role="menu">
+							<li><a href="@controllers.admin.management.routes.FlightBookingCtrl.index("flightQueues.awaitingAction")">New Bookings Queues</a></li>
+							<li><a href="@controllers.admin.management.routes.FlightBookingCtrl.index("flightQueues.bookingByStatus.failed")">Failed Booking Queues</a></li>
+							<li><a href="@controllers.admin.management.routes.FlightBookingCtrl.index("flightQueues.bookingByStatus.cancelled")">Cancelled Booking Queues</a></li>
+							<li><a href="@controllers.admin.management.routes.FlightBookingCtrl.index("flightQueues.bookingByStatus.issued")">Ticket Issued Queues</a></li>
+							<li><a href="@controllers.admin.management.routes.FlightBookingCtrl.index("flightQueues.flightQueues.scheduleChanges")">Schedule Changes Queues</a></li>
+						</ul>
+					</li>
+					<li class="dropdown-submenu">
+						<a href="#">Finance &amp; Payment Related Queues</a>
+						<ul class="dropdown-menu" role="menu">
+							<li><a href="@controllers.admin.management.routes.FlightBookingCtrl.index("flightQueues.paymentMethod.webpay")">Online Payment Queues</a></li>
+							<li><a href="@controllers.admin.management.routes.FlightBookingCtrl.index("flightQueues.flightQueues.webpay.failed")">Online Payment Failed </a></li>
+							<li><a href="@controllers.admin.management.routes.FlightBookingCtrl.index("flightQueues.paymentMethod.bookOnHold")">Book On Hold / Bank Transfer </a></li>
+						</ul>
+					</li>
+					<li class="dropdown-submenu">
+						<a href="#">B2B Platform Queues</a>
+						<ul class="dropdown-menu" role="menu">
+							<li><a href="@controllers.admin.management.routes.FlightBookingCtrl.index("flightQueues.b2bSales.all")">New Bookings Queues </a></li>
+							<li><a href="@controllers.admin.management.routes.FlightBookingCtrl.index("flightQueues.b2bSales.failed")">Failed Booking Queues </a></li>
+							<li><a href="@controllers.admin.management.routes.FlightBookingCtrl.index("flightQueues.b2bSales.cancelled")">Cancelled Queues </a></li>
+							<li><a href="@controllers.admin.management.routes.FlightBookingCtrl.index("flightQueues.b2bSales.paymentSuccess")">CC Payment Successful Queues </a></li>
+							<li><a href="@controllers.admin.management.routes.FlightBookingCtrl.index("flightQueues.b2bSales.paymentFailed")">CC Payment Failed Queues </a></li>
+						</ul>
+					</li>
+					<li class="dropdown-submenu">
+						<a href="#">Other Queues</a>
+						<ul class="dropdown-menu" role="menu">
+							<li><a href="@controllers.admin.management.routes.FlightBookingCtrl.index("flightQueues.archived")">Archived Queues </a></li>
+							<li><a href="@controllers.admin.management.routes.FlightBookingCtrl.index("flightQueues.cancelledQueues")">Cancelled Queues </a></li>
+						</ul>
+					</li>
+				</ul>
+			</li>
+			@*<li class="dropdown @("active".when(tab == "hotels"))">
+				<a href="#" class="dropdown-toggle" data-toggle="dropdown">Hotels <span class="caret"></span></a>
+				<ul class="dropdown-menu" role="menu">
+					<li><a href="@controllers.admin.management.routes.HotelBookingCtrl.index()">All Queues</a></li>
+                    <li class="dropdown-submenu">
+                        <a href="#">Queues</a>
+                        <ul class="dropdown-menu" role="menu">
+                            <li><a href="@controllers.admin.management.routes.HotelBookingCtrl.index("hotelQueues.awaitingAction")">New Bookings</a></li>
+                            <li><a href="@controllers.admin.management.routes.HotelBookingCtrl.index("hotelQueues.bookingByStatus.failed")">Failed Bookings</a></li>
+                            <li><a href="@controllers.admin.management.routes.HotelBookingCtrl.index("hotelQueues.bookingByStatus.cancelled")">Cancelled</a></li>
+                            <li><a href="@controllers.admin.management.routes.HotelBookingCtrl.index("hotelQueues.bookingByStatus.archived")">Archived Bookings</a></li>
+                        </ul>
+                    </li>
+					<li><a href="">System Settings</a></li>
+				</ul>
+			</li>*@
+			<li class="dropdown @("active".when(tab == "report"))"><a href="#" class="dropdown-toggle" data-toggle="dropdown">Report <span class="caret"></span></a>
+				<ul class="dropdown-menu" role="menu">
+					<li><a href="@controllers.admin.reports.routes.ReportCtrl.generateReport()">Generate Sales Reports </a></li>
+					<li><a href="@controllers.admin.reports.routes.ReportCtrl.usersReport()">Customers &amp; Newsletter Records</a></li>
+				</ul>
+			</li>
+			<li class="dropdown @("active".when(tab == "cms"))">
+				<a data-toggle="dropdown" data-hover="dropdown" class="dropdown-toggle" href="#">CMS <span class="caret"></span></a>
+				<ul class="dropdown-menu">
+					<li class="dropdown-submenu"><a href="#">Content Category </a>
+						<ul class="dropdown-menu">
+							<li><a href="@controllers.admin.cms.routes.ContentCategoryCtrl.create()">Create New Category</a></li>
+							<li><a href="@controllers.admin.cms.routes.ContentCategoryCtrl.index">Manage Categories</a></li>
+						</ul>
+					</li>
+                    <li class="dropdown-submenu"><a href="#">Fragments </a>
+                        <ul class="dropdown-menu">
+                            <li><a href="@controllers.admin.cms.routes.FragmentCtrl.create()">Create Fragment</a></li>
+                            <li><a href="@controllers.admin.cms.routes.FragmentCtrl.index">Manage Fragments</a></li>
+                        </ul>
+                    </li>
+                    <li class="dropdown-submenu"><a href="#">Pages </a>
+                        <ul class="dropdown-menu">
+                            <li><a href="@controllers.admin.cms.routes.TemplateCtrl.create">Create New Page</a></li>
+                            <li><a href="@controllers.admin.cms.routes.PageCtrl.index">Manage Pages</a></li>
+                        </ul>
+                    </li>
+					<li class="dropdown-submenu"><a href="#">Banner </a>
+                        <ul class="dropdown-menu">
+                            <li><a href="@controllers.admin.cms.routes.BannerCtrl.create()">Create Banner</a></li>
+                            <li><a href="@controllers.admin.cms.routes.BannerCtrl.index">Manage Banners</a></li>
+                        </ul>
+                    </li>
+					@*<li class="dropdown-submenu"><a href="#">Deals </a>
+                        <ul class="dropdown-menu">
+                            <li><a href="@controllers.admin.cms.routes.DealCtrl.create()">Create Offers &amp; Deal</a></li>
+                            <li><a href="@controllers.admin.cms.routes.DealCtrl.index">Manage Offers &amp; Deals</a></li>
+                        </ul>
+                    </li>*@
+					<li class="dropdown-submenu"><a href="#">Link Builder </a>
+                        <ul class="dropdown-menu">
+                            <li><a href="@controllers.admin.cms.routes.LinkCtrl.create()">Build New Link</a></li>
+                            <li><a href="@controllers.admin.cms.routes.LinkCtrl.index">Manage Existing Link</a></li>
+                        </ul>
+                    </li>
+					<li><a href="@controllers.admin.cms.routes.AppearanceCtrl.index">Appearance & Styling</a></li>
+					<li><a href="@controllers.admin.cms.routes.MediaCtrl.index">Media Manager</a></li>
+				</ul>
+			</li>
+			<li class="dropdown @("active".when(tab == "package"))">
+				<a data-toggle="dropdown" data-hover="dropdown" class="dropdown-toggle" href="#">Packages <span class="caret"></span></a>
+				<ul class="dropdown-menu">
+					<li class="dropdown-submenu"><a href="#">Package Content </a>
+						<ul class="dropdown-menu">
+							<li><a href="@controllers.admin.cms.routes.PackageCtrl.create()">Create Package</a></li>
+							<li><a href="@controllers.admin.cms.routes.PackageCtrl.index">Manage Packages</a></li>
+						</ul>
+					</li>
+					<li class="dropdown-submenu"><a href="#">Package Theme </a>
+						<ul class="dropdown-menu">
+							<li><a href="@controllers.admin.cms.routes.PackageCtrl.createTheme()">Create Theme</a></li>
+							<li><a href="@controllers.admin.cms.routes.PackageCtrl.manageTheme">Manage Theme</a></li>
+						</ul>
+					</li>
+				</ul>
+			</li>
+			<li class="dropdown @("active".when(tab == "product"))">
+				<a data-toggle="dropdown" data-hover="dropdown" class="dropdown-toggle" href="#">Product <span class="caret"></span></a>
+				<ul class="dropdown-menu">
+					<li class="dropdown-submenu"><a href="#">Flight Product Content </a>
+						<ul class="dropdown-menu">
+							<li><a href="@controllers.admin.cms.routes.ProductCtrl.create()">Create Product</a></li>
+							<li><a href="@controllers.admin.cms.routes.ProductCtrl.index">Manage Product</a></li>
+						</ul>
+					</li>
+				</ul>
+			</li>
+			<li class="dropdown @("active".when(tab == "systems"))">
+				<a href="#" class="dropdown-toggle" data-toggle="dropdown">Systems <span class="caret"></span></a>
+				<ul class="dropdown-menu" role="menu">
+					<li class="dropdown-submenu"><a data-toggle="dropdown" data-hover="dropdown" class="dropdown-toggle" href="#"> Flight Fare Rules</a>
+						<ul class="dropdown-menu">
+							<li><a href="@controllers.admin.pricerule.routes.FlightPriceRuleCtrl.createFareRuleManagement()">Create Sellable Fare Rules</a></li>
+							<li><a href="@controllers.admin.pricerule.routes.FlightPriceRuleCtrl.createNonCommissionFareRule()">Create Non-Sellable Fare Rules</a></li>
+							<li><a href="@controllers.admin.pricerule.routes.FlightPriceRuleCtrl.fareRuleManagement()">Manage Fare Rules</a></li>
+							<li><a href="@controllers.admin.pricerule.routes.FlightPriceRuleCtrl.commissionableAirline()">Sellable Airlines</a></li>
+							<li><a href="@controllers.admin.pricerule.routes.FlightPriceRuleCtrl.blacklistAirline()">Blacklisting Airlines</a></li>
+						</ul>
+					</li>
+					<li class="dropdown-submenu"><a data-toggle="dropdown" data-hover="dropdown" class="dropdown-toggle" href="#"> Hotel Fare Rules</a>
+						<ul class="dropdown-menu">
+							<li><a href="@controllers.admin.pricerule.routes.HotelPriceRuleCtrl.create()">Create New Rules</a></li>
+							<li><a href="@controllers.admin.pricerule.routes.HotelPriceRuleCtrl.index()">Manage Fare Rules</a></li>
+						</ul>
+					</li>
+					<li><a href="@controllers.admin.systems.routes.EmailSmsCtrl.index">Email &amp; SMS Template</a></li>
+					<li><a href="@controllers.admin.systems.routes.ControlSettingsCtrl.index()">Control Settings</a></li>
+					<li class="dropdown-submenu"><a data-toggle="dropdown" data-hover="dropdown" class="dropdown-toggle" href="#"> General Settings</a>
+						<ul class="dropdown-menu">
+							<li><a href="@controllers.admin.systems.routes.PaymentCtrl.index">Payment Settings</a></li>
+							<li class="dropdown-submenu"><a data-toggle="dropdown" data-hover="dropdown" class="dropdown-toggle" href="#"> Airlines</a>
+								<ul class="dropdown-menu">
+									<li><a href="@controllers.admin.systems.routes.StaticDataCRUDCtrl.createAirline()">Create Airline</a></li>
+									<li><a href="@controllers.admin.systems.routes.StaticDataCRUDCtrl.airlines">Manage Airlines</a></li>
+								</ul>
+							</li>
+							<li class="dropdown-submenu"><a data-toggle="dropdown" data-hover="dropdown" class="dropdown-toggle" href="#"> Airports</a>
+								<ul class="dropdown-menu">
+									<li><a href="@controllers.admin.systems.routes.StaticDataCRUDCtrl.createAirport()">Create Airport</a></li>
+									<li><a href="@controllers.admin.systems.routes.StaticDataCRUDCtrl.airports">Manage Airports</a></li>
+								</ul>
+							</li>
+							<li class="dropdown-submenu"><a data-toggle="dropdown" data-hover="dropdown" class="dropdown-toggle" href="#"> Countries</a>
+								<ul class="dropdown-menu">
+									<li><a href="@controllers.admin.systems.routes.StaticDataCRUDCtrl.createCountry()">Create Country</a></li>
+									<li><a href="@controllers.admin.systems.routes.StaticDataCRUDCtrl.country">Manage Country</a></li>
+								</ul>
+							</li>
+							<li class="dropdown-submenu"><a data-toggle="dropdown" data-hover="dropdown" class="dropdown-toggle" href="#"> Facilities</a>
+								<ul class="dropdown-menu">
+									<li><a href="@controllers.admin.systems.routes.StaticDataCRUDCtrl.createFacility()">Create Facility</a></li>
+									<li><a href="@controllers.admin.systems.routes.StaticDataCRUDCtrl.facilities">Manage Facility</a></li>
+								</ul>
+							</li>
+						</ul>
+					</li>
+					@*<li><a href="@controllers.admin.reports.routes.AuditCtrl.index">Audit/Monitor Logs </a></li>*@
+				</ul>
+			</li>
+			@*<li class="@("active".when(tab == "bug"))"><a href="@routes.ApplicationCtrl.bugReport()" class="ajax"><span class="fa fa-bug"></span> Bug Report </a></li>*@
+		</ul>
+		<form class="navbar-form navbar-left" action="@routes.ApplicationCtrl.appSearch" method="get" enctype="application/x-www-form-urlencoded" role="search">
+			<div class="form-group">
+				<input type="text" class="form-control" name="search" id="navbar-search-input" placeholder="Search for Booking">
+			</div>
+		</form>
+	</div>
+	<div class="navbar-custom-menu">
+		<ul class="nav navbar-nav">
+				<!-- Notifications Menu -->
+			@*<li class="dropdown notifications-menu">
+					<!-- Menu toggle button -->
+				@defining(NotificationRecipients.find.where().eq("recipient_id_pri", loggedManager.id).orderBy("id desc").setMaxRows(7).findList()) { notifications =>
+
+					<a href="#" class="dropdown-toggle" data-toggle="dropdown">
+					<i class="fa fa-bell-o"></i>
+					<span class="label label-danger">@notifications.size()</span>
+				</a>
+				<ul class="dropdown-menu">
+					<li class="header">You have @notifications.size() notifications</li>
+					<li>
+							<!-- Inner Menu: contains the notifications -->
+						<ul class="menu">
+							@if(notifications != null && notifications.size() != 0) {
+								@for(item <- notifications) {
+									<!-- start notification -->
+									<li>
+										<a href="@item.notificationId.actionUrl"> @item.notificationId.title</a>
+									</li>
+								}
+							} else {
+								<li>
+									<a href="#">No New Notification</a>
+								</li>
+							}
+								<!-- end notification -->
+						</ul>
+					</li>
+				</ul>
+				}
+			</li>*@
+				<!-- Tasks Menu -->
+			<li class="dropdown user user-menu">
+				<a href="#" class="dropdown-toggle" data-toggle="dropdown">
+					<span class="hidden-xs">@Html(Messages("admin.topbar.hello", s"""<span>${loggedManager.getFirstName}</span>""", s"""<span>${loggedManager.getuRoles.split("<<>>").mkString(", ").replaceAllLiterally("_", " ")}</span>"""))</span>
+				</a>
+				<ul class="dropdown-menu">
+					<li class="user-header">
+						<p>@loggedManager.fullName</p>
+					</li>
+					<li class="user-footer">
+						<div class="pull-left">
+							<a href="@routes.ApplicationCtrl.myAccount" class="btn btn-default btn-flat">My Account</a>
+						</div>
+						<div class="pull-right">
+							<a href="@routes.AuthCtrl.signOut" class="btn btn-default btn-flat">Sign out</a>
+						</div>
+					</li>
+				</ul>
+			</li>
+		</ul>
+	</div>
+}
+@main(title, navbarContent, scripts, styles, modals)(content)

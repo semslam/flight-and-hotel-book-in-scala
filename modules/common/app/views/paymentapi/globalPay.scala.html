@@ -1,0 +1,16 @@
+@import controllers.common.routes
+@(transaction: PaymentHistories, fullName: String, email: String)(implicit requestHeader: RequestHeader, messages: Messages)
+@import org.apache.commons.codec.digest.DigestUtils; import java.util.Date; var amt = transaction.getTotalAmount; var transHash = DigestUtils.sha512Hex(transaction.getTransRef + amt.toString + routes.PaymentCtrl.confirm("gp", transaction.getTransRef).absoluteURL() + play.Configuration.root().getString("globalPay.hashKey"));
+<body onload="document.submit2globalpay_form.submit()">
+    <form name="submit2globalpay_form" action="@play.Configuration.root().getString("globalPay.default.urlTest")" target="_self" method="post">
+        <input type="hidden" id="names" name="names" value="@fullName">
+        <input type="hidden" id="amount" name="amount" value="@amt">
+        <input type="hidden" id="email_address" name="email_address" value="@email">
+        <input type="hidden" id="phone_number" name="phone_number" value="08123456789">
+        <!-- Please change the currency as suited to your merchant-->
+        <input type="hidden" id="currency" name="currency" value="NGN">
+        <input type="hidden" id="merch_txnref" name="merch_txnref" value="@transaction.getTransRef">
+        <input type="hidden" id="merchantid" name="merchantid" value="@play.Configuration.root().getString("globalPay.merchantId")">
+        <input class="btn btn-primary" type="submit" id="cmdsubmit" name="cmdsubmit" value="Pay Now">
+    </form>
+</body>

@@ -1,0 +1,16 @@
+@import controllers.web.routes
+@()(implicit loggedUser: Option[Users])
+@if(loggedUser.isDefined) {
+    <li class="dropdown"><a style="font-weight: bold" id="dLabel" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" href="@routes.UserCtrl.dashboard"> Hello @loggedUser.get.getFirstName! <span class="fa fa-caret-down"></span></a>
+        <ul class="dropdown-menu" aria-labelledby="dLabel">
+            <li><a href="@routes.UserCtrl.dashboard()">Dashboard</a> </li>
+            <li><a href="@routes.UserCtrl.dashboard()#bookings">My Bookings</a> </li>
+            <li><a href="@routes.UserCtrl.dashboard()#profile">My Profile</a> </li>
+            <li><a href="@routes.AuthCtrl.signOut">Sign Out</a></li>
+        </ul>
+    </li>
+
+} else {
+    <li><a class="ajax" data-modal-size="modal-sm" href="@routes.AuthCtrl.signIn()">Login</a></li>
+    <li><a class="ajax" data-modal-size="modal-sm" href="@routes.AuthCtrl.startSignUp()"><span class="fa fa-lock"></span> Sign Up</a></li>
+}

@@ -1,0 +1,40 @@
+@import play.filters.csrf.CSRF
+@import controllers.common.routes
+@(transaction: PaymentHistories, fullName: String, email: String)(implicit requestHeader: RequestHeader, messages: Messages)
+@conf = @{
+    play.Configuration.root()
+}
+<body>
+    <em><small><a class="quickteller-checkout-anchor" id="99401">payment button will appear here shortly...</a></small></em>
+    <script type="text/javascript">
+            var QTCheckout = QTCheckout || {};
+            var testMode = true;
+            var baseUrl = "";
+            QTCheckout.paymentItems = QTCheckout.paymentItems || [];
+            QTCheckout.paymentItems.push({
+                paymentCode: 99401,
+                extraData: {
+                    amount: '@transaction.getTotalAmount',
+                    buttonSize: 'medium',
+                    customerId: '@transaction.getTransRef',
+                    mobileNumber: '08127119051',
+                    emailAddress: '@email',
+                    redirectUrl: '@routes.PaymentCtrl.confirm("qt", transaction.getTransRef).absoluteURL()'
+                }
+            });
+//            if (testMode == true) baseUrl = "https://stageserv.interswitchng.com/quicktellercheckout/scripts/quickteller-checkout-min.js?v=";
+            baseUrl = "https://paywith.quickteller.com/scripts/quickteller-checkout-min.js?v=";
+            if (!QTCheckout.qtScript) {
+                var qtScript = document.createElement('script');
+                qtScript.type = 'text/javascript';
+                qtScript.async = true;
+                qtScript.src = baseUrl + new Date().getDay();
+                var s = document.getElementsByTagName('script')[0];
+                s.parentNode.insertBefore(qtScript, s);
+                QTCheckout.qtScript = qtScript;
+            }
+            else if (QTCheckout.buildPaymentItemsUI) {
+                QTCheckout.buildPaymentItemsUI();
+            }
+    </script>
+</body>

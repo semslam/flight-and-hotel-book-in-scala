@@ -1,0 +1,34 @@
+@import views.html.admin.tags.myDataTable
+@import controllers.admin.pricerule.routes
+@import crypto.Encrypt
+@(items: List[HotelsFareRules])(implicit request: RequestHeader, manager: PrivateUsers, messages: Messages, encrypt: Encrypt)
+@views.html.admin.templates.default(title = "Hotel Fare Rules", tab = "bookingSettings") {
+    <div class="panel">
+        <header class="panel-heading">
+            <h2 class="panel-name">Hotel Fare Rules</h2>
+            <br />
+        </header>
+        <div class="panel-body">
+        @myDataTable(Seq("#","Supplier", "Name", "B2C Rule", "B2B Rule", "Is Active?", "Last Updated", "Action")) {
+            @tags.alertFromRequest(request, "success")
+            @tags.alertFromRequest(request, "error")
+            @for(item <- items) {
+                <tr>
+                    <td>@item.getId</td>
+                    <td>@item.getSupplier.getName.toUpperCase</td>
+                    <td>@item.getTitle</td>
+                    <td>@item.getB2cFareDirection @item.getB2cDispenseValue @item.getB2cValueType.name</td>
+                    <td>@item.getB2bFareDirection @item.getB2bDispenseValue @item.getB2bValueType.name</td>
+                    <td>@item.getActive.toString.toUpperCase()</td>
+                    <td>@item.getUpdatedAt.format("yyyy-MM-dd HH:mm")</td>
+                    <td>
+                        <span><a href="@routes.HotelPriceRuleCtrl.create(encrypt.encrypt(item.getId.toString))" class="btn btn-xs btn-primary"><i class="fa fa-pencil"></i> Edit</a></span>
+                        <span><a href="@routes.HotelPriceRuleCtrl.delete(encrypt.encrypt(item.getId.toString))" class="btn btn-xs btn-danger"><i class="fa fa-times"></i> Delete</a></span>
+                    </td>
+                </tr>
+            }
+
+        }
+        </div>
+    </div>
+}

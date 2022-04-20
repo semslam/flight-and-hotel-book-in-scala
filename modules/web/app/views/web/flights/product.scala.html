@@ -1,0 +1,95 @@
+@import helper._
+@import b3.vertical.fieldConstructor
+@import controllers.web.routes
+@import com._
+@import views.html.bookingEngine._
+@import crypto.Encrypt
+@import flight.dto.entity.FlightSearchResponse
+@import com.alajobi.ota.flights.ProductPurchaseInfo
+@import flight.dto.entity.ItineraryWSResponse
+@import flight.dto.entity.FlightSearchRequest
+@(products: List[ProductResult], producsTravellerForm: Form[ProductPurchaseInfo], itinerary: ItineraryWSResponse, searchRequest: FlightSearchRequest, urlAppend: String, itineraryRef: String, fl_tabHash: String)(implicit request: RequestHeader, messages: Messages, loggedsManager: Option[Users], encrypt: Encrypt)
+@import java.text.SimpleDateFormat; val dtFormat = new SimpleDateFormat("yyyy-MM-dd'T'dd:mm:ss")
+@views.html.web.templates.default(title = "Booking Checkout", scripts, loggedUser = loggedsManager) {
+    <style>
+            body, #wrapper, #page_content_wrapper.fixed, #gallery_lightbox h2, .slider_wrapper .gallery_image_caption h2, #body_loading_screen, h3#reply-title span, .overlay_gallery_wrapper, .pricing_wrapper_border, .pagination a, .pagination span, #captcha-wrap .text-box input, .flex-direction-nav a, .blog_promo_title h6, #supersized li, #gallery_caption .tg_caption, #horizontal_gallery_wrapper .image_caption, #tour_search_form, .tour_search_form {
+                /*background: #F2F2F2;*/
+            }
+            button[name=submitBtn] {
+                background: #006fa2;
+                border-color: #006fa2;
+            }
+            @@media(min-width: 1200px)  {
+                .container {
+                    width: 1210px;
+                }
+            }
+    </style>
+    <div style="background-color: #5b63aa; margin:0 0 10px 0;" class="hidden-xs">
+    @("[flightBookingEngineAlt]")
+    </div>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <ol class="breadcrumb">
+                    <li><a href="/" title="Home">Home</a></li>
+                    <li><a href="@routes.FlightCtrl.result(searchRequest.getTripType.name().toLowerCase, searchRequest.getTabHash)" title="Home">Search results</a></li>
+                    <li><a href="@encrypt.decrypt(urlAppend)">@itinerary.getAirline Booking - Traveller(s) details</a></li>
+                    <li>Product &amp; Add-On</li>
+                </ol>
+            </div>
+            <div class="clearfix"></div>
+            <div class="col-md-7">
+                <form method="POST" class="form static-content booking" id="step3" action="@routes.FlightCtrl.saveProduct(itineraryRef, fl_tabHash, urlAppend)" name="b2cFlForm" data-validate="parsley">
+                    @helper.CSRF.formField
+                    <div class="row">
+                    @if(products.nonEmpty) {
+                        <div class="f-item full-width" id="product-option">
+                            <h2>Product &amp; Add-On</h2>
+                            @views.html.common.bookingProducts(products)
+                            <div class="clearfix"></div>
+                            <input type="submit" style="cursor: pointer;" class="btn btn-md btn-primary submitFl_btn gradient-button" value="Continue Booking"/><br />
+                        </div>
+                    }
+                    </div>
+                </form>
+            </div>
+            <aside class="col-md-5">
+                <article class="hotel-details booking-details">
+                    <div class="price">
+                        <h3>Price Breakdown</h3>
+                        <table class="table table-striped table-responsive">
+                            <tbody id="jsTablePriceDisplay">
+                                <tr data-amount="@itinerary.getPricingInfoWSResponse.getTotalFare" id="jsFlightPrice">
+                                    <td><strong class="text-primary">Flight Fare</strong></td>
+                                    <td>@itinerary.getPricingInfoWSResponse.getTotalFare</td>
+                                </tr>
+                                <tr>
+                                    <td>Total</td>
+                                    <td><h4 style="font-size: 15.66px" class="text-primary"><ng-ngn></ng-ngn> <span id="jsTotalCost"></span></h4></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </article>
+                @*<article class="widget">*@
+                    @*<h4>Need Help Booking?</h4>*@
+                    @*<p>Are you stuck or do not understand the booking flow? Please contact one of our agents on phone numbers below to assist you.</p>*@
+                    @*<p class="number">@play.Configuration.root().getString("project.phone1")</p>*@
+                    @*<p class="number">@play.Configuration.root().getString("project.phone2")</p>*@
+                @*</article>*@
+            </aside>
+        </div>
+    </div>
+    <div class="gap"></div>
+}
+@scripts = {
+    <script>
+            $(function() {
+                $('form[name=b2cForm]').find('.search-submit').removeClass('gradient-button');
+                $('.toglekbeng').click(function() {
+                    $("#toglekbeng").toggle();
+                });
+            })
+    </script>
+}

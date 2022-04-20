@@ -1,0 +1,6 @@
+@(name: String, link: String)(implicit messages: Messages)
+@Messages("web.mail.welcome.hello", name)
+Thank you for Signing up on @play.Configuration.root().getString("project.name") B2B Platform
+Your account is still under review. We'll send you an email once your account has been approved.
+Thank you for choosing @play.Configuration.root().getString("project.name")
+Team @play.Configuration.root().getString("project.name") B2B

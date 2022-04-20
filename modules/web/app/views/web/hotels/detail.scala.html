@@ -1,0 +1,214 @@
+@import hotel.dto.entity.Hotel
+@import hotel.dto.entity.SearchRequest
+@import views.html.bookingEngine._
+@import views.html.web.templates._
+@import crypto.Encrypt
+@import java.text.SimpleDateFormat
+@import scala.collection.JavaConversions._
+@(hotel: Hotel, searchRequest: SearchRequest)(implicit request: RequestHeader, maybeUser: Option[Users], messages: Messages, encrypt: Encrypt)
+@import controllers.web.routes
+@default(title = hotel.getHotelName, script, loggedUser = maybeUser) {
+    <div class="container">
+        <ul class="breadcrumb">
+            <li><a href="/@routes.ApplicationCtrl.page("/")">Home</a></li>
+            <li><a href="/@routes.ApplicationCtrl.page("/hotels")">Hotels</a></li>
+            <li class="active">@hotel.getHotelName</li>
+        </ul>
+        <div class="booking-item-details">
+            <header class="booking-item-header">
+                <div class="row">
+                    <div class="col-md-9">
+                        <h2 class="lh1em">@hotel.getHotelName</h2>
+                        <p class="lh1em text-small"><i class="fa fa-map-marker"></i> @hotel.getAddress</p>
+                        <ul class="list list-inline text-small">
+                            <li><a href="#"><i class="fa fa-home"></i> @hotel.getWebsiteUrl</a></li>
+                            <li><a href="#"><i class="fa fa-envelope"></i>@hotel.getEmail</a></li>
+                            <li><i class="fa fa-phone"></i> @hotel.getPhone</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-3">
+                        @if(hotel.getMinRate != null) {
+                            <p class="booking-item-header-price"><small>price from</small>  <span class="text-lg">@hotel.getCurrency @hotel.getMinRate.divide(new java.math.BigDecimal(searchRequest.getHotelAvailabilityRequest.duration())).doubleValue()</span>/night</p>
+                        }
+                    </div>
+                </div>
+            </header>
+            <div class="row">
+                <div class="col-md-7">
+                    <div class="tabbable booking-details-tabbable">
+                        <ul class="nav nav-tabs" id="myTab">
+                            <li class="active"><a href="#tab-1" data-toggle="tab"><i class="fa fa-camera"></i>Photos</a></li>
+                            <li><a href="#tab-2" data-toggle="tab"><i class="fa fa-info-circle"></i>About @hotel.getHotelName</a></li>
+                            <li><a href="#google-map-tab" data-toggle="tab"><i class="fa fa-map-marker"></i>On the Map</a></li>
+                        </ul>
+                        <div class="tab-content">
+                            <div class="tab-pane fade in active" id="tab-1">
+                                    <!-- START LIGHTBOX GALLERY -->
+                                <div class="row row-no-gutter" id="popup-gallery">
+                                    @for(image <- hotel.getImages) {
+                                        <div class="col-md-3">
+                                            <a class="hover-img popup-gallery-image"  href="@image.getUrl" data-effect="mfp-zoom-out">
+                                                <img src="@image.getUrl" style="max-height: 95px" height="95px" alt="Image Alternative text" title="@image.getImgType" />
+                                                <i class="fa fa-plus round box-icon-small hover-icon i round"></i>
+                                            </a>
+                                        </div>
+                                    }
+                                </div>
+                                    <!-- END LIGHTBOX GALLERY -->
+                            </div>
+                            <div class="tab-pane fade in" id="tab-2">
+                                <h4 class="lh1em">About the Hotel</h4>
+                                @hotel.getHotelDesc
+                                @for(facReport <- hotel.getFacilityReports) {
+                                    <div>
+                                        <h5><strong>@facReport.getReportType.toUpperCase</strong></h5>
+                                        <p>@facReport.getDescription</p>
+                                    </div>
+                                }
+                            </div>
+                            <div class="tab-pane fade" id="google-map-tab">
+                                <div id="map" style="width:100%; height:500px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-5">
+                    <div class="booking-item-meta">
+                        @if(hotel.getStarRating != null && !hotel.getStarRating.isEmpty) {
+                            @defining(hotel.getStarRating.toInt.*(100)) { rating =>
+                                <h2 class="lh1em mt40">Exceptional!</h2>
+                            }
+                        }
+                        <h3>97% <small >of guests recommend</small></h3>
+                        @if(hotel.getStarRating != null && !hotel.getStarRating.isEmpty) {
+                            <div class="booking-item-rating">
+                                <ul class="icon-list icon-group booking-item-rating-stars">
+                                    @for(star <- 1 to hotel.getStarRating.toInt) {
+                                        <li><i class="fa fa-star"></i></li>
+                                    }
+                                    @for(star <- 1 to 5 - hotel.getStarRating.toInt) {
+                                        <li><i class="fa fa-star-o"></i></li>
+                                    }
+                                </ul>
+                                <span class="booking-item-rating-number"><b>@hotel.getStarRating</b> of 5 <small class="text-smaller">guest rating</small></span>
+                                <p><a class="text-default" href="#">based on 1535 reviews</a>
+                                </p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+            <div class="gap"></div>
+            <h3>Available Rooms</h3>
+            <div class="row">
+                <div class="col-md-9">
+                    <div class="booking-item-dates-change">
+                        @views.html.bookingEngine._B2ChotelRoomModifyForm(searchRequest)
+                    </div>
+                    @for((roomItem, index) <- hotel.getRooms.sortBy(_.getRooms.head.getOrderPrice.getPrice.doubleValue()).zipWithIndex) {
+                        <div class="gap gap-small"></div>
+                        <ul class="booking-list">
+                            <li>
+                                <a class="booking-item" data-hotelid="@hotel.getHotelId" data-roomrateid="@roomItem.getRooms.head.getRoomRateId" href="@routes.HotelCtrl.bookRoomTraveller(encrypt.encrypt(roomItem.getRooms.head.getRoomRateId), encrypt.encrypt(hotel.getHotelId), request.getQueryString("fl_tabHash").getOrElse("")).url">
+                                    <div class="row">
+                                        <div class="col-md-9">
+                                            <h4 class="booking-item-title">@roomItem.getRooms.head.getRoomName</h4>
+                                            <ul class="booking-item-features booking-item-features-sign clearfix">
+                                                <li rel="tooltip" data-placement="top" title="Adults Occupancy"><i class="fa fa-male"></i><span class="booking-item-feature-sign">x 3</span></li>
+                                                <li rel="tooltip" data-placement="top" title="Children Occupancy"><i class="im im-children"></i> <span class="booking-item-feature-sign">x 1</span></li>
+                                                <li rel="tooltip" data-placement="top" title="Beds"><i class="im im-bed"></i><span class="booking-item-feature-sign">x 2</span></li>
+                                                <li rel="tooltip" data-placement="top" title="Room footage (square feet)"><i class="im im-width"></i><span class="booking-item-feature-sign">200</span></li>
+                                            </ul>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <span class="booking-item-price">@roomItem.getRooms.head.getOrderPrice.getCurrency @roomItem.getRooms.head.getOrderPrice.getPrice.doubleValue()</span>
+                                            <div class="clearfix"></div>
+                                            <span class="btn btn-primary btn-lg form-control loader-btn" style="padding-top: 0px">Book</span>
+                                        </div>
+                                    </div>
+                                </a>
+                            </li>
+                        </ul>
+                    }
+                </div>
+                <div class="col-md-3">
+                     <h4>Hotel Facilities</h4>
+                    <ul class="booking-item-features booking-item-features-expand mb30 clearfix">
+                        <li><i class="im im-wi-fi"></i><span class="booking-item-feature-title">Wi-Fi Internet</span>
+                        </li>
+                        <li><i class="im im-parking"></i><span class="booking-item-feature-title">Parking</span>
+                        </li>
+                        <li><i class="im im-plane"></i><span class="booking-item-feature-title">Airport Transport</span>
+                        </li>
+                        <li><i class="im im-bus"></i><span class="booking-item-feature-title">Shuttle Bus Service</span>
+                        </li>
+                        <li><i class="im im-fitness"></i><span class="booking-item-feature-title">Fitness Center</span>
+                        </li>
+                        <li><i class="im im-pool"></i><span class="booking-item-feature-title">Pool</span>
+                        </li>
+                        <li><i class="im im-spa"></i><span class="booking-item-feature-title">SPA</span>
+                        </li>
+                        <li><i class="im im-restaurant"></i><span class="booking-item-feature-title">Restaurant</span>
+                        </li>
+                        <li><i class="im im-wheel-chair"></i><span class="booking-item-feature-title">Wheelchair Access</span>
+                        </li>
+                        <li><i class="im im-business-person"></i><span class="booking-item-feature-title">Business Center</span>
+                        </li>
+                        <li><i class="im im-children"></i><span class="booking-item-feature-title">Children Activites</span>
+                        </li>
+                        <li><i class="im im-casino"></i><span class="booking-item-feature-title">Casino & Gambling</span>
+                        </li>
+                        <li><i class="im im-bar"></i><span class="booking-item-feature-title">Bar/Lounge</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="gap gap-small"></div>
+    </div>
+}
+@script = {
+    <link rel="stylesheet" media="all" href="/common/plugins/magnific/magnific-popup.min.css" />
+    <script type="text/javascript" src="/common/plugins/magnific/jquery.magnific-popup.min.js"></script>
+    <script type="text/javascript" src="/web/js/fotorama.js"></script>
+    <script>
+            $(function () {
+                $('#popup-gallery').each(function () {
+                    $(this).magnificPopup({
+                        delegate: 'a.popup-gallery-image',
+                        type: 'image',
+                        gallery: {
+                            enabled: true
+                        }
+                    });
+                });
+
+            });
+    </script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDIDc54HZ6VYORNKbMdbE3OJzXZp0dppn4&callback=initMap"></script>
+    <script>
+            function initMap() {
+                var location = {lat: @hotel.getLatitude, lng: @hotel.getLongitude};
+                var map = new google.maps.Map(document.getElementById('map'), {
+                    zoom: 18,
+                    center: location
+                });
+                var marker = new google.maps.Marker({
+                    position: location,
+                    map: map
+                });
+            }
+            (function () {
+                $('.dobAdt').datepicker({
+                    changeMonth: true,
+                    changeYear: true,
+                    yearRange: "-100:+0"
+                });
+                $('.dobChd').datepicker({
+                    changeMonth: true,
+                    changeYear: true,
+                    yearRange: "-11:+0"
+                });
+            })()
+    </script>
+}

@@ -1,0 +1,58 @@
+@import utils.Utilities
+@import views.html.tags.myDataTable
+@import helper._
+@import b3.vertical.fieldConstructor
+@import crypto.Encrypt
+
+@(bookings: List[Bookings], reportForm: Form[(String, String, String)])(implicit loggedManager: Users, messages: Messages, requestHeader: RequestHeader, encrypt: Encrypt)
+@amount = @{
+    0
+}
+@import controllers.b2b.routes
+@rolesString = @{
+    ""
+}
+
+@views.html.b2b.templates.default(title = "Report", tab = "report") {
+    <div class="panel">
+        <div class="panel-body">
+                <!-- Nav tabs -->
+            <ul class="nav nav-tabs" role="tablist">
+                <li role="presentation" class="active"><a href="#home" aria-controls="home" role="tab" data-toggle="tab"> Flight Sales</a></li>
+                @*<li role="presentation"><a href="#profile" aria-controls="profile" role="tab" data-toggle="tab"> Hotel Sales</a></li>*@
+            </ul>
+            <div class="tab-content">
+                <div role="tabpanel" class="tab-pane active" id="home">
+                    <h3><strong>Flight Booking Records</strong></h3>
+                    @myDataTable(Seq("#", "Sold By", "TransID", "PNR", "Dep. to Arr.", "Total Payable", "Payment Status", "Ticket Status", "Trans. Date", "Action"), "desc", "_flightTbl") {
+                        @if(bookings.nonEmpty) {
+                            @for(item <- bookings.filter(_.getFlightBookings != null)) {
+                                <tr>
+                                    <td>@item.getId</td>
+                                    <td><a target="_blank" href="@routes.UserCtrl.create(encrypt.encrypt(item.getUserId.getId.toString))">@item.getUserId.fullName()</a></td>
+                                    <td><small>@item.getTransactionRef</small><div class="clearfix"></div> </td>
+                                    <td>@item.getFlightBookings.getPnrRef</td>
+                                    <td>@for(dd <- item.getFlightBookings.getOriginDestinationsList) { <small>@dd.getDepartureAirportCode to @dd.getArrivalAirportCode</small><br /> }</td>
+                                    <td><small>@item.getPaymentHistoryId.getCurrency @item.getPaymentHistoryId.getTotalAmount</small></td>
+                                    @*<td><small>@item.getPaymentHistoryId.getCurrency @if(item.getFlightBookings.getBookings != null) { @item.getFlightBookings.getBookings.getB2bBookingMarkup.getTotalMarkUp } else { 0 } </small></td>*@
+                                    <td><small>@item.getPaymentHistoryId.getStatus.name()</small></td>
+                                    <td><small>@item.getStatus.name()</small></td>
+                                    <td><small>@item.getCreatedAt.format("yyyy-MM-dd HH:mm")</small></td>
+                                    <td>
+                                        <span><a href="@routes.ApplicationCtrl.viewBookingItinerary(encrypt.encrypt(item.getId.toString))" class="btn btn-xs btn-info ajax"><i class="fa fa-info"></i> View Details</a></span>
+                                        <span><a href="@routes.FlightCtrl.sendInvoiceToMail(item.getId)" class="btn btn-xs btn-info"><i class="fa fa-message"></i> Send Invoice</a></span>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    }
+
+                </div>
+                <div role="tabpanel" class="tab-pane" id="profile">
+                    <h3><strong>Hotel Booking Records</strong></h3>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+	

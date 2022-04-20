@@ -1,0 +1,37 @@
+@import controllers.admin.cms.routes
+@import views.html.admin.tags.myDataTable
+@import views.html.admin.templates._
+@import crypto.Encrypt
+
+
+@(items: List[CmsTemplates])(implicit request: RequestHeader, messages: Messages, manager: PrivateUsers, encrypt: Encrypt)
+@default(title = "Templates & Pages", tab = "cms") {
+    <div class="panel">
+        <header class="panel-heading">
+            <h2 class="panel-name">Page</h2>
+            <br />
+            <a href="@routes.TemplateCtrl.create()" class="btn btn-default"><i class="fa fa-plus"></i> Create New Page</a><br />
+        </header>
+        <div class="panel-body">
+            @myDataTable(Seq("#","Name", "Is Publish", "Author", "URL", "Last Updated", "Action")) {
+                @tags.alertFromRequest(request, "success")
+                @tags.alertFromRequest(request, "error")
+                @if(items.nonEmpty) {
+                    @for(item <- items) {
+                        <tr>
+                            <td>@item.getId</td>
+                            <td>@item.getName</td>
+                            <td>@item.getIsPublished.name()</td>
+                            <td>@item.getAuthUserId.fullName()</td>
+                            <td>@item.getUpdatedAt</td>
+                            <td>
+                                @*<span><a href="@routes.TemplateCtrl.create(encrypt.encrypt(item.getId.toString))" class="btn btn-xs btn-primary"><i class="fa fa-pencil"></i> Edit</a></span>*@
+                                <span><a href="@routes.PageCtrl.delete(encrypt.encrypt(item.getId.toString))" class="btn btn-xs btn-danger"><i class="fa fa-times"></i> Delete</a></span>
+                            </td>
+                        </tr>
+                    }
+                }
+            }
+        </div>
+    </div>
+}

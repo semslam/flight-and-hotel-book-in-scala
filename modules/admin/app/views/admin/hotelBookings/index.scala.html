@@ -1,0 +1,41 @@
+@import views.html.admin.tags.auth._
+@import controllers.admin.management.routes
+@import views.html.admin.tags.myDataTable
+@import crypto.Encrypt
+@(queues: List[HotelBookings])(implicit loggedManager: PrivateUsers, messages: Messages, requestHeader: RequestHeader, encrypt: Encrypt)
+@views.html.admin.templates.default(title = "Hotels Queues", tab = "queue") {
+    <div class="panel" style="border-radius: 0px">
+        <div class="panel-heading">
+            <h3>Hotel Queues</h3>
+            @tags.alertFromRequest(requestHeader, "error")
+            @tags.alertFromRequest(requestHeader, "success")
+        </div>
+        <div class="panel panel-body">
+        @myDataTable(Seq("", "TD Ref.", "Supplier", "Hotel Name", "CheckIn", "Check Out", "No. of Rooms", "Status", "Supp. Amount", "Booking Date", "Tk. Officer")) {
+            @if(queues.nonEmpty) {
+                @for(item <- queues) {
+                    <tr>
+                        <td>@item.getId</td>
+                        <td><a href="@controllers.admin.management.routes.PackageBookingCtrl.manage(encrypt.encrypt(item.getBookings.getTransactionRef))" target="_blank">@item.getBookings.getTransactionRef</a></td>
+                        <td>@item.getBookings.getSupplier.getName</td>
+                        <td>@item.getHotelName</td>
+                        <td>@item.getCheckIn.format("dd-MMM-yyyy")</td>
+                        <td>@item.getCheckOut.format("dd-MMM-yyyy")</td>
+                        <td>@item.getRooms.size() Room(s)</td>
+                        <td>@item.getBookings.getStatus.name()</td>
+                        <td>@item.getSupplierSaleCurrency @item.getSupplierTotalPrice</td>
+                        <td>@item.getCreatedAt.format("dd-MM-yyyy HH:mm")</td>
+                        @{
+                            try {
+                                Html(s"""<td><small>${item.getBookings.getAuthOperatorId.getFirstName}</small></td>""")
+                            } catch {
+                                case e: Throwable => Html(s"""<td><small>-</small></td>""")
+                            }
+                        }
+                    </tr>
+                }
+            }
+        }
+        </div>
+    </div>
+}

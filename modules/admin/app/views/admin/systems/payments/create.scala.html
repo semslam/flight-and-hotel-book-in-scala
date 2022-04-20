@@ -1,0 +1,75 @@
+@import helper._
+@import views.html.admin.tags.myDataTable
+@import crypto.Encrypt
+@import views.html.helper.CSRF
+@import b3.vertical.fieldConstructor
+@import controllers.admin.systems.routes
+
+
+@(form: Form[(Option[String], String, String, Option[String], String, Option[String], Option[String], Option[String])], paymentCategory: PaymentCategories)(implicit request: RequestHeader, messages: Messages, manager: PrivateUsers)
+@import views.html.admin.templates._
+@default(title = "Payment Categories", tab = "systems") {
+    <div class="panel">
+        <header class="panel-heading">
+            <h2 class="panel-name">Payment Categories</h2>
+            <br />
+        </header>
+        <div class="panel-body">
+        @b3.formCSRF(routes.PaymentCtrl.save(paymentCategory.name()), 'enctype -> "multipart/form-data") {
+            <input type="hidden" name="@form("paymentCategory").name" value="@paymentCategory.name()" />
+            @if(form("id").value.isDefined) {
+                <input type="hidden" value="@form("id").value.get" name="id" />
+            }
+            @if(paymentCategory.name().equals(PaymentCategories.CASH_PAYMENT.name())) {
+                <div class="form-group col-md-4">
+                    <label>Operating Bank</label>
+                    <select required name="@form("name").name" class="form-control">
+                        <option>Select a Bank</option>
+                        @for(banks: Banks <- Banks.find.all()) {
+                            <option @if(form("name").value.isDefined && form("name").value.get.equals(banks.getName)) {
+                                selected="selected"
+                            } value="@banks.getName">@banks.getName</option>
+                        }
+                    </select>
+                </div>
+                <div class="form-group col-md-4">
+                    <label>Bank Account Number</label>
+                    <input type="text" name="@form("accountNo").name" value="@form("accountNo").value.getOrElse("")" class="form-control">
+                </div>
+                <div class="form-group col-md-4">
+                    <label>Account Name</label>
+                    <input name="@form("accountName").name" value="@form("accountName").value.getOrElse("")" class="form-control">
+                </div>
+            }
+            @if(paymentCategory.name().equals(PaymentCategories.Debit_Card.name())) {
+                <div class="form-group col-md-3">
+                    <label>Payment Gateway Name</label>
+                    <input type="text" class="form-control" name="@form("name").name" required value="@form("name").value" placeholder="e.g. GTPay, GlobalPay, Interswitch etc." />
+                </div>
+                <div class="form-group col-md-3">
+                    <label>Payment Gateway Display Name</label>
+                    <input type="text" class="form-control" name="@form("accountName").name" required value="@form("accountName").value" placeholder="e.g. GTPay, GlobalPay, Interswitch etc." />
+                </div>
+                <div class="form-group col-md-3">
+                    <label>Logo URL</label>
+                    <input type="text" class="form-control" name="@form("logo").name" required value="@form("logo").value" placeholder="e.g http//images.com/logo.png" />
+                </div>
+                <div class="form-group col-md-1">
+                    <label>Markup</label>
+                    <input type="text" class="form-control" name="@form("markup").name" required value="@form("markup").value" placeholder="Markup Value" />
+                </div>
+                <div class="form-group col-md-2">
+                    <label>Max. Cap Price</label>
+                    <input type="number" class="form-control" name="@form("capPice").name" required value="@form("capPice").value" placeholder="Max. Cap Price" />
+                </div>
+
+            }
+@*//            @if(paymentCategory.name().equals(PaymentCategories.Fund_Transfer.name())) {*@
+                @*<h4>Not Available</h4>*@
+@*//            }*@
+            <br />
+            <button type="submit" name="submit" class="btn form-control btn-primary">Submit</button>
+        }
+        </div>
+    </div>
+}

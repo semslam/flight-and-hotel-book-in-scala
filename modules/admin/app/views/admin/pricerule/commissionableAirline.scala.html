@@ -1,0 +1,70 @@
+@import helper._
+@import views.html.admin.tags.myDataTable
+@import controllers.admin.pricerule.routes
+@import crypto.Encrypt
+@(form: Form[(Option[String], String)], commAirlines: List[AirlineCommissionable], airlines: List[Airlines])(implicit request: RequestHeader, manager: PrivateUsers, messages: Messages, encrypt: Encrypt)
+@views.html.admin.templates.default(title = "Commissionable Airlines", tab = "bookingSettings") {
+    <div class="panel">
+        <header class="panel-heading">
+            <h2 class="panel-name">Sellable Airlines</h2>
+            <br />
+        </header>
+        <div class="panel-body">
+            <div class="row">
+                <div class="col-md-4">
+                    @tags.alertFromRequest(request, "success")
+                    @tags.alertFromRequest(request, "error")
+                    @form.globalError.map { error =>
+                        @tags.alert(error.message, "error")
+                    }
+                    <form method="post" data-validate="parsley" action="@routes.FlightPriceRuleCtrl.saveCommissionableAirline">
+                        @helper.CSRF.formField
+                        @if(form("id").value.isDefined) {
+                            <input type="hidden" name="@form("id").name" value="@form("id").value" />
+                        }
+                        <div class="panel-heading">
+                            <h4><strong>Add New Sellable Airline</strong></h4>
+                        </div>
+                        <div class="panel-body row">
+                            <div class="col-md-4 col-sm-12 col-xs-12 col-lg-4">
+                                <div class="form-group">
+                                    <label for="airline">Select Airline</label>
+                                    <select name="@form("airlineId").name" id="airline" class="form-control" data-required="true">
+                                        <option value="">Select Airline</option>
+                                        @for(airline <- airlines) {
+                                            <option @if(form("airlineId").value.isDefined && form("airlineId").value.get.eq(airline.getId.toString)) {
+                                                selected="selected"
+                                            } value="@airline.getId.toString">@airline.getName</option>
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-12 col-sm-12 col-xs-12 col-lg-12">
+                                <button type="submit" class="btn btn-md btn-danger">Close</button>
+                                <button type="submit" class="btn btn-md btn-primary">Submit</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="col-md-8">
+                    @myDataTable(Seq("#", "Airline", "Created at", "Updated at", "Action")) {
+                    @if(commAirlines.nonEmpty) {
+                        @for(item <- commAirlines) {
+                            <tr>
+                                <td>@item.getId</td>
+                                <td>@item.getAirlineId.getName (@item.getAirlineId.getAirlineCode)</td>
+                                <td>@item.getCreatedAt.format("yyyy-MM-dd HH:mm")</td>
+                                <td>@item.getUpdatedAt.format("yyyy-MM-dd HH:mm")</td>
+                                <td>
+                                    <span><a href="@routes.FlightPriceRuleCtrl.commissionableAirline(encrypt.encrypt(item.getId.toString))" class="btn btn-xs btn-primary"><i class="fa fa-pencil"></i></a></span>
+                                    <span><a href="@routes.FlightPriceRuleCtrl.deleteCommissionableAirline(encrypt.encrypt(item.getId.toString))" class="confirm-delete btn btn-xs btn-danger"><i class="fa fa-times"></i></a></span>
+                                </td>
+                            </tr>
+                        }
+                    }
+                }
+                </div>
+            </div>
+        </div>
+        </div>
+}

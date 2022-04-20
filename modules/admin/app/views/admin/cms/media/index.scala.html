@@ -1,0 +1,75 @@
+@import crypto.Encrypt
+
+
+@(items: List[Medias])(implicit request: RequestHeader, messages: Messages, manager: PrivateUsers, encrypt: Encrypt)
+@import views.html.admin.tags.myDataTable
+@import controllers.admin.cms.routes
+@import views.html.admin.templates._
+@default(title = "Media Upload & Manager", tab = "cms", scripts, style) {
+    <div class="panel">
+        <header class="panel-heading">
+            <h2 class="panel-name">Media Upload & Manager</h2>
+        </header>
+        <div class="panel-body">
+            <div class="col-md-3">
+                <header class="panel-heading">
+                    File Upload
+                </header>
+                @helper.form(routes.MediaCtrl.upload, 'enctype -> "multipart/form-data") {
+                    @helper.CSRF.formField
+                    <div class="form-group">
+                        <input type="file" name="file[]" accept="image/*" class="form-control" multiple>
+                    </div>
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary btn-md">Upload <span class="fa fa-cloud"></span></button>
+                    </div>
+                }
+                <div class="clearfix"></div>
+            </div>
+            <div class="col-md-9">
+            @myDataTable(Seq("#", "-", "URL", "Cloud-Source", "Size", "Created at", "Action")) {
+                @tags.alertFromRequest(request, "success")
+                @if(items.nonEmpty) {
+                    @for(item <- items) {
+                        <tr>
+                            <td>@item.getId</td>
+                            <td><img src="@controllers.admin.routes.Assets.img(s"${item.getExt}.png")"/></td>
+                            <td>
+                                @item.getFileUrl.substring(0, 22)...
+                            <span class="pull-right btn btn-default btn-xs cp" style="cursor: pointer" data-toggle="tooltip" data-placement="right" title="Copy to Clipboard">
+                                <i class="fa fa-clipboard"></i>
+                                <input type="hidden" value="@item.getFileUrl" class="copyClipboard">
+                            </span>
+                            </td>
+                            <td>@item.getSourceType.name()</td>
+                            <td>@item.getSize</td>
+                            <td>@item.getCreatedAt.format("yyyy-MM-dd HH:mm")</td>
+                            <td>
+                                <span><a href="@item.getFileUrl" rel="light" class="btn btn-xs btn-default"><i class="fa fa-tv"></i></a></span>
+                                <span><a href="@item.getFileUrl" class="btn btn-xs btn-default"><i class="fa fa-cloud-download"></i> </a></span>
+                                <span><a href="@routes.MediaCtrl.delete(encrypt.encrypt(item.getId.toString))" class="btn btn-xs btn-danger"><i class="fa fa-times"></i></a></span>
+                            </td>
+                        </tr>
+                    }
+                }
+            }
+            </div>
+        </div>
+    </div>
+}
+@scripts = {
+    <script src="@controllers.admin.routes.Assets.commonLib("lightImgpopup/jquery.light.js")"></script>
+    <script src="@controllers.admin.routes.Assets.commonJs("clipboard.min.js")"></script>
+    <script>
+        $(function() {
+            $('a[rel=light]').light();
+            $(".cp").on('click', function() {
+                var $this = $(this);
+                new Clipboard($this.closest('.copyClipboard'));
+            });
+        })
+    </script>
+}
+@style = {
+    <link rel="stylesheet" media="all" href="@controllers.admin.routes.Assets.commonLib("lightImgpopup/jquery.light.css")" />
+}

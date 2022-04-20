@@ -1,0 +1,4 @@
+@(anyOf: String*)(body: Html)(implicit loggedManager: PrivateUsers)
+@if(utils.silhouette.admin.WithRole.isAuthorized(loggedManager, anyOf:_*)) {
+	@body
+}

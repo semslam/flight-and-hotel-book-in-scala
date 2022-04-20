@@ -1,0 +1,300 @@
+@import com._
+@import controllers.b2b.routes
+@import helper._
+@import b3.vertical.fieldConstructor
+@import crypto.Encrypt
+@import flight.dto.entity.ItineraryWSResponse
+@import flight.dto.entity.FlightSearchRequest
+@import flight.dto.entity.PassengerCode
+@import com.avaje.ebean.Expr
+@import com.alajobi.ota.flights.FlightTravellerInfo
+@import views.html.bookingEngine._
+@(itineraryRef: String, fl_tabHash: String, itinerary: ItineraryWSResponse, searchRequest: FlightSearchRequest, travellerInfoForm: Form[FlightTravellerInfo])(implicit loggedManager: Users, request: RequestHeader, messages: Messages, encrypt: Encrypt)
+@import java.lang.String; var passengerClass = "adultDOB"
+@views.html.b2b.templates.default(title = "Itinerary Detail", tab = "flight", scripts) {
+    <div class="panel">
+        <div class="panel-heading">
+            <span class="pull-right">
+                <a href="#" onclick="javascript: window.history.back();" class="btn btn-md btn-info"><i class="fa fa-backward"></i> Back to Search Result</a>
+                <a href="#" class="btn btn-md btn-default" onclick="javascript: toggleSearch()"><i class="fa fa-search"></i> New Search</a>
+            </span>
+            <h3><span class="badge badge-danger">1</span> <strong>Passengers &amp; Review Itinerary</strong></h3>
+        </div>
+        <div class="panel-body">
+            <div style="display: none" id="_b2bFormAlt">
+            @_B2BflightForm()
+            </div>
+            <table class="table table-striped table-responsive">
+                    <thead>
+                        <tr>
+                            <td>Airline</td>
+                            <td align="center">Departure</td>
+                            <td align="center">Arrival</td>
+                            <td>Duration</td>
+                            <td align="center">Stops</td>
+                            <td align="center">Cabin</td>
+                            <td></td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td role="gridcell">
+                                <span class="pull-left" style="margin-right: 5px"><img class="img img-rounded img-responsive" src="@{s"""https://s3-us-west-2.amazonaws.com/travelden/airline/${itinerary.getAirlineCode}.png"""}" style="height: 40px; width: 40px" alt="@itinerary.getAirline" /></span>
+                                <span>@itinerary.getAirlineCode <br /> <small>FL @itinerary.getAirItineraryWSResponse.getOriginDestinationWSResponses.get(0).getFlightSegmentWSResponses.get(0).getFlightNumber</small></span>
+                            </td>
+                            <td role="gridcell" class="text-center">
+                            @for(departure <- itinerary.getAirItineraryWSResponse.getOriginDestinationWSResponses) {
+                                <p><strong>@departure.getOriginAirportCode</strong> - @utils.Utilities.parseDate(departure.getDepartureDateTime).getTime.format("dd MMM yyyy, HH:mm") </p>
+                            }
+                            </td>
+                            <td role="gridcell" class="text-center">
+                            @for(departure <- itinerary.getAirItineraryWSResponse.getOriginDestinationWSResponses) {
+                                <p><strong>@departure.getDestinationAirportCode</strong> - @utils.Utilities.parseDate(departure.getArrivalDateTime).getTime.format("dd MMM yyyy, HH:mm") </p>
+                            }
+                            </td>
+                            <td role="gridcell">
+                            @for(departure <- itinerary.getAirItineraryWSResponse.getOriginDestinationWSResponses) {
+                                @departure.getDuration<br />
+                            }
+                            </td>
+                            <td role="gridcell" class="text-center">
+                            @for(departure <- itinerary.getAirItineraryWSResponse.getOriginDestinationWSResponses) {
+                                @departure.getNumberOfStops Stop@("s".when(departure.getNumberOfStops.>(1)))<br >
+                            }
+                            </td>
+                            <td role="gridcell" class="text-center">
+                            @itinerary.getAirItineraryWSResponse.getOriginDestinationWSResponses.get(0).getCabin
+                            </td>
+                            <td role="gridcell" class="text-center">
+                                <a href="#" class="btn btn-md btn-primary view-info form-control pull-right" style="border-radius: 3px">Full Details</a><br />
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            <div class="more_detail" style="display: none; padding 10px">
+                @defining(itinerary) { flight =>
+                    @for(item <- flight.getAirItineraryWSResponse.getOriginDestinationWSResponses) {
+                        <div class="col-md-9 col-lg-9 col-xs-9"><i class="icon icon-departure"></i>@item.getOriginAirport <span> <i class="icon icon-long-arrow-right"></i> </span> <i class="icon icon-arrival"></i> @item.getDestinationAirport </div>
+                        <div class="col-md-3 col-lg-3 col-xs-3 pull-right">@item.getDuration</div>
+                        <div class="clearfix"></div>
+                        <div class="col-md-12 col-lg-12 col-xs-12 col-sm-12">
+                            <table class="table table-responsive" cellspacing="0" width="100%">
+                                <tbody>
+                                    @for(flightSegment <- item.getFlightSegmentWSResponses) {
+                                    <tr>
+                                        <td>
+                                            <img src="@flightSegment.getAirlineLogoUrl" class="img img-responsive image lazy-load" height="10px;" style="height: 40px;" />
+                                            <div class="clearfix"></div>
+                                            <small><strong>@flightSegment.getMarketingAirlineCode (@flightSegment.getFlightNumber)</strong></small>
+                                        </td>
+                                        <td>
+                                            <strong> @utils.Utilities.parseDate(flightSegment.getDepartureDateTime).getTime.format("dd MMM yyyy, HH:mm")</strong><br />
+                                            <small> @flightSegment.getDepartureAirport (@flightSegment.getDepartureAirportCode)</small>
+                                        </td>
+                                        <td><i class="icon icon-long-arrow-right"></i></td>
+                                        <td>
+                                            <strong> @utils.Utilities.parseDate(flightSegment.getArrivalDateTime).getTime.format("dd MMM yyyy, HH:mm")</strong><br />
+                                            <small>@flightSegment.getArrivalAirport (@flightSegment.getArrivalAirportCode)</small>
+                                        </td>
+                                        <td class="text-center" width="12%"><span class="text-muted">Duration: </span> @flightSegment.getDuration<br />
+                                            <small>
+                                                <span>@("Non Stop".when(flightSegment.getStopQuantity.<=(0)))</span>
+                                                <span>@(flightSegment.getStopQuantity + " Stop(s)".when(flightSegment.getStopQuantity.>=(1)))</span>
+                                            </small>
+                                            <div class="clearfix"></div>
+                                            <small class="text-primary">@flightSegment.getResBookDesigCode Class</small>
+                                            <div class="clearfix"></div>
+                                            <small class="text-muted">@flightSegment.getCabin</small>
+                                        </td>
+                                    </tr>
+                                }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                }
+            </div>
+            @b3.form(CSRF(routes.FlightCtrl.submitTraveller(itineraryRef, fl_tabHash)), 'name -> "b2bFlForm"){
+                <input type="hidden" name="itineraryRef" value="@itineraryRef" />
+                <input type="hidden" name="@travellerInfoForm("cacheIndex").name" value="@itinerary.getCacheIndex.toString" />
+                <input type="hidden" name="@travellerInfoForm("salesCategory").name" value="@searchRequest.getSalesCategory.name()" />
+                <input type="hidden" name="@travellerInfoForm("userId").name" value="@loggedManager.getId" />
+                <div class="row">
+                    <div class="col-md-12 col-lg-12 col-xs-12 trip-wrap space15 row">
+                        <!-- PASSENGER DETAIL HERE -->
+                        <h4><strong>Adult Details</strong></h4>
+                        @helper.repeatWithIndex(travellerInfoForm("travellersBio"), min = searchRequest.getAdultCount) { (traveller, index) =>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    @if((index + 1) <= searchRequest.getAdultCount) {
+                                        <input type="hidden" name="@traveller("passengerType").name" value="@PassengerCode.ADULT.value()" />
+                                    }
+                                </div>
+                                <div class="col-md-2">
+                                @b3.select(traveller("title"), options(Titles.options("")), 'required -> "required", 'class -> "title form-control", '_label -> Html("""Title<span class="text-danger">*</span>"""))
+                                </div>
+                                <div class="col-md-3">
+                                @b3.text(traveller("firstName"), 'class -> "firstName form-control", 'required -> "required", '_label -> Html("""First Name<span class="text-danger">*</span>"""))
+                                </div>
+                                <div class="col-md-2">
+                                @b3.text(traveller("otherName"), 'class -> "otherName form-control", '_label -> "Other Name")
+                                </div>
+                                <div class="col-md-3">
+                                @b3.text(traveller("lastName"), 'class -> "lastName form-control", 'required -> "required", '_label -> Html("""Surname<span class="text-danger">*</span>"""))
+                                </div>
+                                <div class="f-item col-md-2">
+                                @b3.text(traveller("dateOfBirth"), 'class -> "adultDOB form-control", 'required -> "required", '_label -> Html("""Date or Birth<span class="text-danger">*</span>"""))
+                                </div>
+                                <div class="clearfix"></div>
+                            </div>
+                        }
+
+                        @if(searchRequest.getChildCount > 0) {
+                            <hr />
+                            <h4>Child Details</h4>
+                        }
+                        @helper.repeatWithIndex(travellerInfoForm("travellersBio"), min = searchRequest.getChildCount + searchRequest.getAdultCount) { (traveller, index) =>
+                            @if(index >= searchRequest.getAdultCount) {
+                                <div class="row">
+                                    <input type="hidden" name="@traveller("passengerType").name" value="@PassengerCode.CHILD.value()" />
+                                    <div class="col-md-2">
+                                    @b3.select(traveller("title"), options(Map("" -> "------", "Master" -> "Master", "Ms" -> "Miss")), 'required -> "required", 'class -> "title form-control", '_label -> Html("""Title<span class="text-danger">*</span>"""))
+                                    </div>
+                                    <div class="col-md-3">
+                                    @b3.text(traveller("firstName"), 'class -> "firstName form-control", 'required -> "required", '_label -> Html("""First Name<span class="text-danger">*</span>"""))
+                                    </div>
+                                    <div class="col-md-2">
+                                    @b3.text(traveller("otherName"), 'class -> "otherName form-control", '_label -> "Other Name")
+                                    </div>
+                                    <div class="col-md-3">
+                                    @b3.text(traveller("lastName"), 'class -> "lastName form-control", 'required -> "required", '_label -> Html("""Surname<span class="text-danger">*</span>"""))
+                                    </div>
+                                    <div class="f-item col-md-2">
+                                    @b3.text(traveller("dateOfBirth"), 'class -> "childDOB form-control", 'required -> "required", '_label -> Html("""Date or Birth<span class="text-danger">*</span>"""))
+                                    </div>
+                                    <div class="clearfix"></div>
+                                </div>
+                            }
+                            <span></span>
+                        }
+
+                        @if(searchRequest.getInfantCount > 0) {
+                            <hr />
+                            <h4>Infant Details</h4>
+                        }
+                        @helper.repeatWithIndex(travellerInfoForm("travellersBio"), min = searchRequest.getInfantCount + (searchRequest.getAdultCount + searchRequest.getChildCount)) { (traveller, index) =>
+                            @if(index  >= (searchRequest.getAdultCount + searchRequest.getChildCount)) {
+                                <input type="hidden" name="@traveller("passengerType").name" value="@PassengerCode.INFANT.value()" />
+                                <div class="row">
+                                    <div class="col-md-2">
+                                    @b3.select(traveller("title"), options(Map("" -> "------", "Master" -> "Master", "Ms" -> "Miss")), 'required -> "required", 'class -> "title form-control", '_label -> Html("""Title<span class="text-danger">*</span>"""))
+                                    </div>
+                                    <div class="col-md-3">
+                                    @b3.text(traveller("firstName"), 'class -> "firstName form-control", 'required -> "required", '_label -> Html("""First Name<span class="text-danger">*</span>"""))
+                                    </div>
+                                    <div class="col-md-2">
+                                    @b3.text(traveller("otherName"), 'class -> "otherName form-control", '_label -> "Other Name")
+                                    </div>
+                                    <div class="col-md-3">
+                                    @b3.text(traveller("lastName"), 'class -> "lastName form-control", 'required -> "required", '_label -> Html("""Surname<span class="text-danger">*</span>"""))
+                                    </div>
+                                    <div class="f-item col-md-2">
+                                    @b3.text(traveller("dateOfBirth"), 'class -> "infantDOB form-control", 'required -> "required", '_label -> Html("""Date or Birth<span class="text-danger">*</span>"""))
+                                    </div>
+                                    <div class="clearfix"></div>
+                                </div>
+                            }
+                        }
+                        <div class="gap gap-small"></div>
+
+                    </div>
+                    <div class="col-md-12 col-lg-12 col-xs-12 trip-wrap space15 row">
+                        <div class="col-md-12"><h4>Contact Details <small><label for="same_as_adult1"><input type="checkbox" name="same_as_adult1" value="1" id="same_as_adult1" /> Same as first adult?</label></small></h4></div>
+                        <div class="form-group col-md-1 col-xs-6">
+                        @b3.select(travellerInfoForm("contactTitle"), options(Titles.options(loggedManager.getPrefix.name())), 'class -> "contactTitle", '_label -> "Title", 'required -> "required")
+                        </div>
+                        <div class="form-group col-md-3 col-x-6">
+                        @b3.text(travellerInfoForm("contactFirstName"), 'value -> loggedManager.getFirstName, '_label -> "First Name", 'class -> "contactFirstName", 'required -> "required")
+                        </div>
+                        <div class="form-group col-md-3 col-xs-6">
+                        @b3.text(travellerInfoForm("contactLastName"), 'value -> loggedManager.getLastName, '_label -> "Surname", 'class -> "contactSurname",  'required -> "required")
+                        </div>
+                        <div class="form-group col-md-3 col-xs-6">
+                        @b3.email(travellerInfoForm("email"), 'value -> loggedManager.getEmail, '_label -> "Email", 'required -> "required")
+                        </div>
+                        <div class="form-group col-md-2 col-xs-6">
+                            <label>Mobile Phone</label>
+                            <input name="@travellerInfoForm("phone").name"  type="number" placeholder="Phone Number" value="@travellerInfoForm("phone").value.getOrElse(loggedManager.getPhone)" class="form-control bfh-phone" data-required="true" required="required" />
+                        </div>
+                        <div class="col-md-12 clearfix">
+                        @helper.textarea(travellerInfoForm("remarks"), 'class -> "form-control", '_label -> "Remark(optional)", 'rows -> 4)
+                        </div>
+                    </div>
+                    <div class="col-md-12 col-lg-12 col-xs-12">
+                        <button class="btn btn-md btn-success btn-md" type="submit">Next, Continue!</button>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+    @if(itinerary != null) {
+        @defining(itinerary.getPricingInfoWSResponse.getFlightsFareRules) { fareRule =>
+            @if((fareRule != null && fareRule.getFareRuleAirports != null) && fareRule.getFareRuleAirports.exists(p => p.getAirportCode.equalsIgnoreCase(searchRequest.getOriginDestinationRequests.head.getDestination)) && fareRule.getDisclaimerContent != null) {
+                <div class="modal fade" id="disclaimerModal" tabindex="-1" role="dialog">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                <h4 class="modal-title">@fareRule.getDisclaimerTitle</h4>
+                            </div>
+                            <div class="modal-body">
+                            @Html(fareRule.getDisclaimerContent)
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-primary" data-dismiss="modal">Okay</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    }
+}
+@scripts = {
+    <script src="@routes.Assets.myJs("jsB2bFlight.js")"></script>
+    <script type="text/javascript" src="@routes.Assets.commonJs("bootstrap-formhelpers-phone.js")"></script>
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.0/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/ui/1.12.0/jquery-ui.js"></script>
+    <script>
+        $('.view-info').on('click', function() {
+            $('.more_detail').toggle();
+        });
+    </script>
+    <script>
+            function toggleSearch() {
+                $("#_b2bFormAlt").toggle();
+            }
+            $(function () {
+                var dtOption = {
+                    changeMonth: true,
+                    changeYear: true,
+                    yearRange: "-100:-11"
+                };
+                var childOption = {
+                    changeMonth: true,
+                    changeYear: true,
+                    yearRange: "-12:+0"
+                };
+                var infantOption = {
+                    changeMonth: true,
+                    changeYear: true,
+                    yearRange: "-2:+0"
+                };
+
+                $(".adultDOB").datepicker(dtOption);
+                $(".childDOB").datepicker(childOption);
+                $(".infantDOB").datepicker(infantOption);
+            });
+            $('#disclaimerModal').modal('show');
+    </script>
+}

@@ -1,0 +1,102 @@
+@import cms.DynamicPageHandler
+@import views.html.web.pages._
+@import views.html.bookingEngine._
+@import controllers.web.routes
+@import crypto.Encrypt
+@(title: String, script: Html = Html(""), style: Html = Html(""), loggedUser: Option[Users] = None, page: CmsPages = null, tempMgr: DynamicPageHandler = null, bodyClass: String = "load-full-screen")(content: Html)(implicit messages: Messages, request: RequestHeader, encrypt: Encrypt, user: Option[Users] = loggedUser)
+@import com.alajobi.ota.utils.SystemControlSetting; val systemControlSetting = SystemControlSetting.getInstance()
+@if(content == null) {
+    @*Dynamic Page*@
+    @_header(systemControlSetting, pageTitle = title, inlineCss = page.getInlineCss, seoMetaName = page.getMetaKeywords, seoMetaDesc = page.getMetaDescription, htmlClass = bodyClass)
+} else {
+    @*Non Dynamic Page*@
+    @_header(systemControlSetting, title, style.body, null, htmlClass = bodyClass)
+}
+<body class="@bodyClass">
+    <div class="coming-soon-wrapper full-screen loading" id="loader-wrapper" style="display: none">
+        <div class="coming-soon full-screen">
+            <div class="centered-box text-center">
+                <div class="logo">
+                    <h2><img src="@SystemControlSetting.getInstance().get(SystemControlSetting.CMS_LOGO)" /></h2>
+                </div>
+                <div class="search-title flight-desc"></div>
+                <div class="text-center">
+                    @Html(systemControlSetting.get(SystemControlSetting.CMS_FLIGHT_PRELOADER_HTML))
+                </div>
+                <div class="hotel-desc"></div>
+                   <div class="text-center">
+                        @Html(systemControlSetting.get(SystemControlSetting.CMS_HOTEL_PRELOADER_HTML))
+                    </div>
+                    <p class="copyright"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="site-wrapper">
+        @if(content == null) {
+                @DynamicHtmlParser(systemControlSetting.get(SystemControlSetting.CMS_HTML_HEADER))
+                @if(java.util.Objects.nonNull(tempMgr.getAttrValue("header")) && tempMgr.getAttrValue("header").equalsIgnoreCase("no")) {
+                    @*Page Header Logic*@
+                    <script>
+                            document.getElementById("header").style = "display: none";
+                    </script>
+                    @*End of Page Header Logic*@
+                }
+            } else {
+                @DynamicHtmlParser(systemControlSetting.get(SystemControlSetting.CMS_HTML_HEADER))
+            }
+            @if(content == null) {
+                    <div class="row">
+                    @defining(new DynamicPageHandler().parsePage(page)) { tmpM =>
+                        <div class="@*tmpM.getSidebarDivClass(page.getCmsTemplateId.getAttrValue("sidebar_perc_ratio")).apply(1)*@">
+                        @for(item <- page.getCmsTemplateId.getCmsTemplateAttrList) {
+                            @if(item.getAttr.equals("num_body_rows")) {
+                                @for(bodyIndex <- 1 to Integer.parseInt(page.getCmsTemplateId.getAttrValue("num_body_rows"))) {
+                                    @* Loop throught the number of inner HTML within a BodyRows *@
+                                    <div id="@page.getCmsTemplateId.getAttrValue("body_rows" + bodyIndex)" class="@*row*@">
+                                    @if(page.getCmsTemplateId.getAttrValue("inner_col" + bodyIndex) != null) {
+                                        @for(innerBodyIndex <- 1 to Integer.parseInt(page.getCmsTemplateId.getAttrValue("inner_col" + bodyIndex))) {
+                                            @defining(page.getCmsTemplateId.getAttrValue("body_rows" + bodyIndex).replaceAllLiterally("__col", "__hasContainer")) { hasContainer =>
+                                                @*if(page.cmsTemplateId.getAttrValue(hasContainer) != null && page.cmsTemplateId.getAttrValue(hasContainer).equalsIgnoreCase("yes")) {
+                                                <div class="container">
+                                                }*@
+                                                <div class="@*tmpM.getBodyDivClass(page.getCmsTemplateId.getAttrValue("body_rows" + bodyIndex), bodyIndex)*@">
+                                                @DynamicHtmlParser(tmpM.getContainerValue(tmpM.getAttrValue(innerBodyIndex.toString + page.getCmsTemplateId.getAttrValue("body_rows" + bodyIndex).substring(1, page.getCmsTemplateId.getAttrValue("body_rows" + bodyIndex).length))).getHtmlCode)
+                                                </div>
+                                                @*if(hasContainer != null && hasContainer.equalsIgnoreCase("yes")) {
+                                                </div>
+                                                }*@
+                                            @tmpM.inc(page.getCmsTemplateId.getAttrValue("body_rows" + bodyIndex), bodyIndex)
+                                            }
+                                        }
+                                    }
+                                    </div>
+                                    <div class="clearfix"></div>
+                                }
+                            }
+                        }
+                        </div>
+                    @if(page.getCmsTemplateId.getAttrValue("sidebar_perc_ratio") != null && !(page.getCmsTemplateId.getAttrValue("sidebar_content_1").equals("") || page.getCmsTemplateId.getAttrValue("sidebar_content_1").isEmpty)) {
+                        <div class="@tmpM.getSidebarDivClass(page.getCmsTemplateId.getAttrValue("sidebar_perc_ratio")).apply(0)">
+                        @DynamicHtmlParser(tmpM.getContainerValue(page.getCmsTemplateId.getAttrValue("sidebar_content_1")).getHtmlCode)
+                        </div>
+                    }
+                    </div>
+                    }
+            } else {
+                @DynamicHtmlParser(content.body)
+            }
+            @if(content == null && tempMgr != null && tempMgr.getAttrValue("footer") != null && tempMgr.getAttrValue("footer").equalsIgnoreCase("Yes")) {
+                @DynamicHtmlParser(systemControlSetting.get(SystemControlSetting.CMS_HTML_FOOTER))
+            } else {
+                @DynamicHtmlParser(systemControlSetting.get(SystemControlSetting.CMS_HTML_FOOTER))
+            }
+            </div>
+    </div>
+    @if(loggedUser.nonEmpty) {
+        <script>
+            smartech('identify', '@loggedUser.get.getId');
+        </script>
+    }
+    @_footer(systemControlSetting, footerJs = script.body)
+</body>

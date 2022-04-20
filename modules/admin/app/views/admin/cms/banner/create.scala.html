@@ -1,0 +1,49 @@
+@import helper._
+@import crypto.Encrypt
+@import controllers.admin.cms.routes
+@import views.html.admin.templates._
+@import b3.vertical.fieldConstructor
+@import controllers.admin.cms.BannerDOA
+@(form: Form[BannerDOA])(implicit request: RequestHeader, messages: Messages, manager: PrivateUsers, encrypt: Encrypt)
+@default(title = "Create/Edit Banner", tab = "cms") {
+    <div class="panel">
+        <div class="panel-heading">
+            <h2 class="panel-name">Create/Edit Banners</h2>
+        </div>
+        <div class="panel-body">
+            <div class="row">
+                <div class="col-md-12 col-md-offset-1">
+                    @tags.alertFromRequest(request, "error")
+                    @form.globalError.map { error =>
+                        @tags.alert(error.message, "error")
+                    }
+                </div>
+
+                @b3.formCSRF(routes.BannerCtrl.save) {
+                        @if(form("id").value.nonEmpty) {
+                            <input type="hidden" value="@form("id").value.get" name="@form("id").name" />
+                        }
+                        <div class="col-md-4">
+                            @helper.inputText(form("name"), 'class -> "form-control", '_label -> "Name")
+                        </div>
+                        <div class="col-md-4">
+                            @helper.inputText(form("code"), 'class -> "form-control", '_label -> "Unique Identify code. Max 6 Characters", 'placeholder -> "Max 6. Characters")
+                        </div>
+                        <div class="col-md-4">
+                         @helper.select(form("cmsLinkId"), options(CmsLinks.options("")), 'class -> "form-control", '_label -> "Select from Link Builder")
+                        </div>
+                        <div class="col-md-12">
+                            @helper.textarea(form("html"), 'rows -> "10", 'class -> "editable",  '_label -> Html(s"""File upload not allowed. Click <a target="_blank" href="${routes.MediaCtrl.index}">Here</a> to upload files"""))
+                        </div>
+                        <div class="col-md-12">
+                            @helper.textarea(form("htmlAlt"), 'rows -> "10", 'class -> "editable",  '_label -> Html(s"""Alternate content switch"""))
+                        </div>
+                        <div class="col-md-12">
+                            <button type="submit" name="submit" class="btn btn-primary">Save</button>
+                            <span><a href="@routes.BannerCtrl.index" class="btn btn-default">Cancel</a></span>
+                        </div>
+                    }
+            </div>
+        </div>
+    </div>
+}

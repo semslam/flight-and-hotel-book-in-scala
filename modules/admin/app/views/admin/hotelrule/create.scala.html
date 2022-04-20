@@ -1,0 +1,94 @@
+@import helper._
+@import views.html.admin.tags.myDataTable
+@import controllers.admin.pricerule.routes
+@import b3.vertical.fieldConstructor
+@import crypto.Encrypt
+@import controllers.admin.pricerule.HotelFareRuleDAO
+@(form: Form[HotelFareRuleDAO])(implicit request: RequestHeader, manager: PrivateUsers, messages: Messages, encrypt: Encrypt)
+@views.html.admin.templates.default(title = "Hotel Fare Rules", tab = "bookingSettings") {
+    <div class="panel">
+        <header class="panel-heading">
+            <h2 class="panel-name">Create/Edit Hotel Fare Rules</h2>
+            <br />
+        </header>
+        <div class="panel-body row">
+        @helper.form(routes.HotelPriceRuleCtrl.save(), 'enctype -> "application/x-www-form-urlencoded") {
+            @helper.CSRF.formField
+            <input type="hidden" name="@form("id").name" value="@form("id").value.getOrElse("")" />
+            <div class="col-md-2">
+                <div class="col-md-12 col-sm-12 col-xs-12 col-lg-12">
+                    <a href="@routes.HotelPriceRuleCtrl.index()" class="btn btn-md btn-danger">Close</a>
+                    <button type="submit" class="btn btn-md btn-success">Apply</button>
+                </div>
+            </div>
+            <div class="col-md-10">
+                <div class="nav-tabs-custom">
+                    @tags.alertFromRequest(request, "success")
+                    @tags.alertFromRequest(request, "error")
+                    <ul class="nav nav-tabs">
+                        <li class="active"><a href="#tab_1-1" data-toggle="tab">Hotel Rules</a></li>
+                        <li><a href="#tab_1-2" data-toggle="tab">B2C Fares</a></li>
+                        <li><a href="#tab_1-3" data-toggle="tab">B2B Fares</a></li>
+                    </ul>
+                    <div class="panel-body">
+                        <div class="tab-content">
+                            <div class="tab-pane active" id="tab_1-1">
+                                <div class="row">
+                                    <div class="panel-heading">
+                                        <h4><strong>Fare Rules & Condition</strong></h4>
+                                    </div>
+                                    <div class="col-md-3">
+                                        @helper.inputText(form("name"), 'type -> "text", 'placeholder -> "Specify a name", 'required -> "required", '_label -> "Name")
+                                    </div>
+                                    <div class="form-group col-md-3">
+                                        <label>Hotel Supplier</label>
+                                        <select name="@form("apiSupplierId").name" class="form-control">
+                                            <option value="">--select hotel supplier --</option>
+                                            @for(supplier <- ApiSuppliers.find.where().eq("product_type", "HT").findList()) {
+                                                <option value="@supplier.getId" @if(supplier.getId.toString.eq(form("apiSupplierId").value.getOrElse("0"))) { selected="selected" }>@supplier.getName</option>
+                                            }
+                                        </select>
+                                    </div>
+                                    <div class="clearfix"></div>
+                                </div>
+                            </div>
+                            <div class="tab-pane" id="tab_1-2">
+                                <div class="row">
+                                    <fieldset>
+                                        <legend class="col-md-12"><strong>B2C</strong></legend>
+                                        <div class="col-md-3">
+                                        @helper.select(form("b2cFareDirection"), Seq("+" -> "+", "-" -> "-"), '_label -> "Price Direction")
+                                        </div>
+                                        <div class="col-md-3">
+                                        @helper.inputText(form("b2cDispenseValue"), 'type -> "number", 'min -> "0", 'step -> "0.05", 'placeholder -> "Value", '_label -> "Dispense Value")
+                                        </div>
+                                        <div class="col-md-3">
+                                        @helper.inputRadioGroup(form("b2cValueType"), options(ValueTypes.options()), '_label -> "Value Type")
+                                        </div>
+                                    </fieldset>
+                                </div>
+                            </div>
+                            <div class="tab-pane" id="tab_1-3">
+                                <div class="row">
+                                    <fieldset>
+                                        <legend class="col-md-12"><strong>B2B</strong></legend>
+                                        <div class="col-md-3">
+                                        @helper.select(form("b2bFareDirection"), Seq("+" -> "+", "-" -> "-"), '_label -> "Price Direction")
+                                        </div>
+                                        <div class="col-md-3">
+                                        @helper.inputText(form("b2bDispenseValue"), 'type -> "number", 'min -> "0", 'step -> "0.05", 'placeholder -> "Value", '_label -> "Dispense Value")
+                                        </div>
+                                        <div class="col-md-3">
+                                        @helper.inputRadioGroup(form("b2bValueType"), options(ValueTypes.options()), '_label -> "Value Type")
+                                        </div>
+                                    </fieldset>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+        </div>
+    </div>
+}

@@ -1,0 +1,9 @@
+@(comment: BookingMsgLog)
+<div class="panel">
+    <div class="panel-heading">
+        <h2>Initiated By @if(comment.getAuthUserId != null) { @comment.getAuthUserId.fullName() } else { @comment.getActionType } on @comment.getCreatedAt.format("yyyy-MMM-dd HH:mm")</h2>
+    </div>
+    <div class="panel-body">
+        @Html(comment.getMsg)
+    </div>
+</div>

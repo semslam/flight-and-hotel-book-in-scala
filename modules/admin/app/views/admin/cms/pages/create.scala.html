@@ -1,0 +1,134 @@
+ @import helper._
+@import crypto.Encrypt
+@import controllers.admin.cms.PageDOA
+@import controllers.admin.cms.routes
+@import views.html.admin.templates._
+@import b3.vertical.fieldConstructor
+@import cms.DynamicPageHandler
+
+
+@(form: Form[PageDOA])(implicit request: RequestHeader, messages: Messages, manager: PrivateUsers, encrypt: Encrypt)
+@default(title = "Create Page", tab = "cms", script) {
+    <div class="panel">
+        <div class="panel-heading">
+            <span class="panel-name"><h2>Create New Page</h2></span>
+        </div>
+        <div class="panel-body">
+        @b3.formCSRF(routes.PageCtrl.save(), 'enctype -> "application/x-www-form-urlencoded") {
+            <div class="col-md-12">
+                <button class="btn btn-default mg2 pull-right" onclick="javascript: history.back();" type="button">Go Back</button>
+                <button class="btn btn-danger mg2 pull-right" type="reset">Reset</button>
+                <button class="btn btn-success mg2 pull-right" name="action" value="save" type="submit">Save</button>
+                <button class="btn btn-success mg2 pull-right" name="action" value="save_continue" type="submit">Save and Continue Edit</button>
+            </div>
+            <div class="clearfix"></div>
+            @tags.alertFromRequest(request, "error")
+            @form.globalError.map { error =>
+                @tags.alert(error.message, "error")
+            }
+            <ul class="nav nav-tabs nav-stacked col-md-2">
+                <li class="active"><a href="#pgInformation" data-toggle="tab">Page Information</a></li>
+                <li><a href="#urlLinking" data-toggle="tab">Meta Data</a></li>
+                <li><a href="#meta" data-toggle="tab">Inline CSS and Javascript</a></li>
+            </ul>
+            <div class="col-md-10 pull-right">
+                <div class="tab-content tasi-tab">
+                    <div class="tab-pane row active" id="pgInformation">
+                        @b3.text(form("name"), 'required -> "required", '_label -> "Page Name")
+                        @b3.select(form("cmsTemplateId"), options(CmsTemplates.options(form("cmsTemplateId").value.orNull)), '_label -> "Select Template",'required -> "required")
+                        <div class="form-group row">
+                            <div class="col-md-4">
+                                <label>Host </label>
+                                <ul class="list-inline">
+                                @*for((host, index) <- ()) {
+                                   <li>
+                                       <label for="host[@index]">
+                                           <input type="checkbox" required="required" id="host[@index]" name="host[]" value="@host" /> @host
+                                           @form("host").constraints.map { cont =>
+                                             @cont._1 @cont._2.head
+                                           }
+                                       </label>
+                                   </li>
+                                }*@
+                                </ul>
+                                <p class="text-muted">Required</p>
+                            </div>
+                            <div class="col-md-8">
+                            @helper.inputText(form("slugUrl"), 'required -> "required", 'class -> "form-control", '_label -> "URL Path", 'placeholder -> "/")
+                            </div>
+                        </div>
+                        <div class="form-group">
+                        @helper.select(form("isPublish"), Seq("Yes" -> "Yes", "No" -> "No"), 'class -> "form-control", '_label -> "Publish Page?")
+                        </div>
+                    </div>
+                    <div class="tab-pane" id="urlLinking">
+                        <div class="form-group">
+                        @helper.textarea(form("metaKeywords"), 'class -> "form-control", 'rows -> "4", '_label -> "Meta Keywords")
+                        </div>
+                        <div class="form-group">
+                        @helper.textarea(form("metaDescription"), 'class -> "form-control", 'rows -> "10", '_label -> "Description")
+                        </div>
+                    </div>
+                    <div class="tab-pane" id="meta">
+                        <div class="form-group">
+                        @helper.textarea(form("inlineCss"), 'class -> "form-control code-editor", 'rows -> "10", '_label -> "CSS")
+                        </div>
+                        <div class="form-group">
+                        @helper.textarea(form("inlineJs"), 'class -> "form-control code-editor", 'rows -> "10", '_label -> "Javascript/JQuery")
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+        </div>
+    </div>
+}
+
+@script = {
+    <script>
+            $(function() {
+                $("#cms_template_id").on('change', function() {
+                    var val = $(this).val();
+                    $.ajax({
+                        url: '/console/cms/template/item',
+                        dataType: 'JSON',
+                        type: 'GET',
+                        data:  {
+                            id: val
+                        },
+                        success: function(resp) {
+                            console.log(resp);
+                            if(resp != null) {
+                                $('input[name=slug_url]').attr('value', "/" + jQuery.trim(resp.name.toString().toLowerCase()));
+                            } else {
+                                $('input[name=slug_url]').attr('value', '');
+                            }
+                        }
+                    });
+                });
+                $("select[name=cmsTemplateId]").on('change', function() {
+                    var $this = $(this), val = $this.val(), slugUrl = $("input[name=slugUrl]")
+                    $.ajax({
+                        url: '/cms/template/item-json/' + val,
+                        type: 'get',
+                        dataType: 'json',
+                        beforeSend: function() {
+                            slugUrl.attr('disabled', 'disabled');
+                        },
+                        success: function(response) {
+                            var urlPath = response.urlPath.toLowerCase().replace("\ ", "");
+                            slugUrl.val(urlPath);
+                            slugUrl.html(urlPath);
+                        },
+                        complete: function() {
+                            slugUrl.removeAttr('disabled');
+                        },
+                        error: function() {
+                            slugUrl.val('');
+                            slugUrl.html('');
+                        }
+                    })
+                });
+            });
+    </script>
+}

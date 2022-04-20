@@ -1,0 +1,19 @@
+@import controllers.b2b.routes
+@import views.html.bookingEngine._
+@import crypto.Encrypt
+@(string: String)(implicit loggedManager: Users, requestHeader: RequestHeader, messages: Messages, encrypt: Encrypt)
+@views.html.b2b.templates.default(title = "No Result", tab = "flight", scripts) {
+    <section ng-cloak>
+        <div class="panel" ng-controller="B2B_FlightResultController">
+            <div class="panel-heading">
+                <h4><strong class="text-danger">@string</strong></h4> <hr />
+                <div style="text-align: left;">
+                    @_B2BflightForm()
+                </div>
+            </div>
+        </div>
+    </section>
+}
+@scripts = {
+    <script src="@routes.Assets.myJs("jsB2bFlight.js")"></script>
+}

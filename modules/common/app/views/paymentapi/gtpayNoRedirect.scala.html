@@ -1,0 +1,46 @@
+@import controllers.common.routes
+@import org.apache.commons.codec.digest.DigestUtils
+@(transaction: PaymentHistories, fullName: String, email: String)(implicit requestHeader: RequestHeader, messages: Messages)
+@conf = @{
+    play.Configuration.root()
+}
+@amt = @{
+    Math.multiplyExact(transaction.getTotalAmount.toInt, 100)
+}
+@url = @{
+    helper.CSRF.apply(routes.PaymentCtrl.confirm("gt", transaction.getTransRef)).absoluteURL()
+}
+@defaultCurrency = @{
+    566
+}
+@customerId = @{
+    email + "|" + transaction.getTransRef
+}
+@hashKey = @{
+    play.Configuration.root().getString("gtpay.hashKey")
+}
+@transHash = @{
+    DigestUtils.sha512Hex(s"${conf.getInt("gtpay.merchantId")}${transaction.getTransRef}$amt$defaultCurrency$customerId$url$hashKey")
+}
+@desc = @{
+    "Booking for #" + transaction.getTransRef
+}
+<html>
+    <body>
+        <form name="submit2gtpay_form" action="@conf.getString("gtpay.url")" target="_self" method="post">
+            <input type="hidden" name="gtpay_mert_id" value="@conf.getInt("gtpay.merchantId")" />
+            <input type="hidden" name="gtpay_tranx_id" value="@transaction.getTransRef" />
+            <input type="hidden" name="gtpay_tranx_amt" value="@amt" />
+            <input type="hidden" name="gtpay_tranx_curr" value="@defaultCurrency" />
+            <input type="hidden" name="gtpay_cust_id" value="@customerId" />
+            <input type="hidden" name="gtpay_cust_name" value="@fullName" />
+            <input type="hidden" name="gtpay_tranx_memo" value="@desc" />
+            <input type="hidden" name="gtpay_echo_data" value="@conf.getString("project.name")" />
+            <input type="hidden" name="gtpay_gway_name" value="@conf.getString("gtpay.gatewayName")" />
+            <input type="hidden" name="gtpay_hash" value="@transHash" />
+            <input type="hidden" name="gtpay_tranx_hash" value="@transHash" />
+            <input type="hidden" name="gtpay_tranx_noti_url" value="@url" />
+            <button type="submit" name="submit" class="btn btn-md btn-primary btn-md">Pay with GTPay</button>
+        </form>
+    </body>
+</html>

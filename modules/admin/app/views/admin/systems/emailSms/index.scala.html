@@ -1,0 +1,72 @@
+@import views.html.admin.tags.myDataTable
+@import crypto.Encrypt
+@import views.html.helper.CSRF
+@import b3.vertical.fieldConstructor
+@import controllers.admin.systems.routes
+@import views.html.admin.templates._
+@(smsTemplates: List[SmsTemplates], emailTemplates: List[EmailTemplates])(implicit request: RequestHeader, messages: Messages, manager: PrivateUsers, encrypt: Encrypt)
+@default(title = "SMS & Email Settings", tab = "systems") {
+    <div class="panel">
+        <header class="panel-heading">
+            <h2 class="panel-name">Email &amp; SMS Alerts</h2>
+            <br />
+        </header>
+        <div class="panel-body">
+            @tags.alertFromRequest(request, "success")
+            @tags.alertFromRequest(request, "error")
+            <div class="nav-tabs-custom">
+                <ul class="nav nav-tabs pull-right">
+                    <li><a href="#tab_2-2" data-toggle="tab">SMS Template</a></li>
+                    <li class="active"><a href="#tab_3-2" data-toggle="tab">Email Templates</a></li>
+                </ul>
+                <div class="tab-content">
+                    <div class="tab-pane panel" id="tab_2-2">
+                        <header class="panel-heading">
+                            <h2 class="panel-name">SMS Alert Templates</h2>
+                            <a href="@routes.EmailSmsCtrl.createSmsTemplate()" class="btn btn-default ajax"><i class="fa fa-plus"></i> Create SMS Template</a><br />
+                        </header>
+                        @myDataTable(Seq("#", "Name", "Created at", "Updated at", "Action")) {
+                            @if(smsTemplates.nonEmpty) {
+                                @for(item <- smsTemplates) {
+                                    <tr>
+                                        <td>@item.getId</td>
+                                        <td>@item.getName</td>
+                                        <td>@item.getCreatedAt.format("yyyy-MM-dd HH:mm")</td>
+                                        <td>@item.getUpdatedAt.format("yyyy-MM-dd HH:mm")</td>
+                                        <td>
+                                            <span><a href="@routes.EmailSmsCtrl.createSmsTemplate(encrypt.encrypt(item.getId.toString))" class="btn btn-xs btn-primary ajax"><i class="fa fa-pencil"></i> Edit</a></span>
+                                            <span><a href="@routes.EmailSmsCtrl.deleteSmsTemplate(encrypt.encrypt(item.getId.toString))" class="btn btn-xs btn-danger"><i class="fa fa-times"></i> Delete</a></span>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        }
+                    </div>
+                    <div class="tab-pane active" id="tab_3-2">
+                        <header class="panel-heading">
+                            <h2 class="panel-name">Email Templates</h2>
+                            <a href="@routes.EmailSmsCtrl.createEmailTemplate()" class="btn btn-default"><i class="fa fa-plus"></i> Create Email Template</a><br />
+                        </header>
+                        @myDataTable(Seq("#", "Name", "Subject", "Created at", "Updated at", "Action"), "desc", "emailTmp") {
+                            @if(emailTemplates.nonEmpty) {
+                                @for(item <- emailTemplates) {
+                                    <tr>
+                                        <td>@item.getId</td>
+                                        <td>@item.getName</td>
+                                        <td>@item.getSubject</td>
+                                        <td>@item.getCreatedAt.format("yyyy-MM-dd HH:mm")</td>
+                                        <td>@item.getUpdatedAt.format("yyyy-MM-dd HH:mm")</td>
+                                        <td>
+                                            <span><a href="@routes.EmailSmsCtrl.createEmailTemplate(encrypt.encrypt(item.getId.toString))" class="btn btn-xs btn-primary"><i class="fa fa-pencil"></i> Edit</a></span>
+                                            <span><a href="@routes.EmailSmsCtrl.deleteEmailTemplate(encrypt.encrypt(item.getId.toString))" class="btn btn-xs btn-danger"><i class="fa fa-times"></i> Delete</a></span>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}

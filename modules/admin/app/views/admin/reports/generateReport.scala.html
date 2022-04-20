@@ -1,0 +1,126 @@
+@import b3.vertical.fieldConstructor
+@import controllers.admin.reports.routes
+@import controllers.admin.reports.QueryForm
+@import helper._
+@(form: Form[QueryForm])(implicit loggedManager: PrivateUsers, messages: Messages, requestHeader: RequestHeader)
+@views.html.admin.templates.default(title = "Generate Reports", tab = "report", scripts) {
+    @*<link rel="stylesheet" media="all" href="@controllers.admin.routes.Assets.commonLib("chosen/chosen.css")" />*@
+    <div class="panel">
+        <div class="panel-heading">
+            <h2>Generate Report</h2>
+            @tags.alertFromRequest(requestHeader, "error")
+            @tags.alertFromRequest(requestHeader, "success")
+        </div>
+        <div class="panel-body">
+        @b3.formCSRF(routes.ReportCtrl.postGenerateReport){
+            <div class="col-md-2 form-group">
+                <label for="report_type">Report Type</label>
+                <select class="form-control" name="@form("reportType").name" id="report_type">
+                    <option value="fl_booking">Flight Bookings</option>
+                    <option value="ht_booking" disabled="disabled">Hotel Bookings</option>
+                </select>
+            </div>
+            <div class="col-md-2 form-group">
+                <label for="queueType">Queue Type</label>
+                <select class="form-control" name="@form("queueType").name" id="queueType">
+                    <option value="">All</option>
+                    @*for(item <- Queues.find.all()) {
+                        <option disabled value="@item.getId">@item.getName</option>
+                    }*@
+                </select>
+            </div>
+            <div class="col-md-2 form-group">
+            @b3.text(form("fromDate"), '_label -> "From Date", 'class -> "datepicker", 'placeholder -> "From Date")
+            </div>
+            <div class="col-md-2 form-group">
+            @b3.text(form("toDate"), '_label -> "To Date", 'class -> "datepicker", 'placeholder -> "From Date")
+            </div>
+            <div class="col-md-2 form-group">
+                <label for="paymentStatus">Payment Status</label>
+                <select class="form-control" name="@form("paymentStatus").name" id="paymentStatus">
+                    <option value="">All</option>
+                    @for(ticket <- PaymentStatus.values()) {
+                        <option value="@ticket.name()">@ticket.name()</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2 form-group">
+                <label for="salesCategory">Sales Category</label>
+                <select class="form-control" name="@form("salesCategory").name" id="salesCategory">
+                    <option value="">All</option>
+                    <option value="B2C">B2C</option>
+                    <option value="B2B">B2B</option>
+                </select>
+            </div>
+            <div class="clearfix"></div>
+            <div class="col-md-2 form-group">
+                <label for="ticketStatus">Destination Region</label>
+                <select class="form-control" name="@form("destinationLocale").name" id="queueType">
+                    <option value="">All</option>
+                    @for(item <- TicketLocale.values()) {
+                        <option value="@item.name()">@item.name()</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2 form-group">
+                <label for="ticketStatus">Ticketing Partner</label>
+                <select class="form-control" name="@form("ticketingPartner").name" id="queueType">
+                    <option value="">All</option>
+                    @for(item <- TicketingPartners.find.all()) {
+                        <option value="@item.getId">@item.getName</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2 form-group">
+                <label for="ticketStatus">Ticket Status</label>
+                <select class="form-control" name="@form("ticketStatus").name" id="ticketStatus">
+                    <option value="">All</option>
+                    @for(ticket <- BookingStatus.values()) {
+                        <option value="@ticket.name()">@ticket.name()</option>
+                    }
+                </select>
+            </div>
+            @*<div class="col-md-4 form-group">
+            <label for="ticketStatus">Filter By Customers</label>
+            <select class="form-control chosen-select" name="@form("usersId").name" id="ticketStatus">
+            <option value="">All</option>
+            <optgroup label="B2C">
+            @for(user <- Users.find.where().eq("role", Roles.b2c_customer.name()).findList()) {
+            <option value="@user.id">@user.fullName() / @user.email / @user.phone</option>
+            }
+            </optgroup>
+            <optgroup label="B2B">
+            @for(user <- Users.find.where().eq("role", Roles.b2b_owner.name()).findList()) {
+            <option value="@user.id">@user.agentCorporateDetailId.companyName / @user.fullName()</option>
+            }
+            </optgroup>
+            </select>
+            </div>*@
+            @*Add more "col" here co*@
+            <div class="clearfix"></div>
+            <div class="col-md-12 form-group">
+            @b3.submit('class -> "btn btn-info btn-md") { <span class="fa fa-file-excel-o"></span> Generate CSV }
+            </div>
+        }
+        </div>
+    </div>
+}
+
+@scripts = {
+    @*<script rel="stylesheet" src="@controllers.admin.routes.Assets.commonLib("chosen/chosen.jquery.min.js")"></script>*@
+    <link rel="stylesheet" href="@controllers.admin.routes.Assets.commonCss("jquery-ui.css")">
+    <script src="@controllers.admin.routes.Assets.commonJs("jquery-ui-1.12.js")"></script>
+    <script>
+            $(function () {
+                var dtOption = {
+                    changeMonth: true,
+                    changeYear: true,
+                    yearRange: "-100:+0",
+                    dateFormat: 'yy-mm-dd'
+                };
+                $(".datepicker").datepicker(dtOption);
+
+                $('.chosen-select').chosen();
+            });
+    </script>
+}

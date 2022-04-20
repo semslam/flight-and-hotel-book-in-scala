@@ -1,0 +1,822 @@
+@import controllers.admin.management.routes
+@import b3.vertical.fieldConstructor
+@import views.html.admin.tags.myDataTable
+@import crypto.Encrypt
+@import views.html.helper.CSRF
+@(itinerary: FlightBookings, commentForm: Form[(String, String)])(implicit loggedManager: PrivateUsers, messages: Messages, requestHeader: RequestHeader, encrypt: Encrypt)
+@isAccessible = @{
+    if(itinerary.getBookings.getAuthOperatorId == null) {
+        true
+    } else {
+        if(itinerary.getBookings.getAuthOperatorId.getId.eq(loggedManager.getId)) true
+        else false
+    }
+}
+@isB2bBooking = @{ if(itinerary.getBookings.getSalesCategory.eq(SalesCategory.B2B)){ true } else { false } }
+@views.html.admin.templates.default(title = "View Itinerary", tab = "queue", scripts) {
+    <div class="panel">
+        <div class="panel-heading">
+            <h3>@itinerary.getBookings.getTransactionRef Itinerary - <small class="text-muted">Last Updated on @itinerary.getUpdatedAt.format("yyyy-MMM-dd hh:mm a")</small></h3>
+            @tags.alertFromRequest(requestHeader, "error")
+            @tags.alertFromRequest(requestHeader, "failed")
+            @tags.alertFromRequest(requestHeader, "success")
+        </div>
+        <div class="panel-body">
+            <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+                <div class="panel panel-default">
+                    <div class="panel-heading" role="tab" id="customer"> GDS Action</div>
+                    <form method="post" enctype="application/x-www-form-urlencoded" action="">
+                        @helper.CSRF.formField
+                        <div id="gdsCall" class="panel-body panel-collapse collapse in pull-right" role="tabpanel" aria-labelledby="gdsCall">
+                            <span><a name="action" href="@routes.FlightBookingCtrl.vendorApiAction("cancel", encrypt.encrypt(isAccessible.toString), encrypt.encrypt(itinerary.getId.toString))" @{s"""disabled="disabled"""".when(!isAccessible)} class="btn btn-md btn-danger confirm-action" id="cancel_pnr" onclick="document.getElementById('cancel_pnr').innerHTML = 'Loading...Cancelling booking on GDS'" data-confirm="Are you sure you want to cancel this PNR on @itinerary.getBookings.getSupplier"><i class="fa fa-times"></i> Cancel @itinerary.getPnrRef</a></span>
+                            @*<span><a name="action" href="@routes.FlightBookingCtrl.vendorApiAction("refresh", encrypt.encrypt(isAccessible.toString), encrypt.encrypt(itinerary.getId.toString))"  @{s"""disabled="disabled"""".when(!isAccessible)} class="btn btn-md btn-default" id="refresh_pnr" onclick="document.getElementById('refresh_pnr').innerHTML = 'Loading..Loading information from GDS'"><i class="fa fa-refresh"></i> Refresh PNR</a></span>*@
+                            @*<span><a name="action" href="@routes.FlightBookingCtrl.vendorApiAction("reprice", encrypt.encrypt(isAccessible.toString), encrypt.encrypt(itinerary.getId.toString))"  @{s"""disabled="disabled"""".when(!isAccessible)} class="btn btn-md btn-default" id="re_price" onclick="document.getElementById('re_price').innerHTML = 'Loading..Querying GDS'"><i class="fa fa-info" ></i> Re-Price GDS</a></span>*@
+                        </div>
+                    </form>
+                </div>
+                <div class="panel panel-default">
+                    <div class="panel-heading" role="tab" id="customer">
+                        @if(isAccessible) {
+                            <div><a href="@routes.FlightBookingCtrl.unlockAccess(encrypt.encrypt(itinerary.getId.toString))" class="confirm-delete btn btn-info btn-md" data-confirm="Are you sure you want to release access to this booking?">Unlock Itinerary</a> </div>
+                        } else {
+                            <div><a href="@routes.FlightBookingCtrl.unlockAccess(encrypt.encrypt(itinerary.getId.toString))" class="confirm-delete btn btn-info btn-md" data-confirm="Are you sure you want to release access to this booking?">Unlock Itinerary</a> </div>
+                            <div class="alert alert-info alert-dismissible" role="alert"><span class="fa fancytree-icon"></span> Booking cannot be modified while the itinerary is locked by @itinerary.getBookings.getAuthOperatorId.fullName() user.</div>
+                        }
+                        <h4><strong>Customer &amp; Ticket Information</strong></h4>
+                    </div>
+                    <div id="passFlight" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="customer">
+                        <div class="panel-body">
+                            <div class="row">
+                                <div class="col-md-2">
+                                    <label>Sales Category</label>
+                                    @itinerary.getBookings.getSalesCategory.name()
+                                </div>
+                                <div class="col-md-2">
+                                    <label>Company Name</label>
+                                    @if(isB2bBooking){
+                                        @itinerary.getBookings.getUserId.getAgentCorporateDetailId.getCompanyName
+                                    } else {
+                                        N/A
+                                    }
+                                </div>
+                                <div class="col-md-2">
+                                    @if(isB2bBooking) {
+                                        <label>Agent Full Name</label>
+                                        @itinerary.getBookings.getUserId.fullName()
+                                    } else {
+                                        <label>Customer Full Name</label>
+                                        @if(itinerary.getBookings.getUserId != null) {
+                                            @itinerary.getBookings.getUserId.fullName()
+                                        } else {
+                                            Guest (@itinerary.getBookings.getContactFirstname @itinerary.getBookings.getContactSurname)
+                                        }
+                                    }
+                                </div>
+                                <div class="col-md-2">
+                                    @if(isB2bBooking) {
+                                        <label>Agent Email</label>
+                                        @itinerary.getBookings.getUserId.getEmail
+                                    } else {
+                                        <label>Customer Email</label>
+                                        @if(itinerary.getBookings.getUserId != null) {
+                                            @itinerary.getBookings.getUserId.getEmail
+                                        } else {
+                                            Guest (@itinerary.getBookings.getContactEmail)
+                                        }
+                                    }
+                                </div>
+                                <div class="col-md-2">
+                                    @if(isB2bBooking) {
+                                        <label>Agent Phone</label>
+                                        @itinerary.getBookings.getUserId.getPhone
+                                    } else {
+                                        <label>Customer Phone</label>
+                                        @if(itinerary.getBookings.getUserId != null) {
+                                            @itinerary.getBookings.getUserId.getPhone
+                                        } else {
+                                            Guest (@itinerary.getBookings.getContactPhone)
+                                        }
+                                    }
+                                </div>
+                                <div class="col-md-2">
+                                    <label>PNR Reference</label>
+                                    @itinerary.getPnrRef (@itinerary.getBookings.getStatus.name())
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel panel-default">
+                    <div class="panel-heading" role="tab" id="headingOne">
+                        <h4 class="panel-title">
+                            <a role="button" data-toggle="collapse" data-parent="#accordion"  aria-expanded="true" aria-controls="passFlight">Passengers &amp; Flights</a>
+                        </h4>
+                    </div>
+                    <div id="passFlight" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOne">
+                        <div class="panel-body row">
+                            <div class="col-md-12"> <h4><strong>Passengers</strong></h4></div>
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Title</th>
+                                        <th>First Name</th>
+                                        <th>Middle Name</th>
+                                        <th>Last Name</th>
+                                        <th>Type</th>
+                                        <th>Date of Birth</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @for((passenger, index) <- itinerary.getPnrRecords.zipWithIndex) {
+                                    <tr>
+                                        <td>
+                                            <select name="title" id="title" class="disabled form-control" disabled="disabled">
+                                                <option value="@passenger.getNamePrefix" selected="selected">@passenger.getNamePrefix</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <input type="text" name="fname" disabled="disabled" class="disabled form-control" value="@passenger.getFirstName">
+                                        </td>
+                                        <td class="col-md-2 form-group">
+                                            <input type="text" name="mname" disabled="disabled" class="disabled form-control" value="@passenger.getMiddleName">
+                                        </td>
+                                        <td>
+                                            <input type="text" name="lname" disabled="disabled" class="disabled form-control" value="@passenger.getLastName">
+                                        </td>
+                                        <td>
+                                            <select name="type" id="type" class="disabled form-control" disabled="disabled">
+                                                <option value="@passenger.getPassengerCat">@passenger.getPassengerCat</option>
+
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <input type="text" disabled="disabled" class="disabled form-control" name="dob" value="@if(passenger.getDob != null) { @passenger.getDob.split("T")(0) }">
+                                        </td>
+                                        <td>
+                                            <button type="submit" disabled="disabled" class="btn btn-md btn-primary">Save</button>
+                                        </td>
+                                    </tr>
+                                }
+                                </tbody>
+                            </table>
+                            <hr />
+                            <h4 class="col-md-12 "><strong>Contact Person</strong></h4>
+                            <div class="clearfix"></div>
+                            <table class="table table-striped  col-md-12">
+                                <thead>
+                                    <tr>
+                                        <th>Title</th>
+                                        <th>First Name</th>
+                                        <th>Last Name</th>
+                                        <th>Contact Phone</th>
+                                        <th>Contact Email</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>@itinerary.getBookings.getContactTitle</td>
+                                        <td>@itinerary.getBookings.getContactFirstname</td>
+                                        <td>@itinerary.getBookings.getContactSurname</td>
+                                        <td>@itinerary.getBookings.getContactPhone</td>
+                                        <td>@itinerary.getBookings.getContactEmail</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <hr />
+                            <div class="panel-body row">
+                                <div class="col-md-12"><h4><strong>Flights</strong></h4></div>
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th width="6%">Carrier</th>
+                                            <th width="7%">Flight</th>
+                                            <th>Cabin</th>
+                                            <th width="5%">Class</th>
+                                            <th>Airline Ref</th>
+                                            <th>eTicketing Eligibility</th>
+                                            <th width="6%">Dep.</th>
+                                            <th width="6%">Arr.</th>
+                                            <th width="10%">Dep. Date</th>
+                                            <th width="8%">Dep. Time</th>
+                                            <th width="10%">Arr. Date</th>
+                                            <th width="8%">Arr. Time</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    @for(flightLeg <- itinerary.getOriginDestinationsList) {
+                                        <tr>
+                                            <td>
+                                                <input type="text" name="carrier" class="disabled form-control" disabled="disabled" value="@flightLeg.getAirlineCode" />
+                                            </td>
+                                            <td>
+                                                <input type="text" name="flightNum" class="disabled form-control" disabled="disabled" value="@flightLeg.getFlightBookingDestinationSegmentsList.get(0).getFlightNumber" />
+                                            </td>
+                                            <td>
+                                                <input type="text" name="cabinClass" class="disabled form-control" disabled="disabled" value="@flightLeg.getCabinClass" />
+                                            </td>
+                                            <td>
+                                                <input type="text" name="u_class" class="disabled form-control" disabled="disabled" value="@flightLeg.getFlightBookingDestinationSegmentsList.get(0).getResBookDesignCode" />
+                                            </td>
+                                            <td>
+                                                <input type="text" name="airlineRef" class="disabled form-control" disabled="disabled" value="@itinerary.getPnrRef" />
+                                            </td>
+                                            <td>
+                                                <input type="text" name="airlineRef" class="disabled form-control" disabled="disabled" value="@itinerary.getEticketEligible" />
+                                            </td>
+                                            <td>
+                                                <input type="text" name="airlineRef" class="disabled form-control" disabled="disabled" value="@flightLeg.getDepartureAirportCode" />
+                                            </td>
+                                            <td>
+                                                <input type="text" name="airlineRef" class="disabled form-control" disabled="disabled" value="@flightLeg.getArrivalAirportCode" />
+                                            </td>
+                                            <td>
+                                                <input type="text" name="airlineRef" class="disabled form-control" disabled="disabled" value="@flightLeg.getDepartureDate.split("T")(0)" />
+                                            </td>
+                                            <td>
+                                                <input type="text" name="airlineRef" class="disabled form-control" disabled="disabled" value="@flightLeg.getDepartureDate.split("T")(1)" />
+                                            </td>
+                                            <td>
+                                                <input type="text" name="airlineRef" class="disabled form-control" disabled="disabled" value="@flightLeg.getArrivalDate.split("T")(0)" />
+                                            </td>
+                                            <td>
+                                                <input type="text" name="airlineRef" class="disabled form-control" disabled="disabled" value="@flightLeg.getArrivalDate.split("T")(1)" />
+                                            </td>
+                                        </tr>
+                                    }
+                                    <tr>
+                                        <td colspan="12"><a class="show-info" href="#full-booking-summary">View Complete Segments</a></td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                                <div class="full-itinerary-info" id="full-booking-summary" style="display: none">
+                                    <div class="tab-content" style="padding: 10px;
+                                        background: rgba(255, 90, 0, 0.08);">
+                                        <div role="tabpanel" class="tab-pane active row">
+                                        @for(item <- itinerary.getOriginDestinationsList) {
+                                            <div>
+                                                <div class="col-md-10"><i class="icon icon-departure"></i> @item.getAirlineName <span> <i class="icon icon-long-arrow-right"></i> </span> <i class="icon icon-arrival"></i> @item.getArrivalAirportName </div>
+                                                <div class="col-md-2 pull-right">Duration: @item.getDuration</div>
+                                                <div class="clearfix"></div>
+                                                <div class="col-md-12">
+                                                    <table class="table table-responsive" cellspacing="0" width="100%">
+                                                        <tbody>
+                                                        @for(flightSegment <- item.getFlightBookingDestinationSegmentsList) {
+                                                            <tr>
+                                                                <td>
+                                                                    <img src="https://s3-us-west-2.amazonaws.com/otatravels/airline/@flightSegment.getAirlineCode.concat(".png")" alt="@flightSegment.getAirlineCode" style="width: 5.0em" class="img img-circle flight-ico-img"/>
+                                                                    <span class="text-center">@flightSegment.getAirlineCode</span>
+                                                                </td>
+                                                                <td>
+                                                                    <strong>@flightSegment.getDepartureDt</strong> <br />
+                                                                    <small> @if(flightSegment.getDepartureAirportId != null) { @flightSegment.getDepartureAirportId.getAirportName }
+                                                                        (@flightSegment.getDepartureAirportCode)</small>
+                                                                </td>
+                                                                <td><i class="icon icon-long-arrow-right"></i></td>
+                                                                <td>
+                                                                    <strong>@flightSegment.getArrivalDt
+                                                                    </strong> <br />
+                                                                    <small>@if(flightSegment.getArrivalAirportId != null) { @flightSegment.getArrivalAirportId.getAirportName }
+                                                                        (@flightSegment.getArrivalAirportCode)</small>
+                                                                </td>
+
+                                                                <td class="text-center" width="12%">
+                                                                    <small>
+                                                                        <span>@if(item.getNumOfStops == 0) {
+                                                                            Non stop
+                                                                        } else {
+                                                                            @item.getNumOfStops Stop(s)
+                                                                        }
+                                                                        </span>
+                                                                    </small>
+                                                                    <div class="clearfix"></div>
+                                                                    <small class="text-primary">@item.getCabinClass</small>
+                                                                </td>
+                                                            </tr>
+                                                        }
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel panel-default">
+                    <div class="panel-heading" role="tab" id="headingTwo">
+                        <h4 class="panel-title">
+                            <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" aria-expanded="false" aria-controls="collapseTwo">Fares Breakdown</a>
+                        </h4>
+                    </div>
+                    <div id="collapseTwo" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingTwo">
+                        <div class="">
+                            <div class="panel-heading panel-primary"><h4><strong>Payments BreakDown</strong></h4></div>
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Type</th>
+                                        <th>Item Name</th>
+                                        <th>Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @for(cartItem <- PaymentCartItems.find.where().eq("paymentHistoryId", itinerary.getBookings.getPaymentHistoryId).findList()) {
+                                    <tr>
+                                        <td>@cartItem.getItemType.name()</td>
+                                        <td>@cartItem.getItemName</td>
+                                        <td>@cartItem.getAmount</td>
+                                    </tr>
+                                }
+                                </tbody>
+                            </table>
+                            <div class="panel-heading panel-primary"><h4><strong>Payable &amp; GDS Fare</strong></h4></div>
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>GDS</th>
+                                        <th>Curr.</th>
+                                        <th>NUC</th>
+                                        <th>GDS Tax</th>
+                                        <th>GDS Total</th>
+                                        <th>Payable Base</th>
+                                        <th>Payable Tax</th>
+                                        <th>Payable Total</th>
+                                        <th>MU/Discount</th>
+                                        <th>MU/Discount Amt</th>
+                                        <th>WTHD. Tax</th>
+                                        <th>Payment Option</th>
+                                        <th>Payment Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>@itinerary.getBookings.getSupplier.getName</td>
+                                        <td>@itinerary.getBookings.getPaymentHistoryId.getCurrency</td>
+                                        <td>@(itinerary.getGdsBaseFare)</td>
+                                        <td>@(itinerary.getGdsTaxFare)</td>
+                                        <td>@(itinerary.getGdsTotalFare)</td>
+                                        <td>@(itinerary.getBaseFare)</td>
+                                        <td>@(itinerary.getTaxFare)</td>
+                                        <td>@(itinerary.getBookings.getPaymentHistoryId.getTotalAmount)</td>
+                                        <td>
+                                        @if(itinerary.getBookings.getPaymentHistoryId.getCommissionPriceDirection != null) {
+                                            @itinerary.getBookings.getPaymentHistoryId.getCommissionPriceDirection @itinerary.getBookings.getPaymentHistoryId.getCommissionDispenseValue@if(itinerary.getBookings.getPaymentHistoryId.getCommissionValueType.eq(ValueTypes.PERCENTAGE)){&percnt;}
+                                        } else { N/A }
+                                        </td>
+                                        <td>
+                                        @if(itinerary.getBookings.getPaymentHistoryId.getCommissionPriceDirection != null) {
+                                            @itinerary.getBookings.getPaymentHistoryId.getCommissionPriceDirection @utils.Utilities.numberFormat(itinerary.getBookings.getPaymentHistoryId.getCommissionDispenseValueAmount)
+                                        } else { N/A }
+                                        </td>
+
+                                        <td>@itinerary.getBookings.getPaymentHistoryId.getTaxOnCommission</td>
+                                        <td>@itinerary.getBookings.getPaymentHistoryId.getPaymentMethodId.getName</td>
+                                        <td>@itinerary.getBookings.getPaymentHistoryId.getStatus.name()</td>
+                                    </tr>
+
+                                </tbody>
+                            </table>
+                            <div class="clearfix"></div>
+                            <div class="panel-heading panel-primary"><h4><strong>GDS Re-Price Logs</strong></h4></div>
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Base Fare</th>
+                                        <th>Tax Fare</th>
+                                        <th>Total Fare</th>
+                                        <th>NUC Equivalent</th>
+                                        <th>Re-Priced Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @defining(itinerary.getFlightBookingRepriceLogs) { rePriceLogs =>
+                                        @if(rePriceLogs.size() > 0) {
+                                            @for(log <- rePriceLogs) {
+                                                <tr>
+                                                    <td>@log.getCurrency @log.getBaseFare</td>
+                                                    <td>@log.getCurrency @log.getTax</td>
+                                                    <td>@log.getCurrency @log.getTotalFare</td>
+                                                    <td>@log.getEquivBaseFare@log.getEquivFareCurrency</td>
+                                                    <td>@log.getCreatedAt.format("yyyy-MMM-dd hh:mm a")</td>
+                                                </tr>
+                                            }
+                                        } else {
+                                            <tr>
+                                                <td colspan="5" valign="center">This itinerary has not been re-priced.</td>
+                                            </tr>
+                                        }
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel panel-default">
+                    <div class="panel-heading" role="tab" id="queue_section_Hd">
+                        <h4 class="panel-title">
+                            <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion"  aria-expanded="false" aria-controls="queue_section">Queue</a>
+                        </h4>
+                    </div>
+                    <div id="queue_section" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="queue_section_Hd">
+                        <div class="">
+                            <form @{s"""disabled="disabled"""".when(!isAccessible)} method="post" class="row form-group panel-body" action="@routes.FlightBookingCtrl.addItineraryToQueue(encrypt.encrypt(itinerary.getBookings.getId.toString))" enctype="application/x-www-form-urlencoded">
+                                @helper.CSRF.formField
+                                <div class="form-group col-md-3">
+                                    <select class="form-control" name="queueType">
+                                        <option value="">Select Queue Type</option>
+                                        @for(queue <- models.admin.QueuesType.getQueues()){
+                                            <option value="@queue">@org.apache.commons.lang3.StringUtils.capitalize(queue.replaceAll("_", " "))</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="form-group col-md-7">
+                                    <button type="submit" class="btn btn-md btn-primary">Save to Queue</button> <span class="text-muted">NB: Kindly check to ensure selected queue doesn't exist below</span>
+                                </div>
+                            </form>
+                            <div class=""></div>
+                            <hr />
+                            <div class="panel-body">
+                                <h4>Current Queues</h4>
+                                <div class="row">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <td><label>Queue</label></td>
+                                                <td><label>Comment</label></td>
+                                                <td><label>Author</label></td>
+                                                <td><label>Created</label></td>
+                                                <td><label>Created</label></td>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                        @*for(queue <- itinerary.getBookings.getBookingQueuesList) {
+                                            <tr>
+                                                <form method="get" action="@routes.FlightBookingCtrl.modifyQueue">
+                                                    @helper.CSRF.formField
+                                                    <input type="hidden" name="queueId" value="@queue.getId.toString" />
+                                                    <td>
+                                                       @queue.getActionType
+                                                    </td>
+                                                    <td>
+                                                        <input type="text" name="comment" @if(!isAccessible || queue.getAuthUserId == null) { disabled="disabled" } value="@queue.getComment" class="form-control" />
+                                                    </td>
+                                                    <td>@if(queue.getAuthUserId != null) { @queue.getAuthUserId.fullName() } else { @queue.getActionType }</td>
+                                                    <td>@queue.getCreatedAt.format("yyyy-MMM-dd HH:mm")</td>
+                                                    <td>
+                                                        <span><button @if(!isAccessible || queue.getAuthUserId == null) { disabled="disabled" } class="btn btn-md btn-primary" type="submit" name="action" value="save">Save</button></span>
+                                                        <span><button @if(!isAccessible || queue.getAuthUserId == null) { disabled="disabled" } class="btn btn-md btn-danger confirm-delete" data-confirm="Are you sure you want to delete" name="action" value="delete" type="submit">Delete</button></span>
+                                                    </td>
+                                                </form>
+                                            </tr>
+                                        }*@
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel panel-default">
+                    <div class="panel-heading" role="tab" id="headingTwo">
+                        <h4 class="panel-title">
+                            <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion"  aria-expanded="false" aria-controls="collapseTwo">Comments &amp; Action Log</a>
+                        </h4>
+                    </div>
+                    <div id="collapseTwo" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingTwo">
+                        <div class="">
+                            <div style="max-height: 200px; overflow: scroll">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <td>Author</td>
+                                            <td>Message</td>
+                                            <td>Created</td>
+                                            @*<td></td>*@
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @for(comment <- BookingMsgLog.find.where().eq("bookingId", itinerary.getBookings).findList()) {
+                                            <tr>
+                                                <td width="15%">
+                                                    (@comment.getActionType)
+                                                    @if(comment.getAuthUserId != null) {
+                                                        @comment.getAuthUserId.fullName()
+                                                    }
+                                                </td>
+                                                <td width="70%">@Html(comment.getMsg)</td>
+                                                <td width="15%">@comment.getCreatedAt.format("yyyy-MMM-dd HH:mm")</td>
+                                                @*<td><a class="ajax" href="@routes.FlightBookingCtrl.previewComment(comment.id)">View Comment</a></td>*@
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="form-group">
+                                <form method="post" action="@routes.FlightBookingCtrl.comment(itinerary.getId)">
+                                    <input type="hidden" name="@commentForm("itineraryId").name" value="@itinerary.getId" />
+                                    @helper.CSRF.formField
+                                    <textarea name="@commentForm("comment").name" id="commentEdit" data-height="90" rows="3" class="form-control" placeholder="your comment here..."></textarea>
+                                    <button type="submit" class="btn btn-md btn-primary form-control">Comment</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel panel-default">
+                    <div class="panel-heading" role="tab" id="emailSenderDiv">
+                        <h4 class="panel-title">
+                            <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion"  aria-expanded="false" aria-controls="collapseThree">Email and SMS</a>
+                        </h4>
+                    </div>
+                    <div id="emailSenderDiv" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="emailSenderDiv">
+                        <div class="panel-body">
+                            <div class="nav-tabs-custom">
+                                <ul class="nav nav-tabs">
+                                    <li><a href="#tab_2-2" class="active" data-toggle="tab">Send Email</a></li>
+                                    <li><a href="#tab_3-2" data-toggle="tab">Send SMS</a></li>
+                                    <li><a href="#tab_3-3" data-toggle="tab">SMS and Email Log Trail</a></li>
+                                </ul>
+                                <div class="tab-content">
+                                    <div class="tab-pane panel active" id="tab_2-2">
+                                        <form method="post" action="@routes.FlightBookingCtrl.sendMailSms(itinerary.getId)" enctype="application/x-www-form-urlencoded" id="sendMailForm" >
+                                            @helper.CSRF.formField
+                                            @*		@views.html.helper.CSRF.formField*@
+                                            <input type="hidden" name="type" value="email" />
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label for="emailTemplateId">Email Template</label>
+                                                    <select class="form-control" data-type="email" name="emailTemplateId">
+                                                        <option>---Select---</option>
+                                                        @for(emailTemp <- EmailTemplates.find.all()) {
+                                                            <option value="@emailTemp.getId">@emailTemp.getName</option>
+                                                        }
+                                                    </select>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="subject">Subject</label>
+                                                    <input required="required" class="form-control" name="subject" placeholder="Subject" />
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="subject">To Address</label>
+                                                    <input type="email" required="required" value="@itinerary.getBookings.getContactEmail" class="form-control" name="recipient" placeholder="Recipient email address" />
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="subject">From</label>
+                                                    <input type="email" value="@play.Configuration.root().getString("project.email")" class="form-control" name="from" placeholder="@play.Configuration.root().getString("project.domain")" />
+                                                </div>
+                                                <div class="form-group">
+                                                    <button type="submit" id="emailSend" class="btn btn-success btn-md">
+                                                        Send Email</button>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-8">
+                                                <textarea class="form-control" id="emailContent" rows="13" name="emailContent"></textarea>
+                                            </div>
+                                        </form>
+                                    </div>
+                                    <div class="tab-pane" id="tab_3-2">
+                                        <form method="post" action="@routes.FlightBookingCtrl.sendMailSms(itinerary.getId)" enctype="application/x-www-form-urlencoded" id="sendMailForm" >
+                                            @helper.CSRF.formField
+                                            @*		@views.html.helper.CSRF.formField*@
+                                            <input type="hidden" name="type" value="sms" />
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label for="emailTemplateId">SMS Template</label>
+                                                    <select data-type="sms" class="form-control" name="smsTemplateId">
+                                                        <option>---Select---</option>
+                                                        @for(emailTemp <- SmsTemplates.find.all()) {
+                                                            <option value="@emailTemp.getId">@emailTemp.getName</option>
+                                                        }
+                                                    </select>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="subject">Recipient Phone</label>
+                                                    <input type="text" required="required" value="@itinerary.getBookings.getContactPhone" class="form-control" name="recipient" placeholder="Phone Number" />
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="subject">From</label>
+                                                    <input type="email" disabled="disabled" value="@play.Configuration.root().getString("project.name").toUpperCase()" class="form-control disabled" name="from" />
+                                                </div>
+                                                <div class="form-group">
+                                                    <button type="submit" id="emailSend" class="btn btn-success btn-md">Send SMS</button>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-8">
+                                                <textarea class="form-control" rows="10" name="smsContent" required="required"></textarea>
+                                            </div>
+                                        </form>
+                                    </div>
+                                    <div class="tab-pane" id="tab_3-3">
+                                        <div class="panel-default" style="max-height: 300px;
+                                            height: 300px">
+                                            <ol>
+                                            @for(smsEmail <- BookingMsgLog.find.where().eq("bookingId", itinerary.getBookings).findList()) {
+                                                <li>
+                                                    <small>@smsEmail.getTitle - by @if(smsEmail.getAuthUserId != null){ @smsEmail.getAuthUserId.getFirstName} on @smsEmail.getCreatedAt.format("yyyy-MMM-dd HH:mm") </small>
+                                                    @Html(smsEmail.getMsg)
+                                                </li>
+                                                <hr />
+                                            }
+                                            </ol>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel panel-default">
+                    <div class="panel-heading" role="tab" id="headingTwo">
+                        <h4 class="panel-title">
+                            <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" aria-expanded="false" aria-controls="invoiceDv">Invoice</a>
+                        </h4>
+                    </div>
+                    <div id="invoiceDv" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="InvoiceTwo">
+                        <div class="panel-body">
+                            @b3.formCSRF(routes.FlightBookingCtrl.bookingInvoice(encrypt.encrypt(itinerary.getId.toString)), 'enctype -> "application/x-www-form-urlencoded") {
+                                <div class="col-md-12">Payment Details</div>
+                                <div class="clearfix"></div>
+                                <div class="col-md-2 form-group">
+                                    <label for="itineraryRef">Itinerary Ref.</label>
+                                    <p class="text-danger"><strong>@itinerary.getBookings.getTransactionRef</strong></p>
+                                </div>
+                                <div class="col-md-2 form-group">
+                                    <label for="itineraryRef">Payment Status</label>
+                                    <select name="paymentStatus" required="required" class="form-control">
+                                        <option value="">Select Payment Status</option>
+                                        @for(status <- PaymentStatus.values()) {
+                                            <option @if(status.eq(itinerary.getBookings.getPaymentHistoryId.getStatus)) { selected="selected" } value="@status.name()">@status.name()</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="col-md-2 form-group">
+                                    <label for="itineraryRef">Booking/Ticket Status</label>
+                                    <select name="ticketStatus" class="form-control">
+                                        <option>Select Ticket Status</option>
+                                        @for(status <- BookingStatus.values()) {
+                                            <option @if(status.eq(itinerary.getBookings.getStatus)) { selected="selected" } value="@status.name()">@status.name()</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="col-md-4 form-group">
+                                    @for(passenger <- itinerary.getPnrRecords) {
+                                        <input type="hidden" name="pass_@passenger.getId" value="@passenger.getId" />
+                                        <label for="itineraryRef">Ticket Number for @passenger.getFirstName @passenger.getLastName</label>
+                                        <input class="form-control" name="gdsTicketId_@passenger.getId" value="@passenger.getTicketRef" placeholder="TicketRef ID" />
+                                    }
+                                </div>
+                                <div class="col-md-2 form-group">
+                                    <label for="itineraryRef">Ticketing Partner</label>
+                                    <select name="ticketingPartnerId"  class="form-control">
+                                        <option value="">Select a Ticketing Partner</option>
+                                        @for(partner <- TicketingPartners.find.all()) {
+                                            <option @if(itinerary.getTicketingPartner != null && itinerary.getTicketingPartner.getId.eq(partner.getId)) { selected="selected" } value="@partner.getId">@partner.getName</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="col-md-4 form-group">
+                                    <label for="itineraryRef">Payment URL</label>
+                                    <p class="text-primary">@routes.FlightBookingCtrl.payOnline(itinerary.getBookings.getTransactionRef).absoluteURL().replaceAll(play.Configuration.root().getString("project.subdomain.admin") + ".", "")</p>
+                                </div>
+                                <div class="col-md-4 form-group">
+                                    <label for="itineraryRef">Booking Enquiry URL</label>
+                                    <p class="text-primary">@routes.FlightBookingCtrl.enquiry(itinerary.getBookings.getTransactionRef).absoluteURL().replaceAll(play.Configuration.root().getString("project.subdomain.admin") + ".", "")</p>
+                                </div>
+                                <div class="col-md-4 form-group">
+                                    <span>
+                                        <label>Recipient Email</label>
+                                        <input type="email" name="ticketRecipientEmail" value="@itinerary.getBookings.getContactEmail" class="form-control" />
+                                    </span>
+                                    <span><button type="submit" name="action" value="sendTicketEmail" class="btn btn-md btn-primary">Send Ticket</button></span>
+                                    <span><button type="submit" name="action" value="sendBookingConfirmation" class="btn btn-md btn-primary">Send Booking Confirmation</button></span>
+                                </div>
+                                <div class="clearfix"></div>
+                                <div class="col-md-12">
+                                    <span><button type="submit" name="action" value="save" class="btn btn-md btn-success">Save Changes</button></span>
+                                    @*<span><button type="submit" name="action" value="paymentReminder" class="btn btn-md">Send Payment Reminder</button></span>*@
+                                    <span><button type="submit" name="action" value="archieveBooking" class="btn btn-md btn-info confirm-delete" data-confirm="Are you sure you want to archive booking?"><i class="fa fa-save"></i> Archive Booking</button></span> <small></small>
+                                </div>
+
+                                <div class="clearfix"></div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+@scripts = {
+    <script type="text/javascript">
+
+            function insert_email_content(inst, content = "") {
+                inst.setContent(content);
+            }
+
+            jQuery(function () {
+
+                var tinyObj = tinymce.init({
+                    selector: 'textarea#emailContentXXX',
+                    height: 200,
+                    init_instance_callback: "insert_email_content",
+                    menubar: false,
+                    plugins: [
+                        'advlist autolink lists link image charmap print preview anchor textcolor',
+                        'searchreplace visualblocks code fullscreen',
+                        'insertdatetime media table contextmenu paste code help wordcount'
+                    ],
+                    toolbar: 'insert | undo redo |  formatselect | bold italic backcolor  | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help',
+                    content_css: [
+                        '//fonts.googleapis.com/css?family=Lato:300,300i,400,400i',
+                        '//www.tinymce.com/css/codepen.min.css']
+                });
+
+                // commentEdit
+                tinymce.init({
+                    selector: 'textarea#commentEdit',
+                    height: 200,
+                    menubar: false,
+                    plugins: [
+                        'advlist autolink lists link image charmap print preview anchor textcolor',
+                        'searchreplace visualblocks code fullscreen',
+                        'insertdatetime media table contextmenu paste code help wordcount'
+                    ],
+                    toolbar: 'insert | undo redo |  formatselect | bold italic backcolor  | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help',
+                    content_css: [
+                        '//fonts.googleapis.com/css?family=Lato:300,300i,400,400i',
+                        '//www.tinymce.com/css/codepen.min.css']
+                });
+
+                $(".show-info").on('click', function () {
+                    var idField = $(this).attr('href');
+                    $(idField).toggle();
+                    window.location.href = idField;
+                });
+
+                $('select[name=emailTemplateId]').on('change', function () {
+                    var id = $(this).val();
+                    $.ajax({
+                        url: "@controllers.admin.systems.routes.EmailSmsCtrl.getEmailXhr",
+                        data: {
+                            'id': id,
+                            'type': $(this).data('type')
+                        },
+                        dataType: 'JSON',
+                        type: 'GET',
+                        beforeSend: function () {
+                            $(this).attr('disabled', 'disabled');
+                        },
+                        success: function (xhr) {
+                            $('textarea[name=emailContent]').html(xhr.body);
+                            $('input[name=subject]').val(xhr.subject);
+                            $(this).removeAttr('disabled');
+                        }
+                    })
+                });
+                $('select[name=smsTemplateId]').on('change', function () {
+                    var id = $(this).val();
+                    $.ajax({
+                        url: "@controllers.admin.systems.routes.EmailSmsCtrl.getEmailXhr",
+                        data: {
+                            'id': id,
+                            'type': $(this).data('type')
+                        },
+                        dataType: 'JSON',
+                        type: 'GET',
+                        beforeSend: function () {
+                            $(this).attr('disabled', 'disabled');
+                        },
+                        success: function (xhr) {
+                            $('textarea[name=smsContent]').text(xhr.body);
+                            $(this).removeAttr('disabled');
+                        }
+                    })
+                });
+
+                $("#sendMailForm").on('submit', function () {
+                    $.ajax({
+                        url: $(this).attr('action'),
+                        dataType: "JSON",
+                        type: 'POST',
+                        data: $(this).serialize(),
+                        beforeSend: function () {
+                            $(this).find('button').html('<span class="fa fa-spinner"></span> Loading');
+                        },
+                        success: function (xhr) {
+                            $(this).find('button').removeClass('disabled');
+                            if (xhr.responseCode === 200) {
+                                alert("Mail sent successfully");
+                                window.location.reload();
+                            } else {
+                                alert("Sending failed");
+                            }
+                        }
+                    });
+                    return false;
+                });
+            });
+    </script>
+}
